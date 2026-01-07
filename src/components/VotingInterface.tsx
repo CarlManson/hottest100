@@ -162,14 +162,11 @@ export const VotingInterface: React.FC = () => {
                           key={vote.songId}
                           className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
                         >
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-500 text-white font-bold flex-shrink-0">
-                            {vote.rank}
-                          </div>
                           {song.thumbnail && (
                             <img
                               src={song.thumbnail}
                               alt=""
-                              className="w-10 h-10 rounded object-cover flex-shrink-0"
+                              className="w-12 h-12 rounded object-cover flex-shrink-0"
                             />
                           )}
                           <div className="flex-1 min-w-0">

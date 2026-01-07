@@ -19,6 +19,8 @@ export const SongManager: React.FC = () => {
         const newSongs = parsed.map((item) => ({
           title: item.title || item.song || item.track || '',
           artist: item.artist || '',
+          thumbnail: item.thumbnail,
+          isAustralian: item.isAustralian,
         }));
         await addSongs(newSongs);
         setImportText('');
@@ -87,11 +89,11 @@ export const SongManager: React.FC = () => {
       <div className="mt-6 bg-white rounded-xl shadow-lg p-6 mb-6 border-2 border-orange-200">
         <h3 className="text-2xl font-bold mb-4 text-gray-800">Import Songs</h3>
         <p className="text-gray-600 mb-4">
-          Paste JSON array or CSV (format: Artist, Title - one per line)
+          Paste JSON array with thumbnails and Australian artist flags, or CSV (format: Artist, Title - one per line)
         </p>
         <textarea
           className="w-full h-40 p-3 border-2 border-gray-300 rounded-lg mb-3 font-mono text-sm focus:border-orange-500 focus:outline-none"
-          placeholder='JSON: [{"artist": "Artist Name", "title": "Song Title"}]\nCSV: Artist Name, Song Title'
+          placeholder='JSON: [{"artist": "Artist Name", "title": "Song Title", "thumbnail": "url", "isAustralian": true}]\nCSV: Artist Name, Song Title'
           value={importText}
           onChange={(e) => setImportText(e.target.value)}
         />
@@ -138,31 +140,36 @@ export const SongManager: React.FC = () => {
           <p className="text-gray-500">No songs added yet</p>
         ) : (
           <div className="max-h-96 overflow-y-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 sticky top-0">
-                <tr>
-                  <th className="text-left p-3">Artist</th>
-                  <th className="text-left p-3">Title</th>
-                  <th className="w-20"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {songs.map((song) => (
-                  <tr key={song.id} className="border-t hover:bg-gray-50">
-                    <td className="p-3">{song.artist}</td>
-                    <td className="p-3">{song.title}</td>
-                    <td className="p-3">
-                      <button
-                        onClick={() => removeSong(song.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="space-y-2">
+              {songs.map((song) => (
+                <div key={song.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
+                  {song.thumbnail && (
+                    <img
+                      src={song.thumbnail}
+                      alt=""
+                      className="w-12 h-12 rounded object-cover flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold truncate">{song.title}</div>
+                    <div className="text-sm text-gray-600 flex items-center gap-2">
+                      <span className="truncate">{song.artist}</span>
+                      {song.isAustralian && (
+                        <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded flex-shrink-0">
+                          AUS
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeSong(song.id)}
+                    className="text-red-600 hover:text-red-800 text-sm font-semibold flex-shrink-0"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
