@@ -9,6 +9,8 @@ CREATE TABLE songs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
   artist TEXT NOT NULL,
+  thumbnail TEXT,
+  is_australian BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

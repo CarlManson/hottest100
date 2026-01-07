@@ -97,7 +97,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
-    setState((prev) => ({ ...prev, songs: data || [] }));
+    const songs = (data || []).map(row => ({
+      id: row.id,
+      title: row.title,
+      artist: row.artist,
+      thumbnail: row.thumbnail || undefined,
+      isAustralian: row.is_australian,
+    }));
+
+    setState((prev) => ({ ...prev, songs }));
   };
 
   const loadFamilyMembers = async () => {
@@ -171,7 +179,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addSong = async (song: Omit<Song, 'id'>) => {
     const { error } = await supabase
       .from('songs')
-      .insert([{ title: song.title, artist: song.artist }]);
+      .insert([{
+        title: song.title,
+        artist: song.artist,
+        thumbnail: song.thumbnail || null,
+        is_australian: song.isAustralian || false,
+      }]);
 
     if (error) {
       console.error('Error adding song:', error);
@@ -182,7 +195,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addSongs = async (songs: Omit<Song, 'id'>[]) => {
     const { error } = await supabase
       .from('songs')
-      .insert(songs.map(s => ({ title: s.title, artist: s.artist })));
+      .insert(songs.map(s => ({
+        title: s.title,
+        artist: s.artist,
+        thumbnail: s.thumbnail || null,
+        is_australian: s.isAustralian || false,
+      })));
 
     if (error) {
       console.error('Error adding songs:', error);

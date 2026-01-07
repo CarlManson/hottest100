@@ -2,6 +2,8 @@ export interface Song {
   id: string;
   title: string;
   artist: string;
+  thumbnail?: string;
+  isAustralian?: boolean;
 }
 
 export interface Vote {

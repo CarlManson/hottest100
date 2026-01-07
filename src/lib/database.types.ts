@@ -14,18 +14,24 @@ export interface Database {
           id: string
           title: string
           artist: string
+          thumbnail: string | null
+          is_australian: boolean
           created_at: string
         }
         Insert: {
           id?: string
           title: string
           artist: string
+          thumbnail?: string | null
+          is_australian?: boolean
           created_at?: string
         }
         Update: {
           id?: string
           title?: string
           artist?: string
+          thumbnail?: string | null
+          is_australian?: boolean
           created_at?: string
         }
       }

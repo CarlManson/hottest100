@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { AppProvider } from './context/AppContext';
+import { Dashboard } from './components/Dashboard';
 import { SongManager } from './components/SongManager';
 import { VotingInterface } from './components/VotingInterface';
 import { CountdownEntry } from './components/CountdownEntry';
 import { Leaderboard } from './components/Leaderboard';
 
-type Tab = 'songs' | 'voting' | 'countdown' | 'leaderboard';
+type Tab = 'dashboard' | 'songs' | 'voting' | 'countdown' | 'leaderboard';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('songs');
+  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
 
   return (
     <AppProvider>
@@ -25,6 +26,16 @@ function App() {
         <nav className="bg-white border-b-2 border-orange-300 shadow-md sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-6">
             <div className="flex gap-2 overflow-x-auto">
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`px-6 py-4 font-bold transition whitespace-nowrap rounded-t-lg ${
+                  activeTab === 'dashboard'
+                    ? 'bg-orange-500 text-white'
+                    : 'text-gray-700 hover:bg-orange-100'
+                }`}
+              >
+                Dashboard
+              </button>
               <button
                 onClick={() => setActiveTab('songs')}
                 className={`px-6 py-4 font-bold transition whitespace-nowrap rounded-t-lg ${
@@ -70,6 +81,7 @@ function App() {
         </nav>
 
         <main className="py-8">
+          {activeTab === 'dashboard' && <Dashboard onNavigate={setActiveTab} />}
           {activeTab === 'songs' && <SongManager />}
           {activeTab === 'voting' && <VotingInterface />}
           {activeTab === 'countdown' && <CountdownEntry />}

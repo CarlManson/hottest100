@@ -195,25 +195,39 @@ export const VotingInterface: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <div className="max-h-[600px] overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="max-h-[600px] overflow-y-auto grid grid-cols-1 gap-3">
               {filteredSongs.map((song) => {
                 const isSelected = selectedSongIds.includes(song.id);
                 return (
                   <div
                     key={song.id}
-                    className={`relative p-4 rounded-xl transition shadow-sm border-2 ${
+                    className={`relative flex gap-3 p-3 rounded-xl transition shadow-sm border-2 ${
                       isSelected
                         ? 'bg-green-50 border-green-500'
                         : 'bg-white border-gray-200 hover:border-orange-300 hover:shadow-md'
                     }`}
                   >
-                    <div className="pr-12">
-                      <div className="font-bold text-gray-900">{song.title}</div>
-                      <div className="text-sm text-gray-600 mt-1">{song.artist}</div>
+                    {song.thumbnail && (
+                      <img
+                        src={song.thumbnail}
+                        alt={`${song.title} artwork`}
+                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0 pr-12">
+                      <div className="font-bold text-gray-900 truncate">{song.title}</div>
+                      <div className="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                        <span className="truncate">{song.artist}</span>
+                        {song.isAustralian && (
+                          <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded flex-shrink-0">
+                            AUS
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <button
                       onClick={() => handleToggleSong(song.id)}
-                      className={`absolute top-1/2 right-4 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl transition ${
+                      className={`absolute top-1/2 right-3 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl transition flex-shrink-0 ${
                         isSelected
                           ? 'bg-green-500 text-white hover:bg-green-600'
                           : 'bg-orange-500 text-white hover:bg-orange-600'
