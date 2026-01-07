@@ -134,6 +134,72 @@ export const VotingInterface: React.FC = () => {
         </div>
       </div>
 
+      {/* All Family Members' Votes */}
+      {familyMembers.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-2xl font-bold mb-4 text-gray-800">Everyone's Votes</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {familyMembers.map((member) => (
+              <div
+                key={member.id}
+                className="bg-white rounded-xl shadow-lg p-6 border-2 border-orange-200"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-xl font-bold text-gray-800">{member.name}</h4>
+                  <span className="bg-orange-500 text-white px-3 py-1 rounded-full font-bold text-sm">
+                    {member.votes.length}/10
+                  </span>
+                </div>
+                {member.votes.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No votes yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {member.votes.map((vote) => {
+                      const song = songs.find((s) => s.id === vote.songId);
+                      if (!song) return null;
+                      return (
+                        <div
+                          key={vote.songId}
+                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-500 text-white font-bold flex-shrink-0">
+                            {vote.rank}
+                          </div>
+                          {song.thumbnail && (
+                            <img
+                              src={song.thumbnail}
+                              alt=""
+                              className="w-10 h-10 rounded object-cover flex-shrink-0"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm truncate">{song.title}</div>
+                            <div className="text-xs text-gray-600 flex items-center gap-1">
+                              <span className="truncate">{song.artist}</span>
+                              {song.isAustralian && (
+                                <span className="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">
+                                  AUS
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <button
+                  onClick={() => setSelectedMember(member)}
+                  className="w-full mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition font-semibold"
+                >
+                  Edit Votes
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {selectedMember && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-lg shadow-md p-6">
