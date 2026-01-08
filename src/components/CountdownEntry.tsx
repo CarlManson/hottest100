@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import type { CountdownResult } from '../types';
 
 export const CountdownEntry: React.FC = () => {
   const { songs, countdownResults, updateCountdownResults, hottest200Results, updateHottest200Results } = useApp();
