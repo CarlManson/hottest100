@@ -9,9 +9,14 @@ export const SongManager: React.FC = () => {
   const [manualTitle, setManualTitle] = useState('');
   const [manualArtist, setManualArtist] = useState('');
   const [error, setError] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState('');
 
   const handleImport = async () => {
     setError('');
+    setImportProgress('');
+    setImporting(true);
+
     try {
       // Try JSON first
       const parsed = JSON.parse(importText);
@@ -22,15 +27,41 @@ export const SongManager: React.FC = () => {
           thumbnail: item.thumbnail,
           isAustralian: item.isAustralian,
         }));
-        await addSongs(newSongs);
-        setImportText('');
+
+        // Import in chunks for large datasets
+        const chunkSize = 100;
+        if (newSongs.length > chunkSize) {
+          setImportProgress(`Importing ${newSongs.length} songs in batches...`);
+
+          for (let i = 0; i < newSongs.length; i += chunkSize) {
+            const chunk = newSongs.slice(i, i + chunkSize);
+            await addSongs(chunk);
+            const imported = Math.min(i + chunkSize, newSongs.length);
+            setImportProgress(`Imported ${imported}/${newSongs.length} songs...`);
+
+            // Small delay to avoid overwhelming the database
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+
+          setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
+        } else {
+          await addSongs(newSongs);
+          setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
+        }
+
+        setTimeout(() => {
+          setImportText('');
+          setImportProgress('');
+        }, 3000);
+
         return;
       }
-    } catch {
+    } catch (e) {
       // Not JSON, try CSV
       const lines = importText.split('\n').filter((line) => line.trim());
       if (lines.length === 0) {
         setError('No data to import');
+        setImporting(false);
         return;
       }
 
@@ -49,12 +80,16 @@ export const SongManager: React.FC = () => {
         try {
           await addSongs(newSongs);
           setImportText('');
+          setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
+          setTimeout(() => setImportProgress(''), 3000);
         } catch (err) {
           setError('Failed to import songs. Please try again.');
         }
       } else {
         setError('No valid songs found. Format: Artist, Title (one per line)');
       }
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -96,13 +131,16 @@ export const SongManager: React.FC = () => {
           placeholder='JSON: [{"artist": "Artist Name", "title": "Song Title", "thumbnail": "url", "isAustralian": true}]\nCSV: Artist Name, Song Title'
           value={importText}
           onChange={(e) => setImportText(e.target.value)}
+          disabled={importing}
         />
         {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+        {importProgress && <p className="text-blue-600 text-sm mb-3 font-semibold">{importProgress}</p>}
         <button
           onClick={handleImport}
-          className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition font-bold"
+          disabled={importing}
+          className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition font-bold disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          Import Songs
+          {importing ? 'Importing...' : 'Import Songs'}
         </button>
       </div>
 
