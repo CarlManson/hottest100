@@ -121,46 +121,40 @@ export const VotingInterface: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <div className="max-h-[600px] overflow-y-auto grid grid-cols-1 gap-3">
+            <div className="max-h-[600px] overflow-y-auto space-y-2">
               {filteredSongs.map((song) => {
                 const isSelected = selectedSongIds.includes(song.id);
                 return (
                   <div
                     key={song.id}
-                    className={`relative flex gap-3 p-3 rounded-xl transition shadow-sm border-2 ${
+                    onClick={() => handleToggleSong(song.id)}
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition ${
                       isSelected
-                        ? 'bg-green-50 border-green-500'
-                        : 'bg-white border-gray-200 hover:border-orange-300 hover:shadow-md'
+                        ? 'bg-green-50 border-2 border-green-500'
+                        : 'bg-gray-50 hover:bg-gray-100'
                     }`}
                   >
                     {song.thumbnail && (
                       <img
                         src={song.thumbnail}
-                        alt={`${song.title} artwork`}
-                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                        alt=""
+                        className="w-12 h-12 rounded object-cover flex-shrink-0"
                       />
                     )}
-                    <div className="flex-1 min-w-0 pr-12">
-                      <div className="font-bold text-gray-900 truncate">{song.title}</div>
-                      <div className="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm truncate">{song.title}</div>
+                      <div className="text-xs text-gray-600 flex items-center gap-1">
                         <span className="truncate">{song.artist}</span>
                         {song.isAustralian && (
-                          <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded flex-shrink-0">
+                          <span className="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">
                             AUS
                           </span>
                         )}
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleToggleSong(song.id)}
-                      className={`absolute top-1/2 right-3 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl transition flex-shrink-0 ${
-                        isSelected
-                          ? 'bg-green-500 text-white hover:bg-green-600'
-                          : 'bg-orange-500 text-white hover:bg-orange-600'
-                      }`}
-                    >
-                      {isSelected ? '✓' : '+'}
-                    </button>
+                    {isSelected && (
+                      <span className="text-green-600 font-bold text-xl flex-shrink-0">✓</span>
+                    )}
                   </div>
                 );
               })}

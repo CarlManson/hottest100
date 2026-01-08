@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nUpdate Select Songs panel to match compact Top 10 style\n\n- Reduce thumbnail size from 16x16 to 12x12\n- Match text sizing and spacing with Top 10 panel\n- Make entire song row clickable\n- Replace large round button with simple checkmark for selected items\n- Remove borders and shadows, use simpler hover state\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}
