@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { getLeaderboard, getSongMatches } from '../utils/scoring';
+import { getLeaderboard, getSongMatches, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import type { FamilyMember } from '../types';
 
 export const Leaderboard: React.FC = () => {
@@ -8,6 +8,7 @@ export const Leaderboard: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
+  const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
 
   const matches = selectedMember
     ? getSongMatches(selectedMember, countdownResults, hottest200Results, songs)
@@ -24,32 +25,57 @@ export const Leaderboard: React.FC = () => {
             <p className="text-gray-500">No family members yet</p>
           ) : (
             <div className="space-y-3">
-              {leaderboard.map((entry, index) => (
-                <div
-                  key={entry.member.id}
-                  onClick={() => setSelectedMember(entry.member)}
-                  className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition ${
-                    selectedMember?.id === entry.member.id
-                      ? 'bg-blue-100 border border-blue-500'
-                      : 'bg-gray-50 hover:bg-gray-100'
-                  }`}
-                >
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-bold text-xl">
-                    {index + 1}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-lg">{entry.member.name}</div>
-                    <div className="text-sm text-gray-600">
-                      {matches.length > 0 && selectedMember?.id === entry.member.id
-                        ? `${getSongMatches(entry.member, countdownResults, hottest200Results, songs).length} matches`
-                        : `${entry.member.votes.length} votes`}
+              {leaderboard.map((entry, index) => {
+                const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
+                return (
+                  <div
+                    key={entry.member.id}
+                    onClick={() => setSelectedMember(entry.member)}
+                    className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition ${
+                      selectedMember?.id === entry.member.id
+                        ? 'bg-blue-100 border border-blue-500'
+                        : 'bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-bold text-xl">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-lg">{entry.member.name}</div>
+                      <div className="text-sm text-gray-600">
+                        {matches.length > 0 && selectedMember?.id === entry.member.id
+                          ? `${getSongMatches(entry.member, countdownResults, hottest200Results, songs).length} matches`
+                          : `${entry.member.votes.length} votes`}
+                      </div>
+                      {maxPossibleScore > 0 && (
+                        <div className="mt-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                              <div
+                                className="bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all"
+                                style={{ width: `${efficiency}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-semibold text-gray-600 w-12">
+                              {efficiency}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {entry.score}
+                      </div>
+                      {maxPossibleScore > 0 && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          of {maxPossibleScore}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {entry.score}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -108,6 +134,7 @@ export const Leaderboard: React.FC = () => {
           <li>• Hottest 200 (101-200): Position #200 = 1 point, #101 = 100 points</li>
           <li>• Only songs that appear in the countdown earn points</li>
           <li>• Your ranking of songs doesn't affect points (only whether they made the list)</li>
+          <li>• Efficiency % = Your score vs the max possible score from top 10 songs currently in the countdown</li>
         </ul>
       </div>
     </div>

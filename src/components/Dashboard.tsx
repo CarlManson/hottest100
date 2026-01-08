@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { getLeaderboard } from '../utils/scoring';
+import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 
 interface DashboardProps {
   onNavigate?: (tab: 'songs' | 'voting' | 'countdown' | 'leaderboard') => void;
@@ -10,6 +10,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const { familyMembers, countdownResults, hottest200Results, songs } = useApp();
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
+  const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
   const hasVotes = familyMembers.some(m => m.votes.length > 0);
 
@@ -83,6 +84,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                   const matchCount = entry.member.votes.filter(vote =>
                     [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
                   ).length;
+                  const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
 
                   return (
                     <div
@@ -106,9 +108,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                         <div className="text-sm text-gray-600">
                           {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
                         </div>
+                        {maxPossibleScore > 0 && (
+                          <div className="mt-2">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all"
+                                  style={{ width: `${efficiency}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-semibold text-gray-600 w-10">
+                                {efficiency}%
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="text-2xl font-black text-orange-600">
-                        {entry.score}
+                      <div className="text-right">
+                        <div className="text-2xl font-black text-orange-600">
+                          {entry.score}
+                        </div>
+                        {maxPossibleScore > 0 && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            of {maxPossibleScore}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Cookies from 'js-cookie';
 import { AppProvider } from './context/AppContext';
 import { Dashboard } from './components/Dashboard';
 import { PublicHome } from './components/PublicHome';
@@ -6,6 +7,9 @@ import { SongManager } from './components/SongManager';
 import { VotingInterface } from './components/VotingInterface';
 import { CountdownEntry } from './components/CountdownEntry';
 import { Leaderboard } from './components/Leaderboard';
+import logo from './assets/fairest-100-logo.png';
+import banner from './assets/banner-bg.jpg';
+import bannerRight from './assets/banner-right.png';
 
 type Tab = 'home' | 'dashboard' | 'songs' | 'voting' | 'countdown' | 'leaderboard';
 
@@ -18,10 +22,20 @@ function App() {
 
   const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'hottest100';
 
+  // Check for existing session cookie on mount
+  useEffect(() => {
+    const sessionCookie = Cookies.get('hottest100_session');
+    if (sessionCookie === 'authenticated') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
+      // Set cookie with 7-day expiration
+      Cookies.set('hottest100_session', 'authenticated', { expires: 7 });
       setShowLoginModal(false);
       setPassword('');
       setLoginError('');
@@ -33,6 +47,8 @@ function App() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    // Remove session cookie
+    Cookies.remove('hottest100_session');
     setActiveTab('home');
   };
 
@@ -49,12 +65,10 @@ function App() {
   return (
     <AppProvider>
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-purple-50">
-        <header className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-lg">
+        <header className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-lg" style={{ backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
           <div className="max-w-7xl mx-auto px-6 py-6">
-            <h1 className="text-5xl font-black text-white drop-shadow-lg">
-              🔥 HOTTEST 100 🔥
-            </h1>
-            <p className="text-white/90 mt-2 font-semibold">Family Voting Tracker</p>
+            <img className="logo" src={logo} alt="Fairest 100 Logo" style={{ width: '100%', maxWidth: '25rem', height: 'auto' }} />
+            <img className="banner-right" src={bannerRight}  style={{ width: '25%', height: 'auto', position: 'absolute', top: '0', right: '0', transform: 'translateY(-25%)' }} />
           </div>
         </header>
 
@@ -160,7 +174,7 @@ function App() {
 
         <footer className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 border-t mt-12 py-6">
           <div className="max-w-7xl mx-auto px-6 text-center text-white text-sm">
-            <p className="font-semibold">Triple J Hottest 100 Family Tracker</p>
+            <p className="font-semibold">Fairest 100: The Triple J Hottest 100 Family Tracker</p>
             <p className="mt-1 text-white/80">Real-time family voting tracker with cloud sync</p>
             <div className="mt-4 space-y-2">
               {isAuthenticated ? (
@@ -194,7 +208,10 @@ function App() {
               )}
             </div>
             <div className="mt-4 text-white/70 text-xs max-w-2xl mx-auto">
-              <p>Disclaimer: This is a private family tracker. All votes and results are for entertainment purposes only and are not affiliated with Triple J or the ABC.</p>
+              <p><strong>Before You Start Whinging:</strong> Righto, settle down. Here's the deal. We are not the ABC. We are not Triple J. We're just a bunch of legends who finally realized that trying to update a bloody spreadsheet with greasy sausage-roll fingers is a sh*t idea.</p>
+              <p>I built this so we can figure out who picked the best bangers without fighting over who broke the formulas or deleted the rows by accident.</p>
+              <p>This is 100% unofficial. If you try to sue me over this, the only thing you're getting is a kick up the arse and a face full of flies.</p>
+              <p>Play fair, don't be a d*ckhead, and turn the volume up.</p>
             </div>
           </div>
         </footer>
