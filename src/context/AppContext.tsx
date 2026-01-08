@@ -204,7 +204,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     if (error) {
       console.error('Error adding songs:', error);
-      throw error;
+      const errorMessage = error.message || error.details || 'Unknown database error';
+      throw new Error(`Database error: ${errorMessage}`);
     }
   };
 

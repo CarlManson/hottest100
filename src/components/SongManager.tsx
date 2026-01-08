@@ -50,7 +50,12 @@ export const SongManager: React.FC = () => {
               setImportProgress('');
             }, 3000);
           } catch (err) {
-            const errorMsg = err instanceof Error ? err.message : String(err);
+            console.error('Import error:', err);
+            const errorMsg = err instanceof Error
+              ? err.message
+              : (err && typeof err === 'object' && 'message' in err)
+                ? String((err as any).message)
+                : JSON.stringify(err);
             setError(`Import failed: ${errorMsg}`);
             setImporting(false);
             return;
@@ -64,7 +69,12 @@ export const SongManager: React.FC = () => {
               setImportProgress('');
             }, 3000);
           } catch (err) {
-            const errorMsg = err instanceof Error ? err.message : String(err);
+            console.error('Import error:', err);
+            const errorMsg = err instanceof Error
+              ? err.message
+              : (err && typeof err === 'object' && 'message' in err)
+                ? String((err as any).message)
+                : JSON.stringify(err);
             setError(`Import failed: ${errorMsg}`);
             setImporting(false);
             return;
