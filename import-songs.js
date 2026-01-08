@@ -2,15 +2,18 @@ import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { config } from 'dotenv';
 
-// Load environment variables
+// Load environment variables from .env file if it exists
 config();
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+// Get credentials from command line args or environment variables
+const supabaseUrl = process.argv[2] || process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.argv[3] || process.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Missing Supabase environment variables');
-  console.error('Please create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
+  console.error('❌ Missing Supabase credentials');
+  console.error('');
+  console.error('Usage: node import-songs.js <SUPABASE_URL> <SUPABASE_ANON_KEY>');
+  console.error('Or create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
   process.exit(1);
 }
 
