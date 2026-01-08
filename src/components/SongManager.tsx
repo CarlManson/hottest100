@@ -29,31 +29,49 @@ export const SongManager: React.FC = () => {
         }));
 
         // Import in chunks for large datasets
-        const chunkSize = 100;
+        const chunkSize = 50; // Reduced for better reliability
         if (newSongs.length > chunkSize) {
           setImportProgress(`Importing ${newSongs.length} songs in batches...`);
 
-          for (let i = 0; i < newSongs.length; i += chunkSize) {
-            const chunk = newSongs.slice(i, i + chunkSize);
-            await addSongs(chunk);
-            const imported = Math.min(i + chunkSize, newSongs.length);
-            setImportProgress(`Imported ${imported}/${newSongs.length} songs...`);
+          try {
+            for (let i = 0; i < newSongs.length; i += chunkSize) {
+              const chunk = newSongs.slice(i, i + chunkSize);
+              await addSongs(chunk);
+              const imported = Math.min(i + chunkSize, newSongs.length);
+              setImportProgress(`Imported ${imported}/${newSongs.length} songs...`);
 
-            // Small delay to avoid overwhelming the database
-            await new Promise(resolve => setTimeout(resolve, 100));
+              // Longer delay to prevent rate limiting
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
+            setTimeout(() => {
+              setImportText('');
+              setImportProgress('');
+            }, 3000);
+          } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            setError(`Import failed: ${errorMsg}`);
+            setImporting(false);
+            return;
           }
-
-          setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
         } else {
-          await addSongs(newSongs);
-          setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
+          try {
+            await addSongs(newSongs);
+            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
+            setTimeout(() => {
+              setImportText('');
+              setImportProgress('');
+            }, 3000);
+          } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            setError(`Import failed: ${errorMsg}`);
+            setImporting(false);
+            return;
+          }
         }
 
-        setTimeout(() => {
-          setImportText('');
-          setImportProgress('');
-        }, 3000);
-
+        setImporting(false);
         return;
       }
     } catch (e) {
