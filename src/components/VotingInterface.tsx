@@ -50,30 +50,6 @@ export const VotingInterface: React.FC = () => {
     }
   };
 
-  const handleReorderVote = (voteIndex: number, direction: 'up' | 'down') => {
-    if (!selectedMember) return;
-
-    const votes = [...selectedMember.votes];
-    const newIndex = direction === 'up' ? voteIndex - 1 : voteIndex + 1;
-
-    if (newIndex < 0 || newIndex >= votes.length) return;
-
-    [votes[voteIndex], votes[newIndex]] = [votes[newIndex], votes[voteIndex]];
-
-    // Update ranks
-    votes.forEach((vote, index) => {
-      vote.rank = index + 1;
-    });
-
-    const updatedMember = {
-      ...selectedMember,
-      votes,
-    };
-
-    updateFamilyMember(updatedMember);
-    setSelectedMember(updatedMember);
-  };
-
   const filteredSongs = songs.filter(
     (song) =>
       song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -134,6 +110,112 @@ export const VotingInterface: React.FC = () => {
         </div>
       </div>
 
+      {selectedMember && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-xl font-semibold mb-4">Select Songs</h3>
+            <input
+              type="text"
+              placeholder="Search songs..."
+              className="w-full p-3 border border-gray-300 rounded-lg mb-4"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <div className="max-h-[600px] overflow-y-auto grid grid-cols-1 gap-3">
+              {filteredSongs.map((song) => {
+                const isSelected = selectedSongIds.includes(song.id);
+                return (
+                  <div
+                    key={song.id}
+                    className={`relative flex gap-3 p-3 rounded-xl transition shadow-sm border-2 ${
+                      isSelected
+                        ? 'bg-green-50 border-green-500'
+                        : 'bg-white border-gray-200 hover:border-orange-300 hover:shadow-md'
+                    }`}
+                  >
+                    {song.thumbnail && (
+                      <img
+                        src={song.thumbnail}
+                        alt={`${song.title} artwork`}
+                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0 pr-12">
+                      <div className="font-bold text-gray-900 truncate">{song.title}</div>
+                      <div className="text-sm text-gray-600 mt-1 flex items-center gap-2">
+                        <span className="truncate">{song.artist}</span>
+                        {song.isAustralian && (
+                          <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded flex-shrink-0">
+                            AUS
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleToggleSong(song.id)}
+                      className={`absolute top-1/2 right-3 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl transition flex-shrink-0 ${
+                        isSelected
+                          ? 'bg-green-500 text-white hover:bg-green-600'
+                          : 'bg-orange-500 text-white hover:bg-orange-600'
+                      }`}
+                    >
+                      {isSelected ? '✓' : '+'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-xl font-semibold mb-4">
+              {selectedMember.name}'s Top 10
+            </h3>
+            {selectedMember.votes.length === 0 ? (
+              <p className="text-gray-500">No votes yet</p>
+            ) : (
+              <div className="space-y-2">
+                {selectedMember.votes.map((vote) => {
+                  const song = songs.find((s) => s.id === vote.songId);
+                  if (!song) return null;
+                  return (
+                    <div
+                      key={vote.songId}
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                    >
+                      {song.thumbnail && (
+                        <img
+                          src={song.thumbnail}
+                          alt=""
+                          className="w-12 h-12 rounded object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate">{song.title}</div>
+                        <div className="text-xs text-gray-600 flex items-center gap-1">
+                          <span className="truncate">{song.artist}</span>
+                          {song.isAustralian && (
+                            <span className="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">
+                              AUS
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleToggleSong(vote.songId)}
+                        className="text-red-600 hover:text-red-800 px-2"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* All Family Members' Votes */}
       {familyMembers.length > 0 && (
         <div className="mb-6">
@@ -193,115 +275,6 @@ export const VotingInterface: React.FC = () => {
                 </button>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {selectedMember && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-semibold mb-4">
-              {selectedMember.name}'s Top 10
-            </h3>
-            {selectedMember.votes.length === 0 ? (
-              <p className="text-gray-500">No votes yet</p>
-            ) : (
-              <div className="space-y-2">
-                {selectedMember.votes.map((vote, index) => {
-                  const song = songs.find((s) => s.id === vote.songId);
-                  if (!song) return null;
-                  return (
-                    <div
-                      key={vote.songId}
-                      className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex flex-col gap-1">
-                        <button
-                          onClick={() => handleReorderVote(index, 'up')}
-                          disabled={index === 0}
-                          className="text-gray-600 hover:text-gray-800 disabled:text-gray-300"
-                        >
-                          ▲
-                        </button>
-                        <button
-                          onClick={() => handleReorderVote(index, 'down')}
-                          disabled={index === selectedMember.votes.length - 1}
-                          className="text-gray-600 hover:text-gray-800 disabled:text-gray-300"
-                        >
-                          ▼
-                        </button>
-                      </div>
-                      <div className="font-bold text-lg w-8">{vote.rank}</div>
-                      <div className="flex-1">
-                        <div className="font-semibold">{song.title}</div>
-                        <div className="text-sm text-gray-600">{song.artist}</div>
-                      </div>
-                      <button
-                        onClick={() => handleToggleSong(vote.songId)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-semibold mb-4">Select Songs</h3>
-            <input
-              type="text"
-              placeholder="Search songs..."
-              className="w-full p-3 border border-gray-300 rounded-lg mb-4"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <div className="max-h-[600px] overflow-y-auto grid grid-cols-1 gap-3">
-              {filteredSongs.map((song) => {
-                const isSelected = selectedSongIds.includes(song.id);
-                return (
-                  <div
-                    key={song.id}
-                    className={`relative flex gap-3 p-3 rounded-xl transition shadow-sm border-2 ${
-                      isSelected
-                        ? 'bg-green-50 border-green-500'
-                        : 'bg-white border-gray-200 hover:border-orange-300 hover:shadow-md'
-                    }`}
-                  >
-                    {song.thumbnail && (
-                      <img
-                        src={song.thumbnail}
-                        alt={`${song.title} artwork`}
-                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0 pr-12">
-                      <div className="font-bold text-gray-900 truncate">{song.title}</div>
-                      <div className="text-sm text-gray-600 mt-1 flex items-center gap-2">
-                        <span className="truncate">{song.artist}</span>
-                        {song.isAustralian && (
-                          <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded flex-shrink-0">
-                            AUS
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleToggleSong(song.id)}
-                      className={`absolute top-1/2 right-3 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl transition flex-shrink-0 ${
-                        isSelected
-                          ? 'bg-green-500 text-white hover:bg-green-600'
-                          : 'bg-orange-500 text-white hover:bg-orange-600'
-                      }`}
-                    >
-                      {isSelected ? '✓' : '+'}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </div>
       )}
