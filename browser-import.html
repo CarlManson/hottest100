@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import Songs - Triple J Hottest 100</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ec008c 100%);
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #555;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: monospace;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #ff6b35;
+    }
+    button {
+      background: #ff6b35;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #e55a2b;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .progress {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 6px;
+      display: none;
+    }
+    .progress.show {
+      display: block;
+    }
+    .success {
+      color: #22c55e;
+      font-weight: 600;
+    }
+    .error {
+      color: #ef4444;
+      font-weight: 600;
+    }
+    .info {
+      color: #3b82f6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎵 Import Songs to Supabase</h1>
+
+    <div class="form-group">
+      <label for="supabaseUrl">Supabase URL:</label>
+      <input type="text" id="supabaseUrl" placeholder="https://your-project.supabase.co" />
+    </div>
+
+    <div class="form-group">
+      <label for="supabaseKey">Supabase Anon Key:</label>
+      <input type="password" id="supabaseKey" placeholder="Your anon key" />
+    </div>
+
+    <button id="importBtn" onclick="importSongs()">Import all-songs.json</button>
+
+    <div id="progress" class="progress">
+      <div id="progressText">Ready to import...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    window.importSongs = async function() {
+      const supabaseUrl = document.getElementById('supabaseUrl').value.trim();
+      const supabaseKey = document.getElementById('supabaseKey').value.trim();
+      const progressDiv = document.getElementById('progress');
+      const progressText = document.getElementById('progressText');
+      const importBtn = document.getElementById('importBtn');
+
+      if (!supabaseUrl || !supabaseKey) {
+        alert('Please enter both Supabase URL and Anon Key');
+        return;
+      }
+
+      progressDiv.classList.add('show');
+      importBtn.disabled = true;
+      progressText.innerHTML = '<div class="info">📖 Loading all-songs.json...</div>';
+
+      try {
+        // Fetch the songs file
+        const response = await fetch('./all-songs.json');
+        const songs = await response.json();
+        progressText.innerHTML = `<div class="info">✅ Loaded ${songs.length} songs</div>`;
+
+        // Create Supabase client
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Transform songs to database format
+        const songsToInsert = songs.map(song => ({
+          title: song.title,
+          artist: song.artist,
+          thumbnail: song.thumbnail || null,
+          is_australian: song.isAustralian || false,
+        }));
+
+        // Import in chunks of 100
+        const chunkSize = 100;
+        let imported = 0;
+        let messages = [progressText.innerHTML];
+
+        messages.push('<div class="info">🚀 Starting import...</div>');
+        progressText.innerHTML = messages.join('');
+
+        for (let i = 0; i < songsToInsert.length; i += chunkSize) {
+          const chunk = songsToInsert.slice(i, i + chunkSize);
+
+          const { error } = await supabase
+            .from('songs')
+            .insert(chunk);
+
+          if (error) {
+            throw new Error(`Import failed: ${error.message}`);
+          }
+
+          imported += chunk.length;
+          messages.push(`<div class="info">✅ Imported ${imported}/${songsToInsert.length} songs...</div>`);
+          progressText.innerHTML = messages.join('');
+
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        messages.push('<div class="success">🎉 All songs imported successfully!</div>');
+        progressText.innerHTML = messages.join('');
+
+      } catch (error) {
+        progressText.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+        importBtn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>
