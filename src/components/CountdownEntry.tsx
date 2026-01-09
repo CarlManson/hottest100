@@ -88,54 +88,56 @@ export const CountdownEntry: React.FC = () => {
   const availableSongs = filteredSongs.filter((s) => !allAssignedSongIds.includes(s.id));
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <h2 className="text-3xl font-bold mb-6">Countdown Results</h2>
+    <div className="max-w-6xl mx-auto p-3 sm:p-6">
+      <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 hidden sm:block">Countdown Results</h2>
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex gap-2 mb-6">
+      <div className="bg-white rounded-lg shadow-md p-3 sm:p-6 mb-4 sm:mb-6">
+        <div className="flex gap-2 mb-4 sm:mb-6">
           <button
             onClick={() => setActiveTab('hottest100')}
-            className={`flex-1 py-3 rounded-lg font-semibold transition ${
+            className={`flex-1 py-2 sm:py-3 px-2 rounded-lg font-semibold transition text-xs sm:text-base ${
               activeTab === 'hottest100'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 hover:bg-gray-300'
             }`}
           >
-            Hottest 100 ({countdownResults.length}/100)
+            <span className="hidden sm:inline">Hottest 100 ({countdownResults.length}/100)</span>
+            <span className="sm:hidden">100 ({countdownResults.length}/100)</span>
           </button>
           <button
             onClick={() => setActiveTab('hottest200')}
-            className={`flex-1 py-3 rounded-lg font-semibold transition ${
+            className={`flex-1 py-2 sm:py-3 px-2 rounded-lg font-semibold transition text-xs sm:text-base ${
               activeTab === 'hottest200'
                 ? 'bg-purple-600 text-white'
                 : 'bg-gray-200 hover:bg-gray-300'
             }`}
           >
-            Hottest 200 (101-200) ({hottest200Results.length}/100)
+            <span className="hidden sm:inline">Hottest 200 (101-200) ({hottest200Results.length}/100)</span>
+            <span className="sm:hidden">200 ({hottest200Results.length}/100)</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <div>
-            <h3 className="text-xl font-semibold mb-4">Add Song</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Add Song</h3>
+            <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
               Click a song to add it to the countdown. Songs are added from position {maxPosition} down to {minPosition}.
             </p>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Search Song</label>
+            <div className="mb-3 sm:mb-4">
+              <label className="block text-xs sm:text-sm font-medium mb-2">Search Song</label>
               <input
                 type="text"
                 placeholder="Search songs..."
-                className="w-full p-3 border border-gray-300 rounded-lg"
+                className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
-            <div className="max-h-96 overflow-y-auto space-y-2">
+            <div className="max-h-96 overflow-y-auto space-y-1.5 sm:space-y-2">
               {availableSongs.length === 0 ? (
-                <p className="text-gray-500 text-sm">
+                <p className="text-gray-500 text-xs sm:text-sm">
                   {searchTerm ? 'No songs match your search' : 'All songs have been added'}
                 </p>
               ) : (
@@ -143,21 +145,21 @@ export const CountdownEntry: React.FC = () => {
                   <div
                     key={song.id}
                     onClick={() => handleAddResult(song.id)}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition"
+                    className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition"
                   >
                     {song.thumbnail && (
                       <img
                         src={song.thumbnail}
                         alt=""
-                        className="w-12 h-12 rounded object-cover flex-shrink-0"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm truncate">{song.title}</div>
-                      <div className="text-xs text-gray-600 flex items-center gap-1">
+                      <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                      <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                         <span className="truncate">{song.artist}</span>
                         {song.isAustralian && (
-                          <span className="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">
+                          <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                             AUS
                           </span>
                         )}
@@ -170,16 +172,16 @@ export const CountdownEntry: React.FC = () => {
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold mb-4">
+            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
               Current Results ({currentResults.length}/{maxPosition - minPosition + 1})
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
               Drag and drop to reorder the countdown
             </p>
             {currentResults.length === 0 ? (
-              <p className="text-gray-500">No results entered yet</p>
+              <p className="text-gray-500 text-xs sm:text-sm">No results entered yet</p>
             ) : (
-              <div className="max-h-96 overflow-y-auto space-y-2">
+              <div className="max-h-96 overflow-y-auto space-y-1.5 sm:space-y-2">
                 {[...currentResults]
                   .sort((a, b) => b.position - a.position)
                   .map((result, index) => {
@@ -192,25 +194,25 @@ export const CountdownEntry: React.FC = () => {
                         onDragStart={() => handleDragStart(index)}
                         onDragOver={handleDragOver}
                         onDrop={() => handleDrop(index)}
-                        className={`flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-move hover:bg-gray-100 transition ${
+                        className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg cursor-move hover:bg-gray-100 transition ${
                           draggedIndex === index ? 'opacity-50' : ''
                         }`}
                       >
-                        <div className="font-bold text-lg w-12">#{result.position}</div>
+                        <div className="font-bold text-sm sm:text-lg w-8 sm:w-12 flex-shrink-0">#{result.position}</div>
                         {song.thumbnail && (
                           <img
                             src={song.thumbnail}
                             alt={`${song.title} artwork`}
-                            className="w-12 h-12 rounded object-cover"
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
                           />
                         )}
-                        <div className="flex-1">
-                          <div className="font-semibold">{song.title}</div>
-                          <div className="text-sm text-gray-600">{song.artist}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                          <div className="text-[10px] sm:text-sm text-gray-600 truncate">{song.artist}</div>
                         </div>
                         <button
                           onClick={() => handleRemoveResult(result.position)}
-                          className="text-red-600 hover:text-red-800 px-2"
+                          className="text-red-600 hover:text-red-800 px-1 sm:px-2 text-lg sm:text-xl flex-shrink-0"
                         >
                           ✕
                         </button>
