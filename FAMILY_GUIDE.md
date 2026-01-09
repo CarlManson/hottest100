@@ -1,12 +1,14 @@
 # Triple J Hottest 100 Family Tracker - User Guide
 
+Welcome! This guide will help you and your family track predictions for the Triple J Hottest 100.
+
 ## Quick Start
 
 1. **Add Songs** - Import the eligible songs for this year's Hottest 100
 2. **Add Family Members** - Create profiles for everyone playing
-3. **Cast Votes** - Each person picks their top 10 songs
+3. **Cast Votes** - Each person picks their top 10 songs from any device
 4. **Enter Results** - As the countdown happens, enter the results
-5. **Check Leaderboard** - See who predicted best!
+5. **Check Leaderboard** - See who predicted best in real-time!
 
 ---
 
@@ -16,15 +18,15 @@
 
 **Option A: Import from JSON**
 1. Go to the "Manage Songs" tab
-2. Copy the contents of `sample-songs.json` or create your own list
-3. Paste into the import box
+2. Find this year's eligible songs (Triple J usually publishes a list)
+3. Format as JSON array or paste existing JSON
 4. Click "Import Songs"
 
 Example JSON format:
 ```json
 [
-  {"artist": "Billie Eilish", "title": "Birds of a Feather"},
-  {"artist": "Sabrina Carpenter", "title": "Espresso"}
+  {"artist": "Billie Eilish", "title": "Birds of a Feather", "thumbnail": "https://...", "isAustralian": false},
+  {"artist": "Sabrina Carpenter", "title": "Espresso", "thumbnail": "https://...", "isAustralian": false}
 ]
 ```
 
@@ -62,9 +64,11 @@ Sabrina Carpenter, Espresso
 7. Click a family member to switch between voters
 
 **Tips:**
-- You can vote on behalf of family members if they're not present
+- Everyone can vote from their own device (phone, tablet, laptop)
+- Changes save instantly and sync across all devices
 - Search is instant - just start typing
 - Reordering doesn't affect points (only whether the song makes the countdown)
+- You'll see other people's votes appear in real-time
 
 ### 4. Entering Countdown Results
 
@@ -113,23 +117,25 @@ Sabrina Carpenter, Espresso
 
 ## Data Management
 
-### Backup Your Data
+### Automatic Cloud Backup
+Your data is automatically saved to the cloud (Supabase) with:
+- Real-time syncing across all devices
+- Automatic daily backups (7-day retention)
+- No manual saving required!
+
+### Export Data (Optional)
 1. Go to "Manage Songs" tab
 2. Click "Export All Data"
 3. Save the JSON file somewhere safe
 4. This includes all songs, votes, and results
-
-### Restore Data
-1. Open your backup JSON file
-2. Copy the entire contents
-3. Paste into the "Import Songs" box
-4. All your data will be restored
+5. Useful for year-over-year comparisons
 
 ### Clear Everything
 1. Go to "Manage Songs" tab
 2. Click "Clear All Data"
 3. Click again to confirm
-4. **Warning:** This deletes everything permanently!
+4. **Warning:** This deletes everything from the database permanently!
+5. All connected devices will update instantly
 
 ---
 
@@ -150,13 +156,16 @@ A: Click the green checkmark to remove it, or select the correct person and add 
 A: Yes! Select their name and add/remove songs anytime before the countdown
 
 **Q: What if I close the browser?**
-A: All data is saved automatically in your browser's local storage
+A: All data is saved in the cloud - you can access it from any device anytime
 
 **Q: Can multiple people vote at the same time?**
-A: Not on the same browser. Each person can use their own device, or vote one at a time
+A: Yes! Everyone can vote from their own device simultaneously
 
 **Q: Someone picked the same song twice**
 A: Not possible - the app prevents duplicate selections per person
+
+**Q: Do I need to be online?**
+A: Yes, internet connection required for cloud sync and real-time updates
 
 ---
 
@@ -164,19 +173,22 @@ A: Not possible - the app prevents duplicate selections per person
 
 ### Browser Compatibility
 - Works on Chrome, Firefox, Safari, Edge
-- Mobile browsers supported
+- Mobile browsers fully supported (optimized UI)
 - Requires JavaScript enabled
+- Requires internet connection
 
 ### Data Storage
-- All data stored locally in browser
-- No server required
-- No internet needed after loading
-- Data persists until you clear browser data or use "Clear All Data"
+- Cloud database (Supabase PostgreSQL)
+- Real-time WebSocket connections
+- Automatic daily backups
+- Multi-device sync
+- Data persists forever (unless manually deleted)
 
 ### Privacy
-- Nothing is sent to any server
-- All processing happens in your browser
-- Your data stays on your device
+- Your data is stored in your own Supabase project
+- No analytics or tracking
+- No ads or external scripts
+- Only you and your family have access
 
 ---
 
