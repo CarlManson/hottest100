@@ -130,10 +130,9 @@ export const Leaderboard: React.FC = () => {
       <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="font-semibold mb-2">Scoring Rules:</h4>
         <ul className="text-sm text-gray-700 space-y-1">
-          <li>• Hottest 100: Position #100 = 101 points, #1 = 200 points</li>
-          <li>• Hottest 200 (101-200): Position #200 = 1 point, #101 = 100 points</li>
+          <li>• <strong>Before Hottest 200 is revealed:</strong> Hottest 100 songs score 1-100 points (Position #100 = 1 pt, #1 = 100 pts)</li>
+          <li>• <strong>After Hottest 200 is revealed:</strong> Hottest 100 scores 101-200 points (Position #100 = 101 pts, #1 = 200 pts), Hottest 200 scores 1-100 points (Position #200 = 1 pt, #101 = 100 pts)</li>
           <li>• Only songs that appear in the countdown earn points</li>
-          <li>• Your ranking of songs doesn't affect points (only whether they made the list)</li>
           <li>• Efficiency % = Your score vs the max possible score from top 10 songs currently in the countdown</li>
         </ul>
       </div>
