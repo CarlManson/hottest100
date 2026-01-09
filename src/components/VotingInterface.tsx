@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import type { FamilyMember } from '../types';
+import { LazyImage } from './LazyImage';
 
 export const VotingInterface: React.FC = () => {
   const { songs, familyMembers, addFamilyMember, updateFamilyMember, removeFamilyMember } = useApp();
@@ -136,9 +137,9 @@ export const VotingInterface: React.FC = () => {
                     }`}
                   >
                     {song.thumbnail && (
-                      <img
+                      <LazyImage
                         src={song.thumbnail}
-                        alt=""
+                        alt={`${song.title} artwork`}
                         className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
                       />
                     )}
@@ -179,9 +180,9 @@ export const VotingInterface: React.FC = () => {
                       className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
                     >
                       {song.thumbnail && (
-                        <img
+                        <LazyImage
                           src={song.thumbnail}
-                          alt=""
+                          alt={`${song.title} artwork`}
                           className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
                         />
                       )}
@@ -252,9 +253,9 @@ export const VotingInterface: React.FC = () => {
                               className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
                             >
                               {song.thumbnail && (
-                                <img
+                                <LazyImage
                                   src={song.thumbnail}
-                                  alt=""
+                                  alt={`${song.title} artwork`}
                                   className="w-10 h-10 rounded object-cover flex-shrink-0"
                                 />
                               )}
@@ -312,9 +313,9 @@ export const VotingInterface: React.FC = () => {
                           className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
                         >
                           {song.thumbnail && (
-                            <img
+                            <LazyImage
                               src={song.thumbnail}
-                              alt=""
+                              alt={`${song.title} artwork`}
                               className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
                             />
                           )}

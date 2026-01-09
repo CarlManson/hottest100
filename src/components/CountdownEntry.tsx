@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { LazyImage } from './LazyImage';
 
 export const CountdownEntry: React.FC = () => {
   const { songs, countdownResults, updateCountdownResults, hottest200Results, updateHottest200Results } = useApp();
@@ -148,9 +149,9 @@ export const CountdownEntry: React.FC = () => {
                     className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition"
                   >
                     {song.thumbnail && (
-                      <img
+                      <LazyImage
                         src={song.thumbnail}
-                        alt=""
+                        alt={`${song.title} artwork`}
                         className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
                       />
                     )}
@@ -200,7 +201,7 @@ export const CountdownEntry: React.FC = () => {
                       >
                         <div className="font-bold text-sm sm:text-lg w-8 sm:w-12 flex-shrink-0">#{result.position}</div>
                         {song.thumbnail && (
-                          <img
+                          <LazyImage
                             src={song.thumbnail}
                             alt={`${song.title} artwork`}
                             className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
