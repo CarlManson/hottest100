@@ -7,6 +7,7 @@ export const VotingInterface: React.FC = () => {
   const [newMemberName, setNewMemberName] = useState('');
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [expandedMember, setExpandedMember] = useState<string | null>(null);
 
   const handleAddMember = () => {
     if (!newMemberName.trim()) return;
@@ -59,23 +60,23 @@ export const VotingInterface: React.FC = () => {
   const selectedSongIds = selectedMember?.votes.map((v) => v.songId) || [];
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <h2 className="text-4xl font-black mb-6 text-gray-800">Family Voting</h2>
+    <div className="max-w-7xl mx-auto p-3 sm:p-6">
+      <h2 className="text-2xl sm:text-4xl font-black mb-4 sm:mb-6 text-gray-800">Family Voting</h2>
 
-      <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-2 border-orange-200">
-        <h3 className="text-2xl font-bold mb-4 text-gray-800">Family Members</h3>
-        <div className="flex gap-2 mb-4">
+      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-orange-200">
+        <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">Family Members</h3>
+        <div className="flex gap-2 mb-3 sm:mb-4">
           <input
             type="text"
             placeholder="Enter name"
-            className="flex-1 p-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none"
+            className="flex-1 p-2 sm:p-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-sm sm:text-base"
             value={newMemberName}
             onChange={(e) => setNewMemberName(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAddMember()}
           />
           <button
             onClick={handleAddMember}
-            className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition font-bold"
+            className="bg-orange-500 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-orange-600 transition font-bold text-sm sm:text-base whitespace-nowrap"
           >
             Add Member
           </button>
@@ -83,10 +84,10 @@ export const VotingInterface: React.FC = () => {
 
         <div className="flex flex-wrap gap-2">
           {familyMembers.map((member) => (
-            <div key={member.id} className="flex items-center gap-2">
+            <div key={member.id} className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => setSelectedMember(member)}
-                className={`px-4 py-2 rounded-lg transition font-bold ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition font-bold text-sm sm:text-base ${
                   selectedMember?.id === member.id
                     ? 'bg-orange-500 text-white shadow-md'
                     : 'bg-gray-200 hover:bg-gray-300'
@@ -101,7 +102,7 @@ export const VotingInterface: React.FC = () => {
                     setSelectedMember(null);
                   }
                 }}
-                className="text-red-600 hover:text-red-800 font-bold"
+                className="text-red-600 hover:text-red-800 font-bold text-lg sm:text-xl"
               >
                 ✕
               </button>
@@ -111,24 +112,24 @@ export const VotingInterface: React.FC = () => {
       </div>
 
       {selectedMember && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-semibold mb-4">Select Songs</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Select Songs</h3>
             <input
               type="text"
               placeholder="Search songs..."
-              className="w-full p-3 border border-gray-300 rounded-lg mb-4"
+              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg mb-3 sm:mb-4 text-sm sm:text-base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <div className="max-h-[600px] overflow-y-auto space-y-2">
+            <div className="max-h-[600px] overflow-y-auto space-y-1.5 sm:space-y-2">
               {filteredSongs.map((song) => {
                 const isSelected = selectedSongIds.includes(song.id);
                 return (
                   <div
                     key={song.id}
                     onClick={() => handleToggleSong(song.id)}
-                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition ${
+                    className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg cursor-pointer transition ${
                       isSelected
                         ? 'bg-green-50 border-2 border-green-500'
                         : 'bg-gray-50 hover:bg-gray-100'
@@ -138,22 +139,22 @@ export const VotingInterface: React.FC = () => {
                       <img
                         src={song.thumbnail}
                         alt=""
-                        className="w-12 h-12 rounded object-cover flex-shrink-0"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm truncate">{song.title}</div>
-                      <div className="text-xs text-gray-600 flex items-center gap-1">
+                      <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                      <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                         <span className="truncate">{song.artist}</span>
                         {song.isAustralian && (
-                          <span className="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">
+                          <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                             AUS
                           </span>
                         )}
                       </div>
                     </div>
                     {isSelected && (
-                      <span className="text-green-600 font-bold text-xl flex-shrink-0">✓</span>
+                      <span className="text-green-600 font-bold text-lg sm:text-xl flex-shrink-0">✓</span>
                     )}
                   </div>
                 );
@@ -161,35 +162,35 @@ export const VotingInterface: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-semibold mb-4">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
               {selectedMember.name}'s Top 10
             </h3>
             {selectedMember.votes.length === 0 ? (
-              <p className="text-gray-500">No votes yet</p>
+              <p className="text-gray-500 text-sm sm:text-base">No votes yet</p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1.5 sm:space-y-2">
                 {selectedMember.votes.map((vote) => {
                   const song = songs.find((s) => s.id === vote.songId);
                   if (!song) return null;
                   return (
                     <div
                       key={vote.songId}
-                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
                     >
                       {song.thumbnail && (
                         <img
                           src={song.thumbnail}
                           alt=""
-                          className="w-12 h-12 rounded object-cover flex-shrink-0"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm truncate">{song.title}</div>
-                        <div className="text-xs text-gray-600 flex items-center gap-1">
+                        <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                        <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                           <span className="truncate">{song.artist}</span>
                           {song.isAustralian && (
-                            <span className="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">
+                            <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                               AUS
                             </span>
                           )}
@@ -197,7 +198,7 @@ export const VotingInterface: React.FC = () => {
                       </div>
                       <button
                         onClick={() => handleToggleSong(vote.songId)}
-                        className="text-red-600 hover:text-red-800 px-2"
+                        className="text-red-600 hover:text-red-800 px-1 sm:px-2 text-lg sm:text-xl"
                       >
                         ✕
                       </button>
@@ -212,45 +213,117 @@ export const VotingInterface: React.FC = () => {
 
       {/* All Family Members' Votes */}
       {familyMembers.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-2xl font-bold mb-4 text-gray-800">Everyone's Votes</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mb-4 sm:mb-6">
+          <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">Everyone's Votes</h3>
+
+          {/* Mobile Accordion View */}
+          <div className="md:hidden space-y-2">
             {familyMembers.map((member) => (
               <div
                 key={member.id}
-                className="bg-white rounded-xl shadow-lg p-6 border-2 border-orange-200"
+                className="bg-white rounded-xl shadow-lg border-2 border-orange-200 overflow-hidden"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-xl font-bold text-gray-800">{member.name}</h4>
-                  <span className="bg-orange-500 text-white px-3 py-1 rounded-full font-bold text-sm">
+                <button
+                  onClick={() => setExpandedMember(expandedMember === member.id ? null : member.id)}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition"
+                >
+                  <h4 className="text-lg font-bold text-gray-800">{member.name}</h4>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-orange-500 text-white px-2.5 py-0.5 rounded-full font-bold text-xs">
+                      {member.votes.length}/10
+                    </span>
+                    <span className="text-gray-500 text-xl">
+                      {expandedMember === member.id ? '−' : '+'}
+                    </span>
+                  </div>
+                </button>
+                {expandedMember === member.id && (
+                  <div className="p-4 pt-0 border-t border-gray-100">
+                    {member.votes.length === 0 ? (
+                      <p className="text-gray-500 text-center py-4 text-sm">No votes yet</p>
+                    ) : (
+                      <div className="space-y-1.5 mb-3">
+                        {member.votes.map((vote) => {
+                          const song = songs.find((s) => s.id === vote.songId);
+                          if (!song) return null;
+                          return (
+                            <div
+                              key={vote.songId}
+                              className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg"
+                            >
+                              {song.thumbnail && (
+                                <img
+                                  src={song.thumbnail}
+                                  alt=""
+                                  className="w-10 h-10 rounded object-cover flex-shrink-0"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-xs truncate">{song.title}</div>
+                                <div className="text-[10px] text-gray-600 flex items-center gap-1">
+                                  <span className="truncate">{song.artist}</span>
+                                  {song.isAustralian && (
+                                    <span className="bg-orange-500 text-white text-[10px] font-bold px-1 py-0.5 rounded flex-shrink-0">
+                                      AUS
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setSelectedMember(member)}
+                      className="w-full bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition font-semibold text-sm"
+                    >
+                      Edit Votes
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Grid View */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {familyMembers.map((member) => (
+              <div
+                key={member.id}
+                className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200"
+              >
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <h4 className="text-lg sm:text-xl font-bold text-gray-800">{member.name}</h4>
+                  <span className="bg-orange-500 text-white px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full font-bold text-xs sm:text-sm">
                     {member.votes.length}/10
                   </span>
                 </div>
                 {member.votes.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No votes yet</p>
+                  <p className="text-gray-500 text-center py-6 sm:py-8 text-sm">No votes yet</p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     {member.votes.map((vote) => {
                       const song = songs.find((s) => s.id === vote.songId);
                       if (!song) return null;
                       return (
                         <div
                           key={vote.songId}
-                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                          className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
                         >
                           {song.thumbnail && (
                             <img
                               src={song.thumbnail}
                               alt=""
-                              className="w-12 h-12 rounded object-cover flex-shrink-0"
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
                             />
                           )}
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm truncate">{song.title}</div>
-                            <div className="text-xs text-gray-600 flex items-center gap-1">
+                            <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                            <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                               <span className="truncate">{song.artist}</span>
                               {song.isAustralian && (
-                                <span className="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">
+                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                                   AUS
                                 </span>
                               )}
@@ -263,7 +336,7 @@ export const VotingInterface: React.FC = () => {
                 )}
                 <button
                   onClick={() => setSelectedMember(member)}
-                  className="w-full mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition font-semibold"
+                  className="w-full mt-3 sm:mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition font-semibold text-sm sm:text-base"
                 >
                   Edit Votes
                 </button>

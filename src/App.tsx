@@ -19,6 +19,7 @@ function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'hottest100';
 
@@ -60,6 +61,7 @@ function App() {
     } else {
       setActiveTab(tab);
     }
+    setMobileMenuOpen(false); // Close mobile menu after tab selection
   };
 
   return (
@@ -74,8 +76,86 @@ function App() {
 
         {isAuthenticated && (
           <nav className="bg-white border-b-2 border-orange-300 shadow-md sticky top-0 z-10">
-            <div className="max-w-7xl mx-auto px-6">
-              <div className="flex gap-2 overflow-x-auto">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+              {/* Mobile Menu Button */}
+              <div className="md:hidden flex items-center justify-between py-3">
+                <span className="font-bold text-gray-800">
+                  {activeTab === 'dashboard' && 'Dashboard'}
+                  {activeTab === 'voting' && 'Family Votes'}
+                  {activeTab === 'countdown' && 'Countdown Results'}
+                  {activeTab === 'leaderboard' && 'Leaderboard'}
+                </span>
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition"
+                  aria-label="Toggle menu"
+                >
+                  <svg
+                    className="w-6 h-6 text-gray-700"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    {mobileMenuOpen ? (
+                      <path d="M6 18L18 6M6 6l12 12" />
+                    ) : (
+                      <path d="M4 6h16M4 12h16M4 18h16" />
+                    )}
+                  </svg>
+                </button>
+              </div>
+
+              {/* Mobile Dropdown Menu */}
+              {mobileMenuOpen && (
+                <div className="md:hidden border-t border-gray-200">
+                  <button
+                    onClick={() => handleTabClick('dashboard')}
+                    className={`w-full text-left px-4 py-3 font-bold transition ${
+                      activeTab === 'dashboard'
+                        ? 'bg-orange-500 text-white'
+                        : 'text-gray-700 hover:bg-orange-100'
+                    }`}
+                  >
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={() => handleTabClick('voting')}
+                    className={`w-full text-left px-4 py-3 font-bold transition ${
+                      activeTab === 'voting'
+                        ? 'bg-orange-500 text-white'
+                        : 'text-gray-700 hover:bg-orange-100'
+                    }`}
+                  >
+                    Family Votes
+                  </button>
+                  <button
+                    onClick={() => handleTabClick('countdown')}
+                    className={`w-full text-left px-4 py-3 font-bold transition ${
+                      activeTab === 'countdown'
+                        ? 'bg-orange-500 text-white'
+                        : 'text-gray-700 hover:bg-orange-100'
+                    }`}
+                  >
+                    Countdown Results
+                  </button>
+                  <button
+                    onClick={() => handleTabClick('leaderboard')}
+                    className={`w-full text-left px-4 py-3 font-bold transition ${
+                      activeTab === 'leaderboard'
+                        ? 'bg-orange-500 text-white'
+                        : 'text-gray-700 hover:bg-orange-100'
+                    }`}
+                  >
+                    Leaderboard
+                  </button>
+                </div>
+              )}
+
+              {/* Desktop Menu */}
+              <div className="hidden md:flex gap-2">
                 <button
                   onClick={() => handleTabClick('dashboard')}
                   className={`px-6 py-4 font-bold transition whitespace-nowrap rounded-t-lg ${
