@@ -23,13 +23,40 @@ function App() {
 
   const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'hottest100';
 
-  // Check for existing session cookie on mount
+  // Get tab from URL hash
+  const getTabFromHash = (): Tab => {
+    const hash = window.location.hash.slice(1);
+    const validTabs: Tab[] = ['home', 'dashboard', 'songs', 'voting', 'countdown', 'leaderboard'];
+    return validTabs.includes(hash as Tab) ? (hash as Tab) : 'home';
+  };
+
+  const updateHash = (tab: Tab) => {
+    window.location.hash = tab;
+  };
+
+  // Check for existing session cookie and set initial tab from URL
   useEffect(() => {
     const sessionCookie = Cookies.get('hottest100_session');
     if (sessionCookie === 'authenticated') {
       setIsAuthenticated(true);
+      const tabFromHash = getTabFromHash();
+      if (tabFromHash !== 'home') {
+        setActiveTab(tabFromHash);
+      }
     }
   }, []);
+
+  // Listen for hash changes (back/forward buttons)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const tab = getTabFromHash();
+      if (tab === 'home' || isAuthenticated) {
+        setActiveTab(tab);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [isAuthenticated]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +68,7 @@ function App() {
       setPassword('');
       setLoginError('');
       setActiveTab('dashboard');
+      updateHash('dashboard');
     } else {
       setLoginError('Incorrect password');
     }
@@ -51,15 +79,18 @@ function App() {
     // Remove session cookie
     Cookies.remove('hottest100_session');
     setActiveTab('home');
+    updateHash('home');
   };
 
   const handleTabClick = (tab: Tab) => {
     if (tab === 'home') {
       setActiveTab('home');
+      updateHash('home');
     } else if (!isAuthenticated) {
       setShowLoginModal(true);
     } else {
       setActiveTab(tab);
+      updateHash(tab);
     }
     setMobileMenuOpen(false); // Close mobile menu after tab selection
   };
