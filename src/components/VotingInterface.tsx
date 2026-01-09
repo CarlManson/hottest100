@@ -62,7 +62,7 @@ export const VotingInterface: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6">
-      <h2 className="text-2xl sm:text-4xl font-black mb-4 sm:mb-6 text-gray-800">Family Voting</h2>
+      <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 hidden sm:block">Family Voting</h2>
 
       <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-orange-200">
         <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">Family Members</h3>
