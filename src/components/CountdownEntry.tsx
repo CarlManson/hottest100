@@ -3,7 +3,10 @@ import { useApp } from '../context/AppContext';
 
 export const CountdownEntry: React.FC = () => {
   const { songs, countdownResults, updateCountdownResults, hottest200Results, updateHottest200Results } = useApp();
-  const [activeTab, setActiveTab] = useState<'hottest100' | 'hottest200'>('hottest100');
+
+  // Default to Hottest 200 tab if Hottest 100 is complete
+  const defaultTab = countdownResults.length === 100 ? 'hottest200' : 'hottest100';
+  const [activeTab, setActiveTab] = useState<'hottest100' | 'hottest200'>(defaultTab);
   const [searchTerm, setSearchTerm] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
@@ -45,6 +48,16 @@ export const CountdownEntry: React.FC = () => {
     updateResults(newResults);
   };
 
+  const handleClearAll = () => {
+    const countdownName = activeTab === 'hottest100' ? 'Hottest 100' : 'Hottest 200';
+    const confirmed = window.confirm(
+      `Are you sure you want to clear ALL ${currentResults.length} songs from the ${countdownName}? This cannot be undone.`
+    );
+    if (confirmed) {
+      updateResults([]);
+    }
+  };
+
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
   };
@@ -59,15 +72,20 @@ export const CountdownEntry: React.FC = () => {
       return;
     }
 
-    const sortedResults = [...currentResults].sort((a, b) => b.position - a.position);
+    const sortedResults = [...currentResults].sort((a, b) => a.position - b.position);
+
+    // Preserve the current position values
+    const currentPositions = sortedResults.map(r => r.position);
+
+    // Reorder the songs
     const draggedItem = sortedResults[draggedIndex];
     const newSortedResults = sortedResults.filter((_, i) => i !== draggedIndex);
     newSortedResults.splice(targetIndex, 0, draggedItem);
 
-    // Reassign positions based on new order
+    // Reassign the same position values to the reordered songs
     const updatedResults = newSortedResults.map((result, index) => ({
       ...result,
-      position: maxPosition - index
+      position: currentPositions[index]
     }));
 
     updateResults(updatedResults);
@@ -170,9 +188,19 @@ export const CountdownEntry: React.FC = () => {
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold mb-4">
-              Current Results ({currentResults.length}/{maxPosition - minPosition + 1})
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold">
+                Current Results ({currentResults.length}/{maxPosition - minPosition + 1})
+              </h3>
+              {currentResults.length > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  className="bg-red-500 text-white px-3 py-1.5 rounded-lg hover:bg-red-600 transition text-sm font-semibold"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
             <p className="text-sm text-gray-600 mb-4">
               Drag and drop to reorder the countdown
             </p>
@@ -181,7 +209,7 @@ export const CountdownEntry: React.FC = () => {
             ) : (
               <div className="max-h-96 overflow-y-auto space-y-2">
                 {[...currentResults]
-                  .sort((a, b) => b.position - a.position)
+                  .sort((a, b) => a.position - b.position)
                   .map((result, index) => {
                     const song = songs.find((s) => s.id === result.songId);
                     if (!song) return null;
