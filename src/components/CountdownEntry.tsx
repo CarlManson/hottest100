@@ -154,7 +154,7 @@ export const CountdownEntry: React.FC = () => {
               />
             </div>
 
-            <div className="max-h-96 overflow-y-auto space-y-1.5 sm:space-y-2">
+            <div className="max-h-48 sm:max-h-96 overflow-y-auto space-y-1.5 sm:space-y-2">
               {availableSongs.length === 0 ? (
                 <p className="text-gray-500 text-xs sm:text-sm">
                   {searchTerm ? 'No songs match your search' : 'All songs have been added'}
