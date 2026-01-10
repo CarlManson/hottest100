@@ -7,11 +7,12 @@ import { SongManager } from './components/SongManager';
 import { VotingInterface } from './components/VotingInterface';
 import { CountdownEntry } from './components/CountdownEntry';
 import { Leaderboard } from './components/Leaderboard';
+import { DetailedBreakdown } from './components/DetailedBreakdown';
 import logo from './assets/fairest-100-logo.png';
 import banner from './assets/banner-bg.jpg';
 import bannerRight from './assets/banner-right.png';
 
-type Tab = 'home' | 'dashboard' | 'songs' | 'voting' | 'countdown' | 'leaderboard';
+type Tab = 'home' | 'dashboard' | 'songs' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
@@ -26,7 +27,7 @@ function App() {
   // Get tab from URL hash
   const getTabFromHash = (): Tab => {
     const hash = window.location.hash.slice(1);
-    const validTabs: Tab[] = ['home', 'dashboard', 'songs', 'voting', 'countdown', 'leaderboard'];
+    const validTabs: Tab[] = ['home', 'dashboard', 'songs', 'voting', 'countdown', 'leaderboard', 'detailed-breakdown'];
     return validTabs.includes(hash as Tab) ? (hash as Tab) : 'home';
   };
 
@@ -243,6 +244,7 @@ function App() {
           {activeTab === 'voting' && isAuthenticated && <VotingInterface />}
           {activeTab === 'countdown' && isAuthenticated && <CountdownEntry />}
           {activeTab === 'leaderboard' && isAuthenticated && <Leaderboard />}
+          {activeTab === 'detailed-breakdown' && isAuthenticated && <DetailedBreakdown />}
         </main>
 
         {/* Login Modal */}

@@ -16,7 +16,15 @@ export const Leaderboard: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-6">
-      <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 hidden sm:block">Leaderboard</h2>
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-3xl font-bold hidden sm:block">Leaderboard</h2>
+        <a
+          href="#detailed-breakdown"
+          className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 underline inline-block mt-2"
+        >
+          View detailed vote breakdown →
+        </a>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="bg-white rounded-lg shadow-md p-3 sm:p-6">
