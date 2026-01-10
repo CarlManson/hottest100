@@ -1,11 +1,11 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { calculateLeaderboard } from '../utils/scoring';
+import { getLeaderboard } from '../utils/scoring';
 
 export const DetailedBreakdown: React.FC = () => {
   const { songs, familyMembers, countdownResults, hottest200Results } = useApp();
 
-  const leaderboard = calculateLeaderboard(familyMembers, [...countdownResults, ...hottest200Results], songs);
+  const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const allResults = [...countdownResults, ...hottest200Results];
 
   // Get score for a specific song
@@ -60,7 +60,7 @@ export const DetailedBreakdown: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {leaderboard.map((entry, index) => {
+              {leaderboard.map((entry: { member: { id: string; name: string; votes: { songId: string; rank: number }[] }; score: number }, index: number) => {
                 // Sort votes by rank to display in order
                 const sortedVotes = [...entry.member.votes].sort((a, b) => a.rank - b.rank);
 
