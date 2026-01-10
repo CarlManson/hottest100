@@ -99,44 +99,48 @@ function App() {
     <AppProvider>
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-purple-50">
         <header className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-lg" style={{ backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-          <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="max-w-7xl mx-auto px-6 py-6 relative">
             <img className="logo" src={logo} alt="Fairest 100 Logo" style={{ width: '100%', maxWidth: '25rem', height: 'auto' }} />
-            <img className="banner-right" src={bannerRight}  style={{ width: '25%', height: 'auto', position: 'absolute', top: '0', right: '0', transform: 'translateY(-25%)' }} />
+            {/* Banner right - hidden on mobile, shown on desktop */}
+            <img className="banner-right hidden sm:block" src={bannerRight}  style={{ width: '25%', height: 'auto', position: 'absolute', top: '0', right: '0', transform: 'translateY(-25%)' }} />
+            {/* Mobile menu button - shown on mobile when authenticated */}
+            {isAuthenticated && (
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="sm:hidden absolute top-4 right-4 p-2 rounded-lg bg-white/20 hover:bg-white/30 transition"
+                aria-label="Toggle menu"
+              >
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  {mobileMenuOpen ? (
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
+            )}
           </div>
         </header>
 
         {isAuthenticated && (
           <nav className="bg-white border-b-2 border-orange-300 shadow-md sticky top-0 z-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              {/* Mobile Menu Button */}
-              <div className="md:hidden flex items-center justify-between py-3">
+              {/* Mobile current tab label - hidden since menu is now in header */}
+              <div className="md:hidden py-3 text-center">
                 <span className="font-bold text-gray-800">
                   {activeTab === 'dashboard' && 'Dashboard'}
                   {activeTab === 'voting' && 'Family Votes'}
                   {activeTab === 'countdown' && 'Countdown Results'}
                   {activeTab === 'leaderboard' && 'Leaderboard'}
                 </span>
-                <button
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition"
-                  aria-label="Toggle menu"
-                >
-                  <svg
-                    className="w-6 h-6 text-gray-700"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    {mobileMenuOpen ? (
-                      <path d="M6 18L18 6M6 6l12 12" />
-                    ) : (
-                      <path d="M4 6h16M4 12h16M4 18h16" />
-                    )}
-                  </svg>
-                </button>
               </div>
 
               {/* Mobile Dropdown Menu */}
