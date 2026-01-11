@@ -56,83 +56,97 @@ export const PublicHome: React.FC = () => {
         }}
       >
         <div className="absolute inset-0 bg-black/30"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 text-center text-white">
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black mb-4 drop-shadow-lg">
-            {hasHottest200Started ? 'Triple J Hottest 200 Tracker' : 'Triple J Hottest 100 Tracker'}
-          </h1>
-          <p className="text-lg sm:text-2xl font-semibold mb-8 drop-shadow-md">
-            {totalResults === 0
-              ? 'Predictions are in! Let the countdown begin...'
-              : hasHottest200Started
-              ? `${hottest200Results.length} songs revealed • ${familyMembers.length} competitors`
-              : `${countdownResults.length} songs revealed • ${familyMembers.length} competitors`}
-          </p>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            {/* Title and Progress */}
+            <div className="text-center lg:text-left text-white">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black mb-4 drop-shadow-lg">
+                {hasHottest200Started ? 'Triple J Hottest 200 Tracker' : 'Triple J Hottest 100 Tracker'}
+              </h1>
+              <p className="text-lg sm:text-2xl font-semibold mb-8 drop-shadow-md">
+                {totalResults === 0
+                  ? 'Predictions are in! Let the countdown begin...'
+                  : hasHottest200Started
+                  ? `${hottest200Results.length} songs revealed • ${familyMembers.length} competitors`
+                  : `${countdownResults.length} songs revealed • ${familyMembers.length} competitors`}
+              </p>
 
-          {/* Progress Bar */}
-          {totalResults > 0 && (
-            <div className="max-w-2xl mx-auto">
-              <div className="bg-white/20 backdrop-blur-sm rounded-full h-8 overflow-hidden border-2 border-white/40">
+              {/* Progress Bar */}
+              {totalResults > 0 && (
+                <div className="max-w-2xl lg:max-w-none">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full h-8 overflow-hidden border-2 border-white/40">
+                    <div
+                      className="bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 h-full flex items-center justify-center font-black text-white text-sm transition-all"
+                      style={{
+                        width: hasHottest200Started
+                          ? `${(hottest200Results.length / 100) * 100}%`
+                          : `${(countdownResults.length / 100) * 100}%`
+                      }}
+                    >
+                      {hasHottest200Started
+                        ? hottest200Results.length > 10 && `${hottest200Results.length}/100`
+                        : countdownResults.length > 10 && `${countdownResults.length}/100`}
+                    </div>
+                  </div>
+                  <p className="text-white/90 text-sm mt-2 font-semibold">
+                    Hottest 100: {countdownResults.length}/100 revealed
+                    {hottest200Results.length > 0 && ` • Hottest 200: ${hottest200Results.length}/100`}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* #1 Song Card - Only when available and Hottest 200 NOT started */}
+            {numberOneSong && numberOneSongData && !hasHottest200Started && (
+              <div className="flex justify-center lg:justify-end">
                 <div
-                  className="bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 h-full flex items-center justify-center font-black text-white text-sm transition-all"
+                  className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden transform transition-all hover:scale-105 hover:shadow-3xl"
                   style={{
-                    width: hasHottest200Started
-                      ? `${(hottest200Results.length / 100) * 100}%`
-                      : `${(countdownResults.length / 100) * 100}%`
+                    backgroundImage: numberOneSongData.thumbnail
+                      ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${numberOneSongData.thumbnail})`
+                      : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                   }}
                 >
-                  {hasHottest200Started
-                    ? hottest200Results.length > 10 && `${hottest200Results.length}/100`
-                    : countdownResults.length > 10 && `${countdownResults.length}/100`}
+                  {/* Crown Badge - Top Left */}
+                  <div className="absolute top-4 left-4 text-5xl sm:text-6xl drop-shadow-xl">
+                    👑
+                  </div>
+
+                  {/* #1 Badge - Top Right */}
+                  <div className="absolute top-4 right-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black text-4xl sm:text-5xl w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-xl border-4 border-white">
+                    1
+                  </div>
+
+                  {/* Song Info - Bottom Overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 sm:p-8">
+                    <div className="text-white">
+                      <div className="text-xs sm:text-sm font-bold text-yellow-400 mb-2 uppercase tracking-wider">
+                        #1 Song of 2025
+                      </div>
+                      <h3 className="text-2xl sm:text-3xl font-black mb-2 leading-tight">
+                        {numberOneSongData.title}
+                      </h3>
+                      <p className="text-lg sm:text-xl font-semibold text-gray-200 flex items-center gap-2">
+                        {numberOneSongData.artist}
+                        {numberOneSongData.isAustralian && (
+                          <span className="text-sm bg-orange-500 px-2 py-0.5 rounded-full">🦘</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Decorative corner accent */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent"></div>
                 </div>
               </div>
-              <p className="text-white/90 text-sm mt-2 font-semibold">
-                Hottest 100: {countdownResults.length}/100 revealed
-                {hottest200Results.length > 0 && ` • Hottest 200: ${hottest200Results.length}/100`}
-              </p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
-        {/* #1 Song Feature - When available and Hottest 200 NOT started */}
-        {numberOneSong && numberOneSongData && !hasHottest200Started && (
-          <div className="mb-12">
-            <div className="bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 rounded-xl shadow-xl p-6 sm:p-8 border-4 border-yellow-400">
-              <div className="text-center mb-4">
-                <div className="text-4xl sm:text-6xl mb-2">👑</div>
-                <h2 className="text-2xl sm:text-4xl font-black text-gray-800">
-                  #1 Song of 2025
-                </h2>
-              </div>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                {numberOneSongData.thumbnail && (
-                  <img
-                    src={numberOneSongData.thumbnail}
-                    alt={numberOneSongData.title}
-                    className="w-40 h-40 sm:w-48 sm:h-48 rounded-lg shadow-2xl object-cover"
-                  />
-                )}
-                <div className="text-center sm:text-left">
-                  <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
-                    {numberOneSongData.title}
-                  </h3>
-                  <p className="text-xl sm:text-2xl text-gray-700 font-semibold">
-                    {numberOneSongData.artist}
-                  </p>
-                  {numberOneSongData.isAustralian && (
-                    <div className="mt-3">
-                      <span className="bg-orange-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">
-                        🦘 AUSTRALIAN ARTIST
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Current Highest Song Card + Countdown Progress - Side by side on md+ */}
         {currentHighestResult && currentHighestSong && totalResults > 0 && (
           <div className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-6">
