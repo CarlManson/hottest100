@@ -123,7 +123,7 @@ export const VotingInterface: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <div className="max-h-[600px] overflow-y-auto space-y-1.5 sm:space-y-2">
+            <div className="max-h-48 sm:max-h-[600px] overflow-y-auto space-y-1.5 sm:space-y-2">
               {filteredSongs.map((song) => {
                 const isSelected = selectedSongIds.includes(song.id);
                 return (
@@ -163,8 +163,8 @@ export const VotingInterface: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
+          <div className="bg-gray-900 rounded-lg shadow-md p-4 sm:p-6">
+            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-white">
               {selectedMember.name}'s Top 10
             </h3>
             {selectedMember.votes.length === 0 ? (
@@ -177,7 +177,7 @@ export const VotingInterface: React.FC = () => {
                   return (
                     <div
                       key={vote.songId}
-                      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition"
                     >
                       {song.thumbnail && (
                         <LazyImage
@@ -187,8 +187,8 @@ export const VotingInterface: React.FC = () => {
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
-                        <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
+                        <div className="font-semibold text-xs sm:text-sm truncate text-white">{song.title}</div>
+                        <div className="text-[10px] sm:text-xs text-gray-400 flex items-center gap-1">
                           <span className="truncate">{song.artist}</span>
                           {song.isAustralian && (
                             <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
@@ -199,7 +199,7 @@ export const VotingInterface: React.FC = () => {
                       </div>
                       <button
                         onClick={() => handleToggleSong(vote.songId)}
-                        className="text-red-600 hover:text-red-800 px-1 sm:px-2 text-lg sm:text-xl"
+                        className="text-red-400 hover:text-red-300 px-1 sm:px-2 text-lg sm:text-xl"
                       >
                         ✕
                       </button>
