@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
+import { calculateAwards } from '../utils/awards';
 
 export const PublicHome: React.FC = () => {
   const { familyMembers, countdownResults, hottest200Results, songs } = useApp();
@@ -8,6 +9,10 @@ export const PublicHome: React.FC = () => {
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
+
+  // Calculate awards when Hottest 100 is complete
+  const awards = calculateAwards(familyMembers, songs, countdownResults);
+  const isHottest100Complete = countdownResults.length === 100;
 
   // Determine which results to show in "Latest Entries" and "Featured Song"
   // If Hottest 200 has started, show only those. Otherwise show Hottest 100
@@ -53,6 +58,43 @@ export const PublicHome: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Awards Section - Show when Hottest 100 is complete */}
+      {isHottest100Complete && awards.length > 0 && (
+        <div className="mb-6 sm:mb-8">
+          <div className="bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 rounded-xl shadow-lg p-4 sm:p-6 border-2 border-yellow-400">
+            <h3 className="text-xl sm:text-3xl font-black mb-4 sm:mb-6 text-gray-800 text-center">
+              🏆 Hottest 100 Awards 🏆
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {awards.map((award) => (
+                <div
+                  key={award.id}
+                  className="bg-white rounded-lg p-3 sm:p-4 shadow-md border-2 border-yellow-300 hover:border-yellow-400 transition"
+                >
+                  <div className="text-center">
+                    <div className="text-3xl sm:text-4xl mb-2">{award.emoji}</div>
+                    <h4 className="font-black text-base sm:text-lg text-gray-800 mb-1">
+                      {award.title}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-gray-600 mb-2">
+                      {award.description}
+                    </p>
+                    <div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold text-sm sm:text-base py-1.5 sm:py-2 px-3 rounded-full inline-block mb-1">
+                      {award.winnerName}
+                    </div>
+                    {award.details && (
+                      <p className="text-[10px] sm:text-xs text-gray-500 mt-1 italic">
+                        {award.details}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Countdown Progress */}
