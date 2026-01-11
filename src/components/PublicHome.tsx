@@ -24,13 +24,23 @@ export const PublicHome: React.FC = () => {
   const numberOneSong = countdownResults.find(r => r.position === 1);
   const numberOneSongData = numberOneSong ? songs.find(s => s.id === numberOneSong.songId) : null;
 
-  // Get current highest song (lowest position number revealed)
-  const currentHighestResult = [...countdownResults, ...hottest200Results]
-    .sort((a, b) => a.position - b.position)[0];
+  // Determine which countdown to feature
+  const hasHottest200Started = hottest200Results.length > 0;
+
+  // Get current highest song from active countdown
+  let currentHighestResult;
+  if (hasHottest200Started) {
+    // Show highest from Hottest 200 (101-200)
+    currentHighestResult = [...hottest200Results].sort((a, b) => a.position - b.position)[0];
+  } else {
+    // Show highest from Hottest 100, but not if #1 is revealed
+    if (!numberOneSong) {
+      currentHighestResult = [...countdownResults].sort((a, b) => a.position - b.position)[0];
+    }
+  }
   const currentHighestSong = currentHighestResult ? songs.find(s => s.id === currentHighestResult.songId) : null;
 
   // For countdown progress widget
-  const hasHottest200Started = hottest200Results.length > 0;
   const displayResults = hasHottest200Started ? hottest200Results : countdownResults;
   const recentResults = [...displayResults].sort((a, b) => a.position - b.position);
 
@@ -115,8 +125,8 @@ export const PublicHome: React.FC = () => {
           </div>
         )}
 
-        {/* Current Highest Song Card */}
-        {currentHighestResult && currentHighestSong && !isHottest100Complete && !numberOneSong && (
+        {/* Current Highest Song Card - Shows for Hottest 100 (before #1) or Hottest 200 */}
+        {currentHighestResult && currentHighestSong && (
           <div className="mb-12 flex justify-center">
             <div
               className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl"
@@ -332,8 +342,8 @@ export const PublicHome: React.FC = () => {
           </div>
         )}
 
-        {/* Awards Section - Prominent when countdown complete */}
-        {isHottest100Complete && awards.length > 0 && (
+        {/* Awards Section - Only show when Hottest 100 complete and Hottest 200 NOT started */}
+        {isHottest100Complete && awards.length > 0 && !hasHottest200Started && (
           <div className="mb-12">
             <div className="text-center mb-6">
               <h2 className="text-2xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-yellow-600 via-orange-600 to-pink-600 bg-clip-text text-transparent">
