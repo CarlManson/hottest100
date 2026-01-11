@@ -58,7 +58,7 @@ export const PublicHome: React.FC = () => {
         <div className="absolute inset-0 bg-black/30"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 text-center text-white">
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black mb-4 drop-shadow-lg">
-            {hasHottest200Started ? 'Family Hottest 200 Tracker' : 'Family Hottest 100 Tracker'}
+            {hasHottest200Started ? 'Triple J Hottest 200 Tracker' : 'Triple J Hottest 100 Tracker'}
           </h1>
           <p className="text-lg sm:text-2xl font-semibold mb-8 drop-shadow-md">
             {totalResults === 0
