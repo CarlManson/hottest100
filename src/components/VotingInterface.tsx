@@ -9,6 +9,8 @@ export const VotingInterface: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedMember, setExpandedMember] = useState<string | null>(null);
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
 
   const handleAddMember = () => {
     if (!newMemberName.trim()) return;
@@ -21,6 +23,43 @@ export const VotingInterface: React.FC = () => {
 
     addFamilyMember(newMember);
     setNewMemberName('');
+  };
+
+  const handleStartEdit = (member: FamilyMember) => {
+    setEditingMemberId(member.id);
+    setEditingName(member.name);
+  };
+
+  const handleSaveEdit = (member: FamilyMember) => {
+    if (editingName.trim() && editingName !== member.name) {
+      const updatedMember = {
+        ...member,
+        name: editingName.trim(),
+      };
+      updateFamilyMember(updatedMember);
+      if (selectedMember?.id === member.id) {
+        setSelectedMember(updatedMember);
+      }
+    }
+    setEditingMemberId(null);
+    setEditingName('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMemberId(null);
+    setEditingName('');
+  };
+
+  const handleDeleteMember = (member: FamilyMember) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${member.name}? This will remove all their votes.`
+    );
+    if (confirmed) {
+      removeFamilyMember(member.id);
+      if (selectedMember?.id === member.id) {
+        setSelectedMember(null);
+      }
+    }
   };
 
   const handleToggleSong = (songId: string) => {
@@ -86,27 +125,62 @@ export const VotingInterface: React.FC = () => {
         <div className="flex flex-wrap gap-2">
           {familyMembers.map((member) => (
             <div key={member.id} className="flex items-center gap-1 sm:gap-2">
-              <button
-                onClick={() => setSelectedMember(member)}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition font-bold text-sm sm:text-base ${
-                  selectedMember?.id === member.id
-                    ? 'bg-orange-500 text-white shadow-md'
-                    : 'bg-gray-200 hover:bg-gray-300'
-                }`}
-              >
-                {member.name} ({member.votes.length}/10)
-              </button>
-              <button
-                onClick={() => {
-                  removeFamilyMember(member.id);
-                  if (selectedMember?.id === member.id) {
-                    setSelectedMember(null);
-                  }
-                }}
-                className="text-red-600 hover:text-red-800 font-bold text-lg sm:text-xl"
-              >
-                ✕
-              </button>
+              {editingMemberId === member.id ? (
+                <>
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') handleSaveEdit(member);
+                      if (e.key === 'Escape') handleCancelEdit();
+                    }}
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-orange-500 rounded-lg focus:outline-none text-sm sm:text-base font-bold"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => handleSaveEdit(member)}
+                    className="text-green-600 hover:text-green-800 font-bold text-lg sm:text-xl"
+                    title="Save"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="text-gray-600 hover:text-gray-800 font-bold text-lg sm:text-xl"
+                    title="Cancel"
+                  >
+                    ✕
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setSelectedMember(member)}
+                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition font-bold text-sm sm:text-base ${
+                      selectedMember?.id === member.id
+                        ? 'bg-orange-500 text-white shadow-md'
+                        : 'bg-gray-200 hover:bg-gray-300'
+                    }`}
+                  >
+                    {member.name} ({member.votes.length}/10)
+                  </button>
+                  <button
+                    onClick={() => handleStartEdit(member)}
+                    className="text-blue-600 hover:text-blue-800 font-bold text-sm sm:text-base"
+                    title="Rename"
+                  >
+                    ✎
+                  </button>
+                  <button
+                    onClick={() => handleDeleteMember(member)}
+                    className="text-red-600 hover:text-red-800 font-bold text-lg sm:text-xl"
+                    title="Delete"
+                  >
+                    ✕
+                  </button>
+                </>
+              )}
             </div>
           ))}
         </div>
