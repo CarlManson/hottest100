@@ -29,6 +29,11 @@ export const PublicHome: React.FC = () => {
     .sort((a, b) => a.position - b.position)[0];
   const currentHighestSong = currentHighestResult ? songs.find(s => s.id === currentHighestResult.songId) : null;
 
+  // For countdown progress widget
+  const hasHottest200Started = hottest200Results.length > 0;
+  const displayResults = hasHottest200Started ? hottest200Results : countdownResults;
+  const recentResults = [...displayResults].sort((a, b) => a.position - b.position);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section with Banner Background */}
@@ -110,6 +115,84 @@ export const PublicHome: React.FC = () => {
 
               {/* Decorative corner accent */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent"></div>
+            </div>
+          </div>
+        )}
+
+        {/* Countdown Progress Widget */}
+        {totalResults > 0 && (
+          <div className="mb-12">
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200">
+              <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                📊 Countdown Progress
+              </h3>
+
+              <div className="mb-4">
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="font-semibold text-gray-700">
+                    {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
+                  </span>
+                  <span className="text-gray-600">
+                    {hasHottest200Started
+                      ? `${totalResults}/200 songs`
+                      : `${countdownResults.length}/100 songs`
+                    }
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div
+                    className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
+                    style={{
+                      width: hasHottest200Started
+                        ? `${(totalResults / 200) * 100}%`
+                        : `${(countdownResults.length / 100) * 100}%`
+                    }}
+                  />
+                </div>
+              </div>
+
+              {recentResults.length > 0 && (
+                <div>
+                  <div className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                    {hasHottest200Started ? 'Latest Entries (Hottest 200)' : 'Latest Entries'}
+                  </div>
+                  <div className="max-h-80 overflow-y-auto space-y-1.5 sm:space-y-2 pr-2">
+                    {recentResults.map((result) => {
+                      const song = songs.find(s => s.id === result.songId);
+                      if (!song) return null;
+
+                      return (
+                        <div
+                          key={result.position}
+                          className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
+                        >
+                          {song.thumbnail && (
+                            <img
+                              src={song.thumbnail}
+                              alt=""
+                              className="w-8 h-8 sm:w-10 sm:h-10 rounded object-cover flex-shrink-0"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                            <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
+                              <span className="truncate">{song.artist}</span>
+                              {song.isAustralian && (
+                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                  AUS
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="font-bold text-orange-600 text-sm sm:text-lg flex-shrink-0">
+                            #{result.position}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
