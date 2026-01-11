@@ -98,17 +98,19 @@ function App() {
   return (
     <AppProvider>
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-purple-50">
-        <header className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-lg" style={{ backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        <header
+          className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-lg header-with-banner"
+          style={{ '--banner-image': `url(${banner})` } as React.CSSProperties}
+        >
           <div className="max-w-7xl mx-auto px-6 py-6 relative">
             <img
               className="logo cursor-pointer"
               src={logo}
               alt="Fairest 100 Logo"
-              style={{ width: 'calc(100% - 60px)', maxWidth: '25rem', height: 'auto' }}
               onClick={() => handleTabClick('home')}
             />
             {/* Banner right - hidden on mobile, shown on desktop */}
-            <img className="banner-right hidden md:block" src={bannerRight}  style={{ width: '25%', height: 'auto', position: 'absolute', top: '0', right: '0', transform: 'translateY(-25%)' }} />
+            <img className="banner-right hidden md:block" src={bannerRight} alt="Banner decoration" />
             {/* Mobile menu button - shown on mobile when authenticated */}
             {isAuthenticated && (
               <button

@@ -48,12 +48,8 @@ export const PublicHome: React.FC = () => {
     <div className="min-h-screen">
       {/* Hero Section with Banner Background */}
       <div
-        className="relative bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 py-12 sm:py-20 mb-8"
-        style={{
-          backgroundImage: `url(${banner})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+        className="relative bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 py-12 sm:py-20 mb-8 full-banner-background"
+        style={{ '--banner-image': `url(${banner})` } as React.CSSProperties}
       >
         <div className="absolute inset-0 bg-black/30"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
@@ -100,13 +96,11 @@ export const PublicHome: React.FC = () => {
             {numberOneSong && numberOneSongData && !hasHottest200Started && (
               <div className="flex justify-center lg:justify-end">
                 <div
-                  className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden transform transition-all hover:scale-105 hover:shadow-3xl"
+                  className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
                   style={{
                     backgroundImage: numberOneSongData.thumbnail
                       ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${numberOneSongData.thumbnail})`
                       : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
                   }}
                 >
                   {/* Crown Badge - Top Left */}
@@ -153,13 +147,11 @@ export const PublicHome: React.FC = () => {
             {/* Current Highest Song Card */}
             <div className="flex justify-center md:justify-start">
               <div
-                className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl"
+                className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
                 style={{
                   backgroundImage: currentHighestSong.thumbnail
                     ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${currentHighestSong.thumbnail})`
                     : 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
                 }}
               >
                 {/* Rank Badge - Top Left */}
@@ -270,13 +262,11 @@ export const PublicHome: React.FC = () => {
         {currentHighestResult && currentHighestSong && totalResults === 0 && (
           <div className="mb-12 flex justify-center">
             <div
-              className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl"
+              className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
               style={{
                 backgroundImage: currentHighestSong.thumbnail
                   ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${currentHighestSong.thumbnail})`
                   : 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
               }}
             >
               {/* Rank Badge - Top Left */}
@@ -326,7 +316,7 @@ export const PublicHome: React.FC = () => {
                 <div className="flex items-end justify-center gap-4 sm:gap-8">
                   {/* 2nd Place */}
                   {topThree[1] && (
-                    <div className="flex flex-col items-center" style={{ width: '30%' }}>
+                    <div className="flex flex-col items-center podium-second">
                       <div className="text-4xl sm:text-6xl mb-2">🥈</div>
                       <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
                         {topThree[1].member.name}
@@ -345,7 +335,7 @@ export const PublicHome: React.FC = () => {
                       <div className="text-2xl sm:text-4xl font-black text-gray-400 mt-2">
                         {topThree[1].score}
                       </div>
-                      <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg" style={{ height: '120px' }}>
+                      <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg podium-base-second">
                         <div className="text-white font-black text-3xl sm:text-5xl pt-6 text-center">2</div>
                       </div>
                     </div>
@@ -353,7 +343,7 @@ export const PublicHome: React.FC = () => {
 
                   {/* 1st Place */}
                   {topThree[0] && (
-                    <div className="flex flex-col items-center" style={{ width: '35%' }}>
+                    <div className="flex flex-col items-center podium-first">
                       <div className="text-5xl sm:text-7xl mb-2">🥇</div>
                       <div className="font-bold text-base sm:text-xl text-gray-800 truncate w-full text-center">
                         {topThree[0].member.name}
@@ -372,7 +362,7 @@ export const PublicHome: React.FC = () => {
                       <div className="text-3xl sm:text-5xl font-black text-yellow-600 mt-2">
                         {topThree[0].score}
                       </div>
-                      <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl" style={{ height: '160px' }}>
+                      <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl podium-base-first">
                         <div className="text-white font-black text-4xl sm:text-6xl pt-8 text-center drop-shadow-lg">1</div>
                       </div>
                     </div>
@@ -380,7 +370,7 @@ export const PublicHome: React.FC = () => {
 
                   {/* 3rd Place */}
                   {topThree[2] && (
-                    <div className="flex flex-col items-center" style={{ width: '30%' }}>
+                    <div className="flex flex-col items-center podium-third">
                       <div className="text-4xl sm:text-6xl mb-2">🥉</div>
                       <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
                         {topThree[2].member.name}
@@ -399,7 +389,7 @@ export const PublicHome: React.FC = () => {
                       <div className="text-2xl sm:text-4xl font-black text-orange-600 mt-2">
                         {topThree[2].score}
                       </div>
-                      <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg" style={{ height: '90px' }}>
+                      <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg podium-base-third-short">
                         <div className="text-white font-black text-3xl sm:text-5xl pt-4 text-center">3</div>
                       </div>
                     </div>
@@ -492,7 +482,7 @@ export const PublicHome: React.FC = () => {
                 <div className="flex items-end justify-center gap-4 sm:gap-8 mb-8">
                   {/* 2nd Place */}
                   {topThree[1] && (
-                    <div className="flex flex-col items-center" style={{ width: '30%' }}>
+                    <div className="flex flex-col items-center podium-second">
                       <div className="text-4xl sm:text-6xl mb-2">🥈</div>
                       <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
                         {topThree[1].member.name}
@@ -511,7 +501,7 @@ export const PublicHome: React.FC = () => {
                       <div className="text-2xl sm:text-4xl font-black text-gray-400 mt-2">
                         {topThree[1].score}
                       </div>
-                      <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg" style={{ height: '120px' }}>
+                      <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg podium-base-second">
                         <div className="text-white font-black text-3xl sm:text-5xl pt-6 text-center">2</div>
                       </div>
                     </div>
@@ -519,7 +509,7 @@ export const PublicHome: React.FC = () => {
 
                   {/* 1st Place */}
                   {topThree[0] && (
-                    <div className="flex flex-col items-center" style={{ width: '35%' }}>
+                    <div className="flex flex-col items-center podium-first">
                       <div className="text-5xl sm:text-7xl mb-2">🥇</div>
                       <div className="font-bold text-base sm:text-xl text-gray-800 truncate w-full text-center">
                         {topThree[0].member.name}
@@ -538,7 +528,7 @@ export const PublicHome: React.FC = () => {
                       <div className="text-3xl sm:text-5xl font-black text-yellow-600 mt-2">
                         {topThree[0].score}
                       </div>
-                      <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl" style={{ height: '160px' }}>
+                      <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl podium-base-first">
                         <div className="text-white font-black text-4xl sm:text-6xl pt-8 text-center drop-shadow-lg">1</div>
                       </div>
                     </div>
@@ -546,7 +536,7 @@ export const PublicHome: React.FC = () => {
 
                   {/* 3rd Place */}
                   {topThree[2] && (
-                    <div className="flex flex-col items-center" style={{ width: '30%' }}>
+                    <div className="flex flex-col items-center podium-third">
                       <div className="text-4xl sm:text-6xl mb-2">🥉</div>
                       <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
                         {topThree[2].member.name}
@@ -565,7 +555,7 @@ export const PublicHome: React.FC = () => {
                       <div className="text-2xl sm:text-4xl font-black text-orange-600 mt-2">
                         {topThree[2].score}
                       </div>
-                      <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg" style={{ height: '90px' }}>
+                      <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg podium-base-third-short">
                         <div className="text-white font-black text-3xl sm:text-5xl pt-4 text-center">3</div>
                       </div>
                     </div>

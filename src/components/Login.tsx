@@ -29,12 +29,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="min-h-screen flex items-center justify-center">
       {/* Background */}
       <div
-        className="absolute inset-0 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500"
-        style={{
-          backgroundImage: `url(${banner})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+        className="absolute inset-0 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 full-banner-background"
+        style={{ '--banner-image': `url(${banner})` } as React.CSSProperties}
       >
         <div className="absolute inset-0 bg-black/40"></div>
       </div>
