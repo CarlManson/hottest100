@@ -24,6 +24,11 @@ export const PublicHome: React.FC = () => {
   const numberOneSong = countdownResults.find(r => r.position === 1);
   const numberOneSongData = numberOneSong ? songs.find(s => s.id === numberOneSong.songId) : null;
 
+  // Get current highest song (lowest position number revealed)
+  const currentHighestResult = [...countdownResults, ...hottest200Results]
+    .sort((a, b) => a.position - b.position)[0];
+  const currentHighestSong = currentHighestResult ? songs.find(s => s.id === currentHighestResult.songId) : null;
+
   return (
     <div className="min-h-screen">
       {/* Hero Section with Banner Background */}
@@ -67,6 +72,48 @@ export const PublicHome: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+        {/* Current Highest Song Card */}
+        {currentHighestResult && currentHighestSong && !isHottest100Complete && (
+          <div className="mb-12 flex justify-center">
+            <div
+              className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl"
+              style={{
+                backgroundImage: currentHighestSong.thumbnail
+                  ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${currentHighestSong.thumbnail})`
+                  : 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
+              {/* Rank Badge - Top Left */}
+              <div className="absolute top-4 left-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black text-4xl sm:text-5xl w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-xl border-4 border-white">
+                {currentHighestResult.position}
+              </div>
+
+              {/* Song Info - Bottom Overlay */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 sm:p-8">
+                <div className="text-white">
+                  <div className="text-xs sm:text-sm font-bold text-orange-400 mb-2 uppercase tracking-wider">
+                    Current Highest Song
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-black mb-2 leading-tight">
+                    {currentHighestSong.title}
+                  </h3>
+                  <p className="text-lg sm:text-xl font-semibold text-gray-200 flex items-center gap-2">
+                    {currentHighestSong.artist}
+                    {currentHighestSong.isAustralian && (
+                      <span className="text-sm bg-orange-500 px-2 py-0.5 rounded-full">🦘</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Decorative corner accent */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent"></div>
+            </div>
+          </div>
+        )}
+
         {/* Awards Section - Prominent when countdown complete */}
         {isHottest100Complete && awards.length > 0 && (
           <div className="mb-12">
