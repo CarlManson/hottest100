@@ -170,7 +170,7 @@ function App() {
                         : 'text-gray-700 hover:bg-orange-100'
                     }`}
                   >
-                    Family Votes
+                    Votes
                   </button>
                   <button
                     onClick={() => handleTabClick('countdown')}
@@ -215,7 +215,7 @@ function App() {
                       : 'text-gray-700 hover:bg-orange-100'
                   }`}
                 >
-                  Family Votes
+                  Votes
                 </button>
                 <button
                   onClick={() => handleTabClick('countdown')}

@@ -815,7 +815,7 @@ export const PublicHome: React.FC = () => {
               Get Started!
             </h2>
             <p className="text-gray-600 text-sm sm:text-base">
-              Log in to add family members and start making predictions
+              Log in to add mates and start making predictions
             </p>
           </div>
         )}

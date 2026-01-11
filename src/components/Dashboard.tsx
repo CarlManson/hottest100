@@ -43,7 +43,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
         <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg p-6 text-white">
           <div className="text-3xl font-black">{familyMembers.length}</div>
-          <div className="text-white/80 font-semibold">Family Members</div>
+          <div className="text-white/80 font-semibold">Mates</div>
         </div>
 
         <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-lg p-6 text-white">
@@ -63,7 +63,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         <div className="bg-white rounded-xl shadow-lg p-6 sm:p-12 text-center border-2 border-orange-200">
           <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">🎵</div>
           <h3 className="text-lg sm:text-2xl font-bold mb-2 text-gray-800">Welcome to Hottest 100 Tracker!</h3>
-          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Get started by adding songs and family members</p>
+          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Get started by adding songs and mates</p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <button
               onClick={() => onNavigate?.('songs')}

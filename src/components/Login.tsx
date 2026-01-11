@@ -46,7 +46,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <h1 className="text-3xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
               Triple J Hottest 100
             </h1>
-            <p className="text-gray-600 text-sm sm:text-base">Family Prediction Tracker</p>
+            <p className="text-gray-600 text-sm sm:text-base">Prediction Tracker</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,7 +96,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <div className="mt-6 text-center text-xs text-gray-500">
             <p>Share this site with other Triple J fans!</p>
-            <p className="mt-1">Each family needs their own credentials.</p>
+            <p className="mt-1">Each group needs their own credentials.</p>
           </div>
         </div>
       </div>

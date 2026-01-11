@@ -68,7 +68,7 @@ export const Leaderboard: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md p-3 sm:p-6">
           <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Standings</h3>
           {leaderboard.length === 0 ? (
-            <p className="text-sm sm:text-base text-gray-500">No family members yet</p>
+            <p className="text-sm sm:text-base text-gray-500">No mates yet</p>
           ) : (
             <div className="space-y-2 sm:space-y-3">
               {leaderboard.map((entry, index) => {
