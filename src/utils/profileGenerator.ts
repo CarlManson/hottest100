@@ -18,7 +18,7 @@ export async function generateMemberProfile(
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
 
   if (!apiKey) {
-    throw new Error('Anthropic API key not configured. Please add VITE_ANTHROPIC_API_KEY to your .env file');
+    throw new Error('API key not configured. Add VITE_ANTHROPIC_API_KEY to your .env file to enable AI-generated profiles.');
   }
 
   const allResults = [...countdownResults, ...hottest200Results];
