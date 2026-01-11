@@ -9,6 +9,7 @@ export const Leaderboard: React.FC = () => {
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
+  const hasHottest200 = hottest200Results.length > 0;
 
   const matches = selectedMember
     ? getSongMatches(selectedMember, countdownResults, hottest200Results, songs)
@@ -102,9 +103,18 @@ export const Leaderboard: React.FC = () => {
                 if (!result || !song) return null;
 
                 const isHottest200 = result.position > 100;
-                const points = isHottest200
-                  ? 101 + (200 - result.position)
-                  : 101 + (100 - result.position);
+
+                // Dynamic scoring based on whether Hottest 200 has been revealed
+                let points: number;
+                if (hasHottest200) {
+                  // With Hottest 200 revealed
+                  points = isHottest200
+                    ? 101 + (200 - result.position)  // Hottest 200: position 200 = 1 pt, position 101 = 100 pts
+                    : 101 + (100 - result.position); // Hottest 100: position 100 = 101 pts, position 1 = 200 pts
+                } else {
+                  // Simple scoring when only Hottest 100 exists
+                  points = 101 - result.position; // Position 100 = 1 pt, position 1 = 100 pts
+                }
 
                 return (
                   <div
@@ -123,8 +133,7 @@ export const Leaderboard: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
-                      <span>Your pick: #{vote.rank}</span>
+                    <div className="text-xs sm:text-sm text-gray-600">
                       <span>Actual: #{result.position}</span>
                     </div>
                   </div>
