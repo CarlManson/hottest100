@@ -190,9 +190,9 @@ export const CountdownEntry: React.FC = () => {
             </div>
           </div>
 
-          <div>
+          <div className="bg-gray-900 rounded-lg p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-lg sm:text-xl font-semibold">
+              <h3 className="text-lg sm:text-xl font-semibold text-white">
                 Current Results ({currentResults.length}/{maxPosition - minPosition + 1})
               </h3>
               {currentResults.length > 0 && (
@@ -204,7 +204,7 @@ export const CountdownEntry: React.FC = () => {
                 </button>
               )}
             </div>
-            <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
+            <p className="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">
               Drag and drop to reorder the countdown
             </p>
             {currentResults.length === 0 ? (
@@ -223,11 +223,11 @@ export const CountdownEntry: React.FC = () => {
                         onDragStart={() => handleDragStart(index)}
                         onDragOver={handleDragOver}
                         onDrop={() => handleDrop(index)}
-                        className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg cursor-move hover:bg-gray-100 transition ${
+                        className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-800 rounded-lg cursor-move hover:bg-gray-700 transition ${
                           draggedIndex === index ? 'opacity-50' : ''
                         }`}
                       >
-                        <div className="font-bold text-sm sm:text-lg w-8 sm:w-12 flex-shrink-0">#{result.position}</div>
+                        <div className="font-bold text-sm sm:text-lg w-8 sm:w-12 flex-shrink-0 text-orange-400">#{result.position}</div>
                         {song.thumbnail && (
                           <LazyImage
                             src={song.thumbnail}
@@ -236,12 +236,12 @@ export const CountdownEntry: React.FC = () => {
                           />
                         )}
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
-                          <div className="text-[10px] sm:text-sm text-gray-600 truncate">{song.artist}</div>
+                          <div className="font-semibold text-xs sm:text-sm truncate text-white">{song.title}</div>
+                          <div className="text-[10px] sm:text-sm text-gray-400 truncate">{song.artist}</div>
                         </div>
                         <button
                           onClick={() => handleRemoveResult(result.position)}
-                          className="text-red-600 hover:text-red-800 px-1 sm:px-2 text-lg sm:text-xl flex-shrink-0"
+                          className="text-red-400 hover:text-red-300 px-1 sm:px-2 text-lg sm:text-xl flex-shrink-0"
                         >
                           ✕
                         </button>

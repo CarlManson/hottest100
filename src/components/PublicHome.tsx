@@ -77,8 +77,46 @@ export const PublicHome: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+        {/* #1 Song Feature - When available */}
+        {numberOneSong && numberOneSongData && (
+          <div className="mb-12">
+            <div className="bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 rounded-xl shadow-xl p-6 sm:p-8 border-4 border-yellow-400">
+              <div className="text-center mb-4">
+                <div className="text-4xl sm:text-6xl mb-2">👑</div>
+                <h2 className="text-2xl sm:text-4xl font-black text-gray-800">
+                  #1 Song of 2025
+                </h2>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                {numberOneSongData.thumbnail && (
+                  <img
+                    src={numberOneSongData.thumbnail}
+                    alt={numberOneSongData.title}
+                    className="w-40 h-40 sm:w-48 sm:h-48 rounded-lg shadow-2xl object-cover"
+                  />
+                )}
+                <div className="text-center sm:text-left">
+                  <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
+                    {numberOneSongData.title}
+                  </h3>
+                  <p className="text-xl sm:text-2xl text-gray-700 font-semibold">
+                    {numberOneSongData.artist}
+                  </p>
+                  {numberOneSongData.isAustralian && (
+                    <div className="mt-3">
+                      <span className="bg-orange-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">
+                        🦘 AUSTRALIAN ARTIST
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Current Highest Song Card */}
-        {currentHighestResult && currentHighestSong && !isHottest100Complete && (
+        {currentHighestResult && currentHighestSong && !isHottest100Complete && !numberOneSong && (
           <div className="mb-12 flex justify-center">
             <div
               className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl"
@@ -119,128 +157,12 @@ export const PublicHome: React.FC = () => {
           </div>
         )}
 
-        {/* Countdown Progress Widget */}
-        {totalResults > 0 && (
-          <div className="mb-12">
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200">
-              <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                📊 Countdown Progress
-              </h3>
-
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-semibold text-gray-700">
-                    {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
-                  </span>
-                  <span className="text-gray-600">
-                    {hasHottest200Started
-                      ? `${totalResults}/200 songs`
-                      : `${countdownResults.length}/100 songs`
-                    }
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div
-                    className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
-                    style={{
-                      width: hasHottest200Started
-                        ? `${(totalResults / 200) * 100}%`
-                        : `${(countdownResults.length / 100) * 100}%`
-                    }}
-                  />
-                </div>
-              </div>
-
-              {recentResults.length > 0 && (
-                <div>
-                  <div className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                    {hasHottest200Started ? 'Latest Entries (Hottest 200)' : 'Latest Entries'}
-                  </div>
-                  <div className="max-h-80 overflow-y-auto space-y-1.5 sm:space-y-2 pr-2">
-                    {recentResults.map((result) => {
-                      const song = songs.find(s => s.id === result.songId);
-                      if (!song) return null;
-
-                      return (
-                        <div
-                          key={result.position}
-                          className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
-                        >
-                          {song.thumbnail && (
-                            <img
-                              src={song.thumbnail}
-                              alt=""
-                              className="w-8 h-8 sm:w-10 sm:h-10 rounded object-cover flex-shrink-0"
-                            />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
-                            <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
-                              <span className="truncate">{song.artist}</span>
-                              {song.isAustralian && (
-                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
-                                  AUS
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="font-bold text-orange-600 text-sm sm:text-lg flex-shrink-0">
-                            #{result.position}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Awards Section - Prominent when countdown complete */}
-        {isHottest100Complete && awards.length > 0 && (
-          <div className="mb-12">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-yellow-600 via-orange-600 to-pink-600 bg-clip-text text-transparent">
-                🏆 Hottest 100 Awards 🏆
-              </h2>
-              <p className="text-gray-600 text-sm sm:text-base">Celebrating our champions!</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {awards.map((award) => (
-                <div
-                  key={award.id}
-                  className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 shadow-xl border-2 border-yellow-400 hover:border-yellow-500 hover:shadow-2xl transition-all transform hover:-translate-y-1"
-                >
-                  <div className="text-center">
-                    <div className="text-5xl mb-3">{award.emoji}</div>
-                    <h4 className="font-black text-xl text-gray-800 mb-2">
-                      {award.title}
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-4">
-                      {award.description}
-                    </p>
-                    <div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold text-lg py-3 px-4 rounded-full inline-block mb-2 shadow-lg">
-                      {award.winnerName}
-                    </div>
-                    {award.details && (
-                      <p className="text-xs text-gray-500 mt-2 italic">
-                        {award.details}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Leader Podium - Visual representation of top 3 */}
         {leaderboard.length > 0 && (
           <div className="mb-12">
             <div className="text-center mb-8">
               <h2 className="text-3xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
-                Current Standings
+                {numberOneSong ? "Winners Podium" : "Current Standings"}
               </h2>
               <p className="text-gray-600 text-sm sm:text-base">Who's leading the pack?</p>
             </div>
@@ -410,40 +332,118 @@ export const PublicHome: React.FC = () => {
           </div>
         )}
 
-        {/* #1 Song Feature - When available */}
-        {numberOneSong && numberOneSongData && (
+        {/* Awards Section - Prominent when countdown complete */}
+        {isHottest100Complete && awards.length > 0 && (
           <div className="mb-12">
-            <div className="bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 rounded-xl shadow-xl p-6 sm:p-8 border-4 border-yellow-400">
-              <div className="text-center mb-4">
-                <div className="text-4xl sm:text-6xl mb-2">👑</div>
-                <h2 className="text-2xl sm:text-4xl font-black text-gray-800">
-                  #1 Song of 2025
-                </h2>
-              </div>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                {numberOneSongData.thumbnail && (
-                  <img
-                    src={numberOneSongData.thumbnail}
-                    alt={numberOneSongData.title}
-                    className="w-40 h-40 sm:w-48 sm:h-48 rounded-lg shadow-2xl object-cover"
-                  />
-                )}
-                <div className="text-center sm:text-left">
-                  <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
-                    {numberOneSongData.title}
-                  </h3>
-                  <p className="text-xl sm:text-2xl text-gray-700 font-semibold">
-                    {numberOneSongData.artist}
-                  </p>
-                  {numberOneSongData.isAustralian && (
-                    <div className="mt-3">
-                      <span className="bg-orange-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">
-                        🦘 AUSTRALIAN ARTIST
-                      </span>
+            <div className="text-center mb-6">
+              <h2 className="text-2xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-yellow-600 via-orange-600 to-pink-600 bg-clip-text text-transparent">
+                🏆 Hottest 100 Awards 🏆
+              </h2>
+              <p className="text-gray-600 text-xs sm:text-sm">Celebrating our champions!</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {awards.map((award) => (
+                <div
+                  key={award.id}
+                  className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 shadow-xl border-2 border-yellow-400 hover:border-yellow-500 hover:shadow-2xl transition-all transform hover:-translate-y-1"
+                >
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">{award.emoji}</div>
+                    <h4 className="font-black text-lg text-gray-800 mb-2">
+                      {award.title}
+                    </h4>
+                    <p className="text-xs text-gray-600 mb-3">
+                      {award.description}
+                    </p>
+                    <div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold text-base py-2 px-3 rounded-full inline-block mb-2 shadow-lg">
+                      {award.winnerName}
                     </div>
-                  )}
+                    {award.details && (
+                      <p className="text-[11px] text-gray-500 mt-2 italic">
+                        {award.details}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Countdown Progress Widget */}
+        {totalResults > 0 && (
+          <div className="mb-12">
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200">
+              <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                📊 {numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
+              </h3>
+
+              <div className="mb-4">
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="font-semibold text-gray-700">
+                    {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
+                  </span>
+                  <span className="text-gray-600">
+                    {hasHottest200Started
+                      ? `${totalResults}/200 songs`
+                      : `${countdownResults.length}/100 songs`
+                    }
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div
+                    className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
+                    style={{
+                      width: hasHottest200Started
+                        ? `${(totalResults / 200) * 100}%`
+                        : `${(countdownResults.length / 100) * 100}%`
+                    }}
+                  />
                 </div>
               </div>
+
+              {recentResults.length > 0 && (
+                <div>
+                  <div className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                    {hasHottest200Started ? 'Latest Entries (Hottest 200)' : 'Latest Entries'}
+                  </div>
+                  <div className="max-h-80 overflow-y-auto space-y-1.5 sm:space-y-2 pr-2">
+                    {recentResults.map((result) => {
+                      const song = songs.find(s => s.id === result.songId);
+                      if (!song) return null;
+
+                      return (
+                        <div
+                          key={result.position}
+                          className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
+                        >
+                          {song.thumbnail && (
+                            <img
+                              src={song.thumbnail}
+                              alt=""
+                              className="w-8 h-8 sm:w-10 sm:h-10 rounded object-cover flex-shrink-0"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                            <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
+                              <span className="truncate">{song.artist}</span>
+                              {song.isAustralian && (
+                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                  AUS
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="font-bold text-orange-600 text-sm sm:text-lg flex-shrink-0">
+                            #{result.position}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
