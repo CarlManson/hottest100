@@ -2,9 +2,14 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { AppState, Song, FamilyMember, CountdownResult } from '../types';
 import { supabase } from '../lib/supabase';
+import { generateAllProfiles, type MemberProfile } from '../utils/profileGenerator';
+import { getLeaderboard } from '../utils/scoring';
 
 interface AppContextType extends AppState {
   loading: boolean;
+  profiles: MemberProfile[];
+  isGeneratingProfiles: boolean;
+  profileError: string;
   addSong: (song: Omit<Song, 'id'>) => Promise<void>;
   addSongs: (songs: Omit<Song, 'id'>[]) => Promise<void>;
   removeSong: (songId: string) => Promise<void>;
@@ -16,6 +21,8 @@ interface AppContextType extends AppState {
   addHottest200Result: (result: Omit<CountdownResult, 'id'>) => Promise<void>;
   updateHottest200Results: (results: Omit<CountdownResult, 'id'>[]) => Promise<void>;
   clearAllData: () => Promise<void>;
+  generateProfiles: () => Promise<void>;
+  getProfileForMember: (memberId: string) => MemberProfile | undefined;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -28,6 +35,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     hottest200Results: [],
   });
   const [loading, setLoading] = useState(true);
+  const [profiles, setProfiles] = useState<MemberProfile[]>([]);
+  const [isGeneratingProfiles, setIsGeneratingProfiles] = useState(false);
+  const [profileError, setProfileError] = useState<string>('');
 
   // Load initial data
   useEffect(() => {
@@ -389,11 +399,47 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await supabase.from('songs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   };
 
+  const generateProfiles = async () => {
+    const hasApiKey = !!import.meta.env.VITE_ANTHROPIC_API_KEY;
+
+    if (!hasApiKey) {
+      setProfileError('Profile generation requires an Anthropic API key. Add VITE_ANTHROPIC_API_KEY to your .env file to enable this feature.');
+      return;
+    }
+
+    setIsGeneratingProfiles(true);
+    setProfileError('');
+
+    try {
+      const leaderboard = getLeaderboard(state.familyMembers, state.countdownResults, state.hottest200Results);
+      const generatedProfiles = await generateAllProfiles(
+        state.familyMembers,
+        state.songs,
+        state.countdownResults,
+        state.hottest200Results,
+        leaderboard
+      );
+      setProfiles(generatedProfiles);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : 'Failed to generate profiles');
+      console.error('Profile generation error:', err);
+    } finally {
+      setIsGeneratingProfiles(false);
+    }
+  };
+
+  const getProfileForMember = (memberId: string): MemberProfile | undefined => {
+    return profiles.find(p => p.memberId === memberId);
+  };
+
   return (
     <AppContext.Provider
       value={{
         ...state,
         loading,
+        profiles,
+        isGeneratingProfiles,
+        profileError,
         addSong,
         addSongs,
         removeSong,
@@ -405,6 +451,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addHottest200Result,
         updateHottest200Results,
         clearAllData,
+        generateProfiles,
+        getProfileForMember,
       }}
     >
       {children}

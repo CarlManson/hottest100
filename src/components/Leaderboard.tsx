@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, getSongMatches, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
-import { generateAllProfiles, type MemberProfile } from '../utils/profileGenerator';
+import type { MemberProfile } from '../utils/profileGenerator';
 import type { FamilyMember } from '../types';
 
 export const Leaderboard: React.FC = () => {
-  const { familyMembers, countdownResults, hottest200Results, songs } = useApp();
+  const {
+    familyMembers,
+    countdownResults,
+    hottest200Results,
+    songs,
+    profiles,
+    isGeneratingProfiles,
+    profileError,
+    generateProfiles,
+    getProfileForMember
+  } = useApp();
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
-  const [profiles, setProfiles] = useState<MemberProfile[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
-  const [error, setError] = useState<string>('');
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
@@ -21,35 +28,6 @@ export const Leaderboard: React.FC = () => {
     : [];
 
   const hasApiKey = !!import.meta.env.VITE_ANTHROPIC_API_KEY;
-
-  const handleGenerateProfiles = async () => {
-    if (!hasApiKey) {
-      setError('Profile generation requires an Anthropic API key. Add VITE_ANTHROPIC_API_KEY to your .env file to enable this feature.');
-      return;
-    }
-
-    setIsGenerating(true);
-    setError('');
-    try {
-      const generatedProfiles = await generateAllProfiles(
-        familyMembers,
-        songs,
-        countdownResults,
-        hottest200Results,
-        leaderboard
-      );
-      setProfiles(generatedProfiles);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate profiles');
-      console.error('Profile generation error:', err);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const getProfileForMember = (memberId: string) => {
-    return profiles.find(p => p.memberId === memberId);
-  };
 
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-6">
@@ -65,10 +43,10 @@ export const Leaderboard: React.FC = () => {
             </a>
           </div>
           <button
-            onClick={handleGenerateProfiles}
-            disabled={isGenerating || familyMembers.length === 0}
+            onClick={generateProfiles}
+            disabled={isGeneratingProfiles || familyMembers.length === 0}
             className={`px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition whitespace-nowrap ${
-              isGenerating || familyMembers.length === 0
+              isGeneratingProfiles || familyMembers.length === 0
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : hasApiKey
                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
@@ -76,12 +54,12 @@ export const Leaderboard: React.FC = () => {
             }`}
             title={!hasApiKey ? 'Requires Anthropic API key in .env file' : ''}
           >
-            {isGenerating ? '🤖 Generating...' : profiles.length > 0 ? '🔄 Regenerate Profiles' : hasApiKey ? '✨ Generate Profiles' : '✨ Generate Profiles (Setup Required)'}
+            {isGeneratingProfiles ? '🤖 Generating...' : profiles.length > 0 ? '🔄 Regenerate Profiles' : hasApiKey ? '✨ Generate Profiles' : '✨ Generate Profiles (Setup Required)'}
           </button>
         </div>
-        {error && (
+        {profileError && (
           <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs sm:text-sm text-red-700">
-            {error}
+            {profileError}
           </div>
         )}
       </div>

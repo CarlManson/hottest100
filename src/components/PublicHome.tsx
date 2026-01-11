@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import { calculateAwards } from '../utils/awards';
+import type { MemberProfile } from '../utils/profileGenerator';
 import banner from '../assets/banner-bg.jpg';
 
 export const PublicHome: React.FC = () => {
-  const { familyMembers, countdownResults, hottest200Results, songs } = useApp();
+  const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
+  const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
@@ -122,6 +124,17 @@ export const PublicHome: React.FC = () => {
                   <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
                     {topThree[1].member.name}
                   </div>
+                  {(() => {
+                    const profile = getProfileForMember(topThree[1].member.id);
+                    return profile ? (
+                      <button
+                        onClick={() => setSelectedProfile(profile)}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                      >
+                        {profile.label}
+                      </button>
+                    ) : null;
+                  })()}
                   <div className="text-2xl sm:text-4xl font-black text-gray-400 mt-2">
                     {topThree[1].score}
                   </div>
@@ -138,6 +151,17 @@ export const PublicHome: React.FC = () => {
                   <div className="font-bold text-base sm:text-xl text-gray-800 truncate w-full text-center">
                     {topThree[0].member.name}
                   </div>
+                  {(() => {
+                    const profile = getProfileForMember(topThree[0].member.id);
+                    return profile ? (
+                      <button
+                        onClick={() => setSelectedProfile(profile)}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                      >
+                        {profile.label}
+                      </button>
+                    ) : null;
+                  })()}
                   <div className="text-3xl sm:text-5xl font-black text-yellow-600 mt-2">
                     {topThree[0].score}
                   </div>
@@ -154,6 +178,17 @@ export const PublicHome: React.FC = () => {
                   <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
                     {topThree[2].member.name}
                   </div>
+                  {(() => {
+                    const profile = getProfileForMember(topThree[2].member.id);
+                    return profile ? (
+                      <button
+                        onClick={() => setSelectedProfile(profile)}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                      >
+                        {profile.label}
+                      </button>
+                    ) : null;
+                  })()}
                   <div className="text-2xl sm:text-4xl font-black text-orange-600 mt-2">
                     {topThree[2].score}
                   </div>
@@ -194,7 +229,20 @@ export const PublicHome: React.FC = () => {
                         {index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
+                          {(() => {
+                            const profile = getProfileForMember(entry.member.id);
+                            return profile ? (
+                              <button
+                                onClick={() => setSelectedProfile(profile)}
+                                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap"
+                              >
+                                {profile.label}
+                              </button>
+                            ) : null;
+                          })()}
+                        </div>
                         <div className="text-xs sm:text-sm text-gray-600">
                           {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
                         </div>
@@ -283,6 +331,39 @@ export const PublicHome: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Profile Modal */}
+      {selectedProfile && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedProfile(null)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg sm:text-xl font-bold">
+                  {familyMembers.find(m => m.id === selectedProfile.memberId)?.name}
+                </h3>
+                <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  {selectedProfile.label}
+                </span>
+              </div>
+              <button
+                onClick={() => setSelectedProfile(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+              {selectedProfile.description}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
