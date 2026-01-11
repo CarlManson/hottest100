@@ -1,29 +1,67 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, getSongMatches, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
+import type { MemberProfile } from '../utils/profileGenerator';
 import type { FamilyMember } from '../types';
 
 export const Leaderboard: React.FC = () => {
-  const { familyMembers, countdownResults, hottest200Results, songs } = useApp();
+  const {
+    familyMembers,
+    countdownResults,
+    hottest200Results,
+    songs,
+    profiles,
+    isGeneratingProfiles,
+    profileError,
+    generateProfiles,
+    getProfileForMember
+  } = useApp();
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
+  const hasHottest200 = hottest200Results.length > 0;
 
   const matches = selectedMember
     ? getSongMatches(selectedMember, countdownResults, hottest200Results, songs)
     : [];
 
+  const hasApiKey = !!import.meta.env.VITE_ANTHROPIC_API_KEY;
+
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-6">
       <div className="mb-4 sm:mb-6">
-        <h2 className="text-xl sm:text-3xl font-bold hidden sm:block">Leaderboard</h2>
-        <a
-          href="#detailed-breakdown"
-          className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 underline inline-block mt-2"
-        >
-          View detailed vote breakdown →
-        </a>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <div>
+            <h2 className="text-xl sm:text-3xl font-bold hidden sm:block">Leaderboard</h2>
+            <a
+              href="#detailed-breakdown"
+              className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 underline inline-block mt-2"
+            >
+              View detailed vote breakdown →
+            </a>
+          </div>
+          <button
+            onClick={generateProfiles}
+            disabled={isGeneratingProfiles || familyMembers.length === 0}
+            className={`px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition whitespace-nowrap ${
+              isGeneratingProfiles || familyMembers.length === 0
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : hasApiKey
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+                : 'bg-gray-400 text-white hover:bg-gray-500'
+            }`}
+            title={!hasApiKey ? 'Requires Anthropic API key in .env file' : ''}
+          >
+            {isGeneratingProfiles ? '🤖 Generating...' : profiles.length > 0 ? '🔄 Regenerate Profiles' : hasApiKey ? '✨ Generate Profiles' : '✨ Generate Profiles (Setup Required)'}
+          </button>
+        </div>
+        {profileError && (
+          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs sm:text-sm text-red-700">
+            {profileError}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
@@ -35,6 +73,7 @@ export const Leaderboard: React.FC = () => {
             <div className="space-y-2 sm:space-y-3">
               {leaderboard.map((entry, index) => {
                 const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
+                const profile = getProfileForMember(entry.member.id);
                 return (
                   <div
                     key={entry.member.id}
@@ -49,7 +88,20 @@ export const Leaderboard: React.FC = () => {
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm sm:text-lg truncate">{entry.member.name}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-semibold text-sm sm:text-lg truncate">{entry.member.name}</div>
+                        {profile && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedProfile(profile);
+                            }}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap"
+                          >
+                            {profile.label}
+                          </button>
+                        )}
+                      </div>
                       <div className="text-xs sm:text-sm text-gray-600">
                         {matches.length > 0 && selectedMember?.id === entry.member.id
                           ? `${getSongMatches(entry.member, countdownResults, hottest200Results, songs).length} matches`
@@ -102,9 +154,18 @@ export const Leaderboard: React.FC = () => {
                 if (!result || !song) return null;
 
                 const isHottest200 = result.position > 100;
-                const points = isHottest200
-                  ? 101 + (200 - result.position)
-                  : 101 + (100 - result.position);
+
+                // Dynamic scoring based on whether Hottest 200 has been revealed
+                let points: number;
+                if (hasHottest200) {
+                  // With Hottest 200 revealed
+                  points = isHottest200
+                    ? 101 + (200 - result.position)  // Hottest 200: position 200 = 1 pt, position 101 = 100 pts
+                    : 101 + (100 - result.position); // Hottest 100: position 100 = 101 pts, position 1 = 200 pts
+                } else {
+                  // Simple scoring when only Hottest 100 exists
+                  points = 101 - result.position; // Position 100 = 1 pt, position 1 = 100 pts
+                }
 
                 return (
                   <div
@@ -123,8 +184,7 @@ export const Leaderboard: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
-                      <span>Your pick: #{vote.rank}</span>
+                    <div className="text-xs sm:text-sm text-gray-600">
                       <span>Actual: #{result.position}</span>
                     </div>
                   </div>
@@ -144,6 +204,39 @@ export const Leaderboard: React.FC = () => {
           <li>• Efficiency % = Your score vs the max possible score from top 10 songs currently in the countdown</li>
         </ul>
       </div>
+
+      {/* Profile Modal */}
+      {selectedProfile && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedProfile(null)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg sm:text-xl font-bold">
+                  {familyMembers.find(m => m.id === selectedProfile.memberId)?.name}
+                </h3>
+                <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  {selectedProfile.label}
+                </span>
+              </div>
+              <button
+                onClick={() => setSelectedProfile(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+              {selectedProfile.description}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,248 +1,369 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
+import { calculateAwards } from '../utils/awards';
+import type { MemberProfile } from '../utils/profileGenerator';
+import banner from '../assets/banner-bg.jpg';
 
 export const PublicHome: React.FC = () => {
-  const { familyMembers, countdownResults, hottest200Results, songs } = useApp();
+  const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
+  const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
 
-  // Determine which results to show in "Latest Entries" and "Featured Song"
-  // If Hottest 200 has started, show only those. Otherwise show Hottest 100
-  const hasHottest200Started = hottest200Results.length > 0;
-  const displayResults = hasHottest200Started ? hottest200Results : countdownResults;
+  // Calculate awards when Hottest 100 is complete
+  const awards = calculateAwards(familyMembers, songs, countdownResults);
+  const isHottest100Complete = countdownResults.length === 100;
 
-  // Get recent countdown results (sorted ascending, so lowest position is first)
-  const recentResults = [...displayResults]
-    .sort((a, b) => a.position - b.position);
+  // Get top 3 for podium display
+  const topThree = leaderboard.slice(0, 3);
 
-  // Get the top song (lowest position number from current display results)
-  const topSong = recentResults.length > 0 ? recentResults[0] : null;
-  const topSongData = topSong ? songs.find(s => s.id === topSong.songId) : null;
+  // Get the #1 song if available
+  const numberOneSong = countdownResults.find(r => r.position === 1);
+  const numberOneSongData = numberOneSong ? songs.find(s => s.id === numberOneSong.songId) : null;
 
   return (
-    <div className="max-w-7xl mx-auto p-3 sm:p-6">
-      <div className="mb-4 sm:mb-8 hidden sm:block">
-        <h2 className="text-2xl sm:text-4xl font-black mb-2 text-gray-800">Dashboard</h2>
-        <p className="text-sm sm:text-base text-gray-600">Live standings and countdown progress</p>
+    <div className="min-h-screen">
+      {/* Hero Section with Banner Background */}
+      <div
+        className="relative bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 py-12 sm:py-20 mb-8"
+        style={{
+          backgroundImage: `url(${banner})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-black/30"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 text-center text-white">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black mb-4 drop-shadow-lg">
+            Family Hottest 100 Tracker
+          </h1>
+          <p className="text-lg sm:text-2xl font-semibold mb-8 drop-shadow-md">
+            {totalResults === 0
+              ? 'Predictions are in! Let the countdown begin...'
+              : `${totalResults} songs revealed • ${familyMembers.length} competitors`}
+          </p>
+
+          {/* Progress Bar */}
+          {totalResults > 0 && (
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-white/20 backdrop-blur-sm rounded-full h-8 overflow-hidden border-2 border-white/40">
+                <div
+                  className="bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 h-full flex items-center justify-center font-black text-white text-sm transition-all"
+                  style={{ width: `${(countdownResults.length / 100) * 100}%` }}
+                >
+                  {countdownResults.length > 10 && `${countdownResults.length}/100`}
+                </div>
+              </div>
+              <p className="text-white/90 text-sm mt-2 font-semibold">
+                Hottest 100: {countdownResults.length}/100 revealed
+                {hottest200Results.length > 0 && ` • Hottest 200: ${hottest200Results.length}/100`}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Stats Cards - Hidden on mobile */}
-      <div className={`hidden md:grid gap-4 mb-8 ${hottest200Results.length > 0 ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
-        <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-xl shadow-lg p-6 text-white">
-          <div className="text-3xl font-black">{songs.length}</div>
-          <div className="text-white/80 font-semibold">Eligible Songs</div>
-        </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+        {/* Awards Section - Prominent when countdown complete */}
+        {isHottest100Complete && awards.length > 0 && (
+          <div className="mb-12">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-yellow-600 via-orange-600 to-pink-600 bg-clip-text text-transparent">
+                🏆 Hottest 100 Awards 🏆
+              </h2>
+              <p className="text-gray-600 text-sm sm:text-base">Celebrating our champions!</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {awards.map((award) => (
+                <div
+                  key={award.id}
+                  className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 shadow-xl border-2 border-yellow-400 hover:border-yellow-500 hover:shadow-2xl transition-all transform hover:-translate-y-1"
+                >
+                  <div className="text-center">
+                    <div className="text-5xl mb-3">{award.emoji}</div>
+                    <h4 className="font-black text-xl text-gray-800 mb-2">
+                      {award.title}
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      {award.description}
+                    </p>
+                    <div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold text-lg py-3 px-4 rounded-full inline-block mb-2 shadow-lg">
+                      {award.winnerName}
+                    </div>
+                    {award.details && (
+                      <p className="text-xs text-gray-500 mt-2 italic">
+                        {award.details}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg p-6 text-white">
-          <div className="text-3xl font-black">{familyMembers.length}</div>
-          <div className="text-white/80 font-semibold">Family Members</div>
-        </div>
+        {/* Leader Podium - Visual representation of top 3 */}
+        {leaderboard.length > 0 && (
+          <div className="mb-12">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                Current Standings
+              </h2>
+              <p className="text-gray-600 text-sm sm:text-base">Who's leading the pack?</p>
+            </div>
 
-        <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-lg p-6 text-white">
-          <div className="text-3xl font-black">{countdownResults.length}/100</div>
-          <div className="text-white/80 font-semibold">Hottest 100</div>
-        </div>
+            {/* Podium Display for Top 3 */}
+            <div className="flex items-end justify-center gap-4 sm:gap-8 mb-8">
+              {/* 2nd Place */}
+              {topThree[1] && (
+                <div className="flex flex-col items-center" style={{ width: '30%' }}>
+                  <div className="text-4xl sm:text-6xl mb-2">🥈</div>
+                  <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
+                    {topThree[1].member.name}
+                  </div>
+                  {(() => {
+                    const profile = getProfileForMember(topThree[1].member.id);
+                    return profile ? (
+                      <button
+                        onClick={() => setSelectedProfile(profile)}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                      >
+                        {profile.label}
+                      </button>
+                    ) : null;
+                  })()}
+                  <div className="text-2xl sm:text-4xl font-black text-gray-400 mt-2">
+                    {topThree[1].score}
+                  </div>
+                  <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg" style={{ height: '120px' }}>
+                    <div className="text-white font-black text-3xl sm:text-5xl pt-6 text-center">2</div>
+                  </div>
+                </div>
+              )}
 
-        {hottest200Results.length > 0 && (
-          <div className="bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl shadow-lg p-6 text-white">
-            <div className="text-3xl font-black">{hottest200Results.length}/100</div>
-            <div className="text-white/80 font-semibold">Hottest 200</div>
+              {/* 1st Place */}
+              {topThree[0] && (
+                <div className="flex flex-col items-center" style={{ width: '35%' }}>
+                  <div className="text-5xl sm:text-7xl mb-2">🥇</div>
+                  <div className="font-bold text-base sm:text-xl text-gray-800 truncate w-full text-center">
+                    {topThree[0].member.name}
+                  </div>
+                  {(() => {
+                    const profile = getProfileForMember(topThree[0].member.id);
+                    return profile ? (
+                      <button
+                        onClick={() => setSelectedProfile(profile)}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                      >
+                        {profile.label}
+                      </button>
+                    ) : null;
+                  })()}
+                  <div className="text-3xl sm:text-5xl font-black text-yellow-600 mt-2">
+                    {topThree[0].score}
+                  </div>
+                  <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl" style={{ height: '160px' }}>
+                    <div className="text-white font-black text-4xl sm:text-6xl pt-8 text-center drop-shadow-lg">1</div>
+                  </div>
+                </div>
+              )}
+
+              {/* 3rd Place */}
+              {topThree[2] && (
+                <div className="flex flex-col items-center" style={{ width: '30%' }}>
+                  <div className="text-4xl sm:text-6xl mb-2">🥉</div>
+                  <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
+                    {topThree[2].member.name}
+                  </div>
+                  {(() => {
+                    const profile = getProfileForMember(topThree[2].member.id);
+                    return profile ? (
+                      <button
+                        onClick={() => setSelectedProfile(profile)}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                      >
+                        {profile.label}
+                      </button>
+                    ) : null;
+                  })()}
+                  <div className="text-2xl sm:text-4xl font-black text-orange-600 mt-2">
+                    {topThree[2].score}
+                  </div>
+                  <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg" style={{ height: '90px' }}>
+                    <div className="text-white font-black text-3xl sm:text-5xl pt-4 text-center">3</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Full Leaderboard */}
+            <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
+              <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
+                Full Leaderboard
+              </h3>
+              <div className="space-y-2">
+                {leaderboard.map((entry, index) => {
+                  const matchCount = entry.member.votes.filter(vote =>
+                    [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
+                  ).length;
+                  const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
+
+                  return (
+                    <div
+                      key={entry.member.id}
+                      className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
+                        index < 3
+                          ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
+                          : 'bg-gray-50'
+                      }`}
+                    >
+                      <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${
+                        index === 0 ? 'bg-yellow-500 text-white' :
+                        index === 1 ? 'bg-gray-400 text-white' :
+                        index === 2 ? 'bg-orange-600 text-white' :
+                        'bg-gray-300 text-gray-700'
+                      }`}>
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
+                          {(() => {
+                            const profile = getProfileForMember(entry.member.id);
+                            return profile ? (
+                              <button
+                                onClick={() => setSelectedProfile(profile)}
+                                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap"
+                              >
+                                {profile.label}
+                              </button>
+                            ) : null;
+                          })()}
+                        </div>
+                        <div className="text-xs sm:text-sm text-gray-600">
+                          {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
+                        </div>
+                        {maxPossibleScore > 0 && (
+                          <div className="mt-1">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                                <div
+                                  className="bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all"
+                                  style={{ width: `${efficiency}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-semibold text-gray-600 w-12">
+                                {efficiency}%
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl sm:text-3xl font-black text-orange-600">
+                          {entry.score}
+                        </div>
+                        {maxPossibleScore > 0 && (
+                          <div className="text-xs text-gray-500">
+                            of {maxPossibleScore}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* #1 Song Feature - When available */}
+        {numberOneSong && numberOneSongData && (
+          <div className="mb-12">
+            <div className="bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 rounded-xl shadow-xl p-6 sm:p-8 border-4 border-yellow-400">
+              <div className="text-center mb-4">
+                <div className="text-4xl sm:text-6xl mb-2">👑</div>
+                <h2 className="text-2xl sm:text-4xl font-black text-gray-800">
+                  #1 Song of 2025
+                </h2>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                {numberOneSongData.thumbnail && (
+                  <img
+                    src={numberOneSongData.thumbnail}
+                    alt={numberOneSongData.title}
+                    className="w-40 h-40 sm:w-48 sm:h-48 rounded-lg shadow-2xl object-cover"
+                  />
+                )}
+                <div className="text-center sm:text-left">
+                  <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
+                    {numberOneSongData.title}
+                  </h3>
+                  <p className="text-xl sm:text-2xl text-gray-700 font-semibold">
+                    {numberOneSongData.artist}
+                  </p>
+                  {numberOneSongData.isAustralian && (
+                    <div className="mt-3">
+                      <span className="bg-orange-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">
+                        🦘 AUSTRALIAN ARTIST
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {leaderboard.length === 0 && (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">🎵</div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+              Get Started!
+            </h2>
+            <p className="text-gray-600 text-sm sm:text-base">
+              Log in to add family members and start making predictions
+            </p>
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Countdown Progress */}
-        <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6 border-2 border-orange-200">
-          <h3 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800 flex items-center gap-2">
-            📊 Countdown Progress
-          </h3>
-          {totalResults === 0 ? (
-            <div className="text-center py-6 sm:py-8">
-              <div className="text-3xl sm:text-4xl mb-2">⏰</div>
-              <p className="text-sm sm:text-base text-gray-500">No results entered yet</p>
-              <p className="text-xs sm:text-sm text-gray-400 mt-1">Results will appear here as the countdown happens</p>
-            </div>
-          ) : (
-            <>
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-semibold text-gray-700">
-                    {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
-                  </span>
-                  <span className="text-gray-600">
-                    {hasHottest200Started
-                      ? `${totalResults}/200 songs`
-                      : `${countdownResults.length}/100 songs`
-                    }
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div
-                    className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
-                    style={{
-                      width: hasHottest200Started
-                        ? `${(totalResults / 200) * 100}%`
-                        : `${(countdownResults.length / 100) * 100}%`
-                    }}
-                  />
-                </div>
+      {/* Profile Modal */}
+      {selectedProfile && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedProfile(null)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg sm:text-xl font-bold">
+                  {familyMembers.find(m => m.id === selectedProfile.memberId)?.name}
+                </h3>
+                <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  {selectedProfile.label}
+                </span>
               </div>
-
-              {/* Featured Top Song */}
-              {topSong && topSongData && (
-                <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-400 rounded-lg">
-                  <div className="text-[10px] sm:text-xs font-bold text-orange-600 mb-1 sm:mb-2">🏆 HIGHEST POSITION</div>
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="font-black text-xl sm:text-3xl text-orange-600">
-                      #{topSong.position}
-                    </div>
-                    {topSongData.thumbnail && (
-                      <img
-                        src={topSongData.thumbnail}
-                        alt={`${topSongData.title} artwork`}
-                        className="w-12 h-12 sm:w-16 sm:h-16 rounded object-cover flex-shrink-0"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-sm sm:text-lg truncate">{topSongData.title}</div>
-                      <div className="text-xs sm:text-sm text-gray-700 flex items-center gap-1">
-                        <span className="truncate">{topSongData.artist}</span>
-                        {topSongData.isAustralian && (
-                          <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
-                            AUS
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {recentResults.length > 0 && (
-                <div>
-                  <div className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                    {hasHottest200Started ? 'Latest Entries (Hottest 200)' : 'Latest Entries'}
-                  </div>
-                  <div className="max-h-80 overflow-y-auto space-y-1.5 sm:space-y-2 pr-2">
-                    {recentResults.map((result) => {
-                      const song = songs.find(s => s.id === result.songId);
-                      if (!song) return null;
-
-                      return (
-                        <div
-                          key={result.position}
-                          className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
-                        >
-                          {song.thumbnail && (
-                            <img
-                              src={song.thumbnail}
-                              alt=""
-                              className="w-8 h-8 sm:w-10 sm:h-10 rounded object-cover flex-shrink-0"
-                            />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
-                            <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
-                              <span className="truncate">{song.artist}</span>
-                              {song.isAustralian && (
-                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
-                                  AUS
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="font-bold text-orange-600 text-sm sm:text-lg flex-shrink-0">
-                            #{result.position}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Leaderboard */}
-        <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6 border-2 border-orange-200">
-          <h3 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800 flex items-center gap-2">
-            🏆 Leaderboard
-          </h3>
-          {leaderboard.length === 0 ? (
-            <p className="text-sm sm:text-base text-gray-500 text-center py-6 sm:py-8">No votes yet</p>
-          ) : (
-            <div className="space-y-2 sm:space-y-3">
-              {leaderboard.slice(0, 5).map((entry, index) => {
-                const matchCount = entry.member.votes.filter(vote =>
-                  [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
-                ).length;
-                const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
-
-                return (
-                  <div
-                    key={entry.member.id}
-                    className={`flex items-center gap-2 sm:gap-4 p-2 sm:p-4 rounded-lg ${
-                      index === 0
-                        ? 'bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-400'
-                        : 'bg-gray-50'
-                    }`}
-                  >
-                    <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full font-bold text-sm sm:text-lg ${
-                      index === 0 ? 'bg-yellow-500 text-white' :
-                      index === 1 ? 'bg-gray-400 text-white' :
-                      index === 2 ? 'bg-orange-600 text-white' :
-                      'bg-gray-300 text-gray-700'
-                    }`}>
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-sm sm:text-base text-gray-900 truncate">{entry.member.name}</div>
-                      <div className="text-xs sm:text-sm text-gray-600">
-                        {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
-                      </div>
-                      {maxPossibleScore > 0 && (
-                        <div className="mt-1 sm:mt-2">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                              <div
-                                className="bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all"
-                                style={{ width: `${efficiency}%` }}
-                              />
-                            </div>
-                            <span className="text-[10px] sm:text-xs font-semibold text-gray-600 w-8 sm:w-10">
-                              {efficiency}%
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xl sm:text-2xl font-black text-orange-600">
-                        {entry.score}
-                      </div>
-                      {maxPossibleScore > 0 && (
-                        <div className="text-[10px] sm:text-xs text-gray-500 mt-1">
-                          of {maxPossibleScore}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-              {leaderboard.length > 5 && (
-                <div className="text-center text-xs sm:text-sm text-gray-500 mt-3 sm:mt-4">
-                  +{leaderboard.length - 5} more • View full leaderboard
-                </div>
-              )}
+              <button
+                onClick={() => setSelectedProfile(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
             </div>
-          )}
+            <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+              {selectedProfile.description}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

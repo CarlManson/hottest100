@@ -7,19 +7,27 @@ export const DetailedBreakdown: React.FC = () => {
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const allResults = [...countdownResults, ...hottest200Results];
+  const hasHottest200 = hottest200Results.length > 0;
 
-  // Get score for a specific song
+  // Get score for a specific song - matches dynamic scoring in scoring.ts
   const getSongScore = (songId: string) => {
     const result = allResults.find(r => r.songId === songId);
     if (!result) return null;
 
-    // Calculate score based on position
-    if (result.position <= 100) {
-      // Hottest 100: Position 100 = 101 points, Position 1 = 200 points
-      return 101 + (100 - result.position);
+    // Dynamic scoring based on whether Hottest 200 has been revealed
+    if (hasHottest200) {
+      // With Hottest 200 revealed
+      if (result.position <= 100) {
+        // Hottest 100: Position 100 = 101 points, Position 1 = 200 points
+        return 101 + (100 - result.position);
+      } else {
+        // Hottest 200: Position 200 = 1 point, Position 101 = 100 points
+        return 101 + (200 - result.position);
+      }
     } else {
-      // Hottest 200: Position 200 = 1 point, Position 101 = 100 points
-      return 101 + (200 - result.position);
+      // Simple scoring when only Hottest 100 exists
+      // Position 100 = 1 point, Position 1 = 100 points
+      return 101 - result.position;
     }
   };
 
@@ -128,13 +136,6 @@ export const DetailedBreakdown: React.FC = () => {
                                   +{score} pts
                                 </div>
                               )}
-                              {song.isAustralian && (
-                                <div className="mt-0.5">
-                                  <span className="bg-orange-500 text-white text-[8px] sm:text-[9px] font-bold px-1 py-0.5 rounded">
-                                    AUS
-                                  </span>
-                                </div>
-                              )}
                             </div>
                           ) : (
                             <span className="text-gray-400">—</span>
@@ -166,10 +167,6 @@ export const DetailedBreakdown: React.FC = () => {
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-white border-2 border-gray-200 rounded"></div>
             <span>Song didn't make the countdown</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">AUS</span>
-            <span>Australian artist</span>
           </div>
         </div>
       </div>
