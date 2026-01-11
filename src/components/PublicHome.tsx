@@ -58,12 +58,14 @@ export const PublicHome: React.FC = () => {
         <div className="absolute inset-0 bg-black/30"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 text-center text-white">
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black mb-4 drop-shadow-lg">
-            Family Hottest 100 Tracker
+            {hasHottest200Started ? 'Family Hottest 200 Tracker' : 'Family Hottest 100 Tracker'}
           </h1>
           <p className="text-lg sm:text-2xl font-semibold mb-8 drop-shadow-md">
             {totalResults === 0
               ? 'Predictions are in! Let the countdown begin...'
-              : `${totalResults} songs revealed • ${familyMembers.length} competitors`}
+              : hasHottest200Started
+              ? `${hottest200Results.length} songs revealed • ${familyMembers.length} competitors`
+              : `${countdownResults.length} songs revealed • ${familyMembers.length} competitors`}
           </p>
 
           {/* Progress Bar */}
@@ -72,9 +74,15 @@ export const PublicHome: React.FC = () => {
               <div className="bg-white/20 backdrop-blur-sm rounded-full h-8 overflow-hidden border-2 border-white/40">
                 <div
                   className="bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 h-full flex items-center justify-center font-black text-white text-sm transition-all"
-                  style={{ width: `${(countdownResults.length / 100) * 100}%` }}
+                  style={{
+                    width: hasHottest200Started
+                      ? `${(hottest200Results.length / 100) * 100}%`
+                      : `${(countdownResults.length / 100) * 100}%`
+                  }}
                 >
-                  {countdownResults.length > 10 && `${countdownResults.length}/100`}
+                  {hasHottest200Started
+                    ? hottest200Results.length > 10 && `${hottest200Results.length}/100`
+                    : countdownResults.length > 10 && `${countdownResults.length}/100`}
                 </div>
               </div>
               <p className="text-white/90 text-sm mt-2 font-semibold">
@@ -87,8 +95,8 @@ export const PublicHome: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
-        {/* #1 Song Feature - When available */}
-        {numberOneSong && numberOneSongData && (
+        {/* #1 Song Feature - When available and Hottest 200 NOT started */}
+        {numberOneSong && numberOneSongData && !hasHottest200Started && (
           <div className="mb-12">
             <div className="bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 rounded-xl shadow-xl p-6 sm:p-8 border-4 border-yellow-400">
               <div className="text-center mb-4">
@@ -172,7 +180,7 @@ export const PublicHome: React.FC = () => {
           <div className="mb-12">
             <div className="text-center mb-8">
               <h2 className="text-3xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
-                {numberOneSong ? "Winners Podium" : "Current Standings"}
+                {hottest200Results.length === 100 ? "Winners Podium" : "Current Standings"}
               </h2>
               <p className="text-gray-600 text-sm sm:text-base">Who's leading the pack?</p>
             </div>
