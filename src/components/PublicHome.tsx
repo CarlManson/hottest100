@@ -393,7 +393,7 @@ export const PublicHome: React.FC = () => {
           <div className="mb-12">
             <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200">
               <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                📊 {numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
+                📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
               </h3>
 
               <div className="mb-4">
