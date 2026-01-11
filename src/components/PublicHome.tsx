@@ -304,173 +304,261 @@ export const PublicHome: React.FC = () => {
               <p className="text-gray-600 text-sm sm:text-base">Who's leading the pack?</p>
             </div>
 
-            {/* Podium Display for Top 3 */}
-            <div className="flex items-end justify-center gap-4 sm:gap-8 mb-8">
-              {/* 2nd Place */}
-              {topThree[1] && (
-                <div className="flex flex-col items-center" style={{ width: '30%' }}>
-                  <div className="text-4xl sm:text-6xl mb-2">🥈</div>
-                  <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
-                    {topThree[1].member.name}
-                  </div>
-                  {(() => {
-                    const profile = getProfileForMember(topThree[1].member.id);
-                    return profile ? (
-                      <button
-                        onClick={() => setSelectedProfile(profile)}
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
-                      >
-                        {profile.label}
-                      </button>
-                    ) : null;
-                  })()}
-                  <div className="text-2xl sm:text-4xl font-black text-gray-400 mt-2">
-                    {topThree[1].score}
-                  </div>
-                  <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg" style={{ height: '120px' }}>
-                    <div className="text-white font-black text-3xl sm:text-5xl pt-6 text-center">2</div>
-                  </div>
-                </div>
-              )}
-
-              {/* 1st Place */}
-              {topThree[0] && (
-                <div className="flex flex-col items-center" style={{ width: '35%' }}>
-                  <div className="text-5xl sm:text-7xl mb-2">🥇</div>
-                  <div className="font-bold text-base sm:text-xl text-gray-800 truncate w-full text-center">
-                    {topThree[0].member.name}
-                  </div>
-                  {(() => {
-                    const profile = getProfileForMember(topThree[0].member.id);
-                    return profile ? (
-                      <button
-                        onClick={() => setSelectedProfile(profile)}
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
-                      >
-                        {profile.label}
-                      </button>
-                    ) : null;
-                  })()}
-                  <div className="text-3xl sm:text-5xl font-black text-yellow-600 mt-2">
-                    {topThree[0].score}
-                  </div>
-                  <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl" style={{ height: '160px' }}>
-                    <div className="text-white font-black text-4xl sm:text-6xl pt-8 text-center drop-shadow-lg">1</div>
-                  </div>
-                </div>
-              )}
-
-              {/* 3rd Place */}
-              {topThree[2] && (
-                <div className="flex flex-col items-center" style={{ width: '30%' }}>
-                  <div className="text-4xl sm:text-6xl mb-2">🥉</div>
-                  <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
-                    {topThree[2].member.name}
-                  </div>
-                  {(() => {
-                    const profile = getProfileForMember(topThree[2].member.id);
-                    return profile ? (
-                      <button
-                        onClick={() => setSelectedProfile(profile)}
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
-                      >
-                        {profile.label}
-                      </button>
-                    ) : null;
-                  })()}
-                  <div className="text-2xl sm:text-4xl font-black text-orange-600 mt-2">
-                    {topThree[2].score}
-                  </div>
-                  <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg" style={{ height: '90px' }}>
-                    <div className="text-white font-black text-3xl sm:text-5xl pt-4 text-center">3</div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Conditional Layout: Countdown + Leaderboard OR just Leaderboard */}
+            {/* Conditional Layout: Podium + Leaderboard OR Countdown + Leaderboard OR just Leaderboard */}
             {currentHighestResult && currentHighestSong ? (
-              // Featured song is showing above, so just show full-width leaderboard
-              <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
-                <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
-                  Full Leaderboard
-                </h3>
-                <div className="space-y-2">
-                  {leaderboard.map((entry, index) => {
-                    const matchCount = entry.member.votes.filter(vote =>
-                      [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
-                    ).length;
-                    const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
-
-                    return (
-                      <div
-                        key={entry.member.id}
-                        className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
-                          index < 3
-                            ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
-                            : 'bg-gray-50'
-                        }`}
-                      >
-                        <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${
-                          index === 0 ? 'bg-yellow-500 text-white' :
-                          index === 1 ? 'bg-gray-400 text-white' :
-                          index === 2 ? 'bg-orange-600 text-white' :
-                          'bg-gray-300 text-gray-700'
-                        }`}>
-                          {index + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
-                            {(() => {
-                              const profile = getProfileForMember(entry.member.id);
-                              return profile ? (
-                                <button
-                                  onClick={() => setSelectedProfile(profile)}
-                                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap"
-                                >
-                                  {profile.label}
-                                </button>
-                              ) : null;
-                            })()}
-                          </div>
-                          <div className="text-xs sm:text-sm text-gray-600">
-                            {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
-                          </div>
-                          {maxPossibleScore > 0 && (
-                            <div className="mt-1">
-                              <div className="flex items-center gap-2">
-                                <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-                                  <div
-                                    className="bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all"
-                                    style={{ width: `${efficiency}%` }}
-                                  />
-                                </div>
-                                <span className="text-xs font-semibold text-gray-600 w-12">
-                                  {efficiency}%
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl sm:text-3xl font-black text-orange-600">
-                            {entry.score}
-                          </div>
-                          {maxPossibleScore > 0 && (
-                            <div className="text-xs text-gray-500">
-                              of {maxPossibleScore}
-                            </div>
-                          )}
-                        </div>
+              // Featured song is showing above, so show podium + leaderboard side by side on md+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Podium Visualization (Top 3) */}
+                <div className="flex items-end justify-center gap-4 sm:gap-8">
+                  {/* 2nd Place */}
+                  {topThree[1] && (
+                    <div className="flex flex-col items-center" style={{ width: '30%' }}>
+                      <div className="text-4xl sm:text-6xl mb-2">🥈</div>
+                      <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
+                        {topThree[1].member.name}
                       </div>
-                    );
-                  })}
+                      {(() => {
+                        const profile = getProfileForMember(topThree[1].member.id);
+                        return profile ? (
+                          <button
+                            onClick={() => setSelectedProfile(profile)}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                          >
+                            {profile.label}
+                          </button>
+                        ) : null;
+                      })()}
+                      <div className="text-2xl sm:text-4xl font-black text-gray-400 mt-2">
+                        {topThree[1].score}
+                      </div>
+                      <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg" style={{ height: '120px' }}>
+                        <div className="text-white font-black text-3xl sm:text-5xl pt-6 text-center">2</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 1st Place */}
+                  {topThree[0] && (
+                    <div className="flex flex-col items-center" style={{ width: '35%' }}>
+                      <div className="text-5xl sm:text-7xl mb-2">🥇</div>
+                      <div className="font-bold text-base sm:text-xl text-gray-800 truncate w-full text-center">
+                        {topThree[0].member.name}
+                      </div>
+                      {(() => {
+                        const profile = getProfileForMember(topThree[0].member.id);
+                        return profile ? (
+                          <button
+                            onClick={() => setSelectedProfile(profile)}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                          >
+                            {profile.label}
+                          </button>
+                        ) : null;
+                      })()}
+                      <div className="text-3xl sm:text-5xl font-black text-yellow-600 mt-2">
+                        {topThree[0].score}
+                      </div>
+                      <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl" style={{ height: '160px' }}>
+                        <div className="text-white font-black text-4xl sm:text-6xl pt-8 text-center drop-shadow-lg">1</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3rd Place */}
+                  {topThree[2] && (
+                    <div className="flex flex-col items-center" style={{ width: '30%' }}>
+                      <div className="text-4xl sm:text-6xl mb-2">🥉</div>
+                      <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
+                        {topThree[2].member.name}
+                      </div>
+                      {(() => {
+                        const profile = getProfileForMember(topThree[2].member.id);
+                        return profile ? (
+                          <button
+                            onClick={() => setSelectedProfile(profile)}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                          >
+                            {profile.label}
+                          </button>
+                        ) : null;
+                      })()}
+                      <div className="text-2xl sm:text-4xl font-black text-orange-600 mt-2">
+                        {topThree[2].score}
+                      </div>
+                      <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg" style={{ height: '90px' }}>
+                        <div className="text-white font-black text-3xl sm:text-5xl pt-4 text-center">3</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Full Leaderboard */}
+                <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
+                  <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
+                    Full Leaderboard
+                  </h3>
+                  <div className="space-y-2">
+                    {leaderboard.map((entry, index) => {
+                      const matchCount = entry.member.votes.filter(vote =>
+                        [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
+                      ).length;
+                      const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
+
+                      return (
+                        <div
+                          key={entry.member.id}
+                          className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
+                            index < 3
+                              ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
+                              : 'bg-gray-50'
+                          }`}
+                        >
+                          <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${
+                            index === 0 ? 'bg-yellow-500 text-white' :
+                            index === 1 ? 'bg-gray-400 text-white' :
+                            index === 2 ? 'bg-orange-600 text-white' :
+                            'bg-gray-300 text-gray-700'
+                          }`}>
+                            {index + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
+                              {(() => {
+                                const profile = getProfileForMember(entry.member.id);
+                                return profile ? (
+                                  <button
+                                    onClick={() => setSelectedProfile(profile)}
+                                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap"
+                                  >
+                                    {profile.label}
+                                  </button>
+                                ) : null;
+                              })()}
+                            </div>
+                            <div className="text-xs sm:text-sm text-gray-600">
+                              {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
+                            </div>
+                            {maxPossibleScore > 0 && (
+                              <div className="mt-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div
+                                      className="bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all"
+                                      style={{ width: `${efficiency}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs font-semibold text-gray-600 w-12">
+                                    {efficiency}%
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl sm:text-3xl font-black text-orange-600">
+                              {entry.score}
+                            </div>
+                            {maxPossibleScore > 0 && (
+                              <div className="text-xs text-gray-500">
+                                of {maxPossibleScore}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             ) : totalResults > 0 ? (
-              // No featured song, show countdown + leaderboard side by side on md+
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              // No featured song, show podium + countdown + leaderboard
+              <>
+                {/* Podium Display for Top 3 */}
+                <div className="flex items-end justify-center gap-4 sm:gap-8 mb-8">
+                  {/* 2nd Place */}
+                  {topThree[1] && (
+                    <div className="flex flex-col items-center" style={{ width: '30%' }}>
+                      <div className="text-4xl sm:text-6xl mb-2">🥈</div>
+                      <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
+                        {topThree[1].member.name}
+                      </div>
+                      {(() => {
+                        const profile = getProfileForMember(topThree[1].member.id);
+                        return profile ? (
+                          <button
+                            onClick={() => setSelectedProfile(profile)}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                          >
+                            {profile.label}
+                          </button>
+                        ) : null;
+                      })()}
+                      <div className="text-2xl sm:text-4xl font-black text-gray-400 mt-2">
+                        {topThree[1].score}
+                      </div>
+                      <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg" style={{ height: '120px' }}>
+                        <div className="text-white font-black text-3xl sm:text-5xl pt-6 text-center">2</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 1st Place */}
+                  {topThree[0] && (
+                    <div className="flex flex-col items-center" style={{ width: '35%' }}>
+                      <div className="text-5xl sm:text-7xl mb-2">🥇</div>
+                      <div className="font-bold text-base sm:text-xl text-gray-800 truncate w-full text-center">
+                        {topThree[0].member.name}
+                      </div>
+                      {(() => {
+                        const profile = getProfileForMember(topThree[0].member.id);
+                        return profile ? (
+                          <button
+                            onClick={() => setSelectedProfile(profile)}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                          >
+                            {profile.label}
+                          </button>
+                        ) : null;
+                      })()}
+                      <div className="text-3xl sm:text-5xl font-black text-yellow-600 mt-2">
+                        {topThree[0].score}
+                      </div>
+                      <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl" style={{ height: '160px' }}>
+                        <div className="text-white font-black text-4xl sm:text-6xl pt-8 text-center drop-shadow-lg">1</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3rd Place */}
+                  {topThree[2] && (
+                    <div className="flex flex-col items-center" style={{ width: '30%' }}>
+                      <div className="text-4xl sm:text-6xl mb-2">🥉</div>
+                      <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
+                        {topThree[2].member.name}
+                      </div>
+                      {(() => {
+                        const profile = getProfileForMember(topThree[2].member.id);
+                        return profile ? (
+                          <button
+                            onClick={() => setSelectedProfile(profile)}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                          >
+                            {profile.label}
+                          </button>
+                        ) : null;
+                      })()}
+                      <div className="text-2xl sm:text-4xl font-black text-orange-600 mt-2">
+                        {topThree[2].score}
+                      </div>
+                      <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg" style={{ height: '90px' }}>
+                        <div className="text-white font-black text-3xl sm:text-5xl pt-4 text-center">3</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Countdown Progress Widget */}
                 <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200 h-fit">
                   <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
@@ -623,10 +711,96 @@ export const PublicHome: React.FC = () => {
                     })}
                   </div>
                 </div>
-              </div>
+                </div>
+              </>
             ) : (
-              // No countdown results yet, just show leaderboard
-              <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
+              // No countdown results yet, show podium + leaderboard
+              <>
+                {/* Podium Display for Top 3 */}
+                <div className="flex items-end justify-center gap-4 sm:gap-8 mb-8">
+                  {/* 2nd Place */}
+                  {topThree[1] && (
+                    <div className="flex flex-col items-center" style={{ width: '30%' }}>
+                      <div className="text-4xl sm:text-6xl mb-2">🥈</div>
+                      <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
+                        {topThree[1].member.name}
+                      </div>
+                      {(() => {
+                        const profile = getProfileForMember(topThree[1].member.id);
+                        return profile ? (
+                          <button
+                            onClick={() => setSelectedProfile(profile)}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                          >
+                            {profile.label}
+                          </button>
+                        ) : null;
+                      })()}
+                      <div className="text-2xl sm:text-4xl font-black text-gray-400 mt-2">
+                        {topThree[1].score}
+                      </div>
+                      <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg" style={{ height: '120px' }}>
+                        <div className="text-white font-black text-3xl sm:text-5xl pt-6 text-center">2</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 1st Place */}
+                  {topThree[0] && (
+                    <div className="flex flex-col items-center" style={{ width: '35%' }}>
+                      <div className="text-5xl sm:text-7xl mb-2">🥇</div>
+                      <div className="font-bold text-base sm:text-xl text-gray-800 truncate w-full text-center">
+                        {topThree[0].member.name}
+                      </div>
+                      {(() => {
+                        const profile = getProfileForMember(topThree[0].member.id);
+                        return profile ? (
+                          <button
+                            onClick={() => setSelectedProfile(profile)}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                          >
+                            {profile.label}
+                          </button>
+                        ) : null;
+                      })()}
+                      <div className="text-3xl sm:text-5xl font-black text-yellow-600 mt-2">
+                        {topThree[0].score}
+                      </div>
+                      <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl" style={{ height: '160px' }}>
+                        <div className="text-white font-black text-4xl sm:text-6xl pt-8 text-center drop-shadow-lg">1</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3rd Place */}
+                  {topThree[2] && (
+                    <div className="flex flex-col items-center" style={{ width: '30%' }}>
+                      <div className="text-4xl sm:text-6xl mb-2">🥉</div>
+                      <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
+                        {topThree[2].member.name}
+                      </div>
+                      {(() => {
+                        const profile = getProfileForMember(topThree[2].member.id);
+                        return profile ? (
+                          <button
+                            onClick={() => setSelectedProfile(profile)}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
+                          >
+                            {profile.label}
+                          </button>
+                        ) : null;
+                      })()}
+                      <div className="text-2xl sm:text-4xl font-black text-orange-600 mt-2">
+                        {topThree[2].score}
+                      </div>
+                      <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg" style={{ height: '90px' }}>
+                        <div className="text-white font-black text-3xl sm:text-5xl pt-4 text-center">3</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
                 <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
                   Full Leaderboard
                 </h3>
@@ -702,7 +876,8 @@ export const PublicHome: React.FC = () => {
                     );
                   })}
                 </div>
-              </div>
+                </div>
+              </>
             )}
           </div>
         )}
