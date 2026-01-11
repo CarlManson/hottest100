@@ -101,7 +101,13 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-purple-50">
         <header className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-lg" style={{ backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
           <div className="max-w-7xl mx-auto px-6 py-6 relative">
-            <img className="logo" src={logo} alt="Fairest 100 Logo" style={{ width: '100%', maxWidth: '25rem', height: 'auto' }} />
+            <img
+              className="logo cursor-pointer"
+              src={logo}
+              alt="Fairest 100 Logo"
+              style={{ width: '100%', maxWidth: '25rem', height: 'auto' }}
+              onClick={() => handleTabClick('home')}
+            />
             {/* Banner right - hidden on mobile, shown on desktop */}
             <img className="banner-right hidden sm:block" src={bannerRight}  style={{ width: '25%', height: 'auto', position: 'absolute', top: '0', right: '0', transform: 'translateY(-25%)' }} />
             {/* Mobile menu button - shown on mobile when authenticated */}
