@@ -1,0 +1,26 @@
+@use 'variables' as *;
+
+// Song card background properties
+.song-card-background {
+  background-size: cover;
+  background-position: center;
+
+  // Optional: Add common song card styling
+  &:hover {
+    // Hover effects can be added here if needed
+  }
+}
+
+// Song card overlay mixin (for gradients)
+@mixin song-card-overlay($opacity-top: 0.3, $opacity-bottom: 0.7) {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, $opacity-top),
+    rgba(0, 0, 0, $opacity-bottom)
+  );
+}
+
+// Fallback gradient for cards without thumbnails
+@mixin song-card-fallback($start-color, $end-color) {
+  background-image: linear-gradient(135deg, $start-color 0%, $end-color 100%);
+}

@@ -1,0 +1,30 @@
+@use 'variables' as *;
+
+// Podium container widths
+.podium-first {
+  width: $podium-first-width;
+}
+
+.podium-second,
+.podium-third {
+  width: $podium-second-width;
+}
+
+// Podium base heights
+.podium-base-first {
+  height: $podium-first-height;
+}
+
+.podium-base-second,
+.podium-base-third {
+  height: $podium-second-height;
+}
+
+.podium-base-third-short {
+  height: $podium-third-height;
+}
+
+// Optional: Podium color mixins for consistency
+@mixin podium-gradient($start-color, $end-color) {
+  background: linear-gradient(to bottom right, $start-color, $end-color);
+}

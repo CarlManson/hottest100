@@ -1,0 +1,14 @@
+// Hottest 100 Tracker - Main Styles
+// Modular SCSS structure for better organization
+
+// Variables must be imported first
+@use 'variables';
+
+// Component styles
+@use 'header';
+@use 'podium';
+@use 'song-cards';
+@use 'banner';
+@use 'utilities';
+
+// Additional global styles can go here
