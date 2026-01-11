@@ -26,7 +26,22 @@ npm run lint      # Run ESLint
 2. Add Supabase credentials:
    - `VITE_SUPABASE_URL` - Supabase project URL
    - `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key
-3. Run `supabase-schema.sql` in Supabase SQL Editor to create tables
+3. Set authentication credentials:
+   - `VITE_AUTH_USERNAME` - Username for admin access (choose something unique to your family)
+   - `VITE_AUTH_PASSWORD` - Strong password (recommend using a password generator)
+4. Run `supabase-schema.sql` in Supabase SQL Editor to create tables
+
+### Security & Sharing
+**Authentication**: The app uses client-side username/password authentication stored in environment variables. This is suitable for family/small group sharing where one set of credentials is shared among trusted users.
+
+**For sharing with other Triple J fans:**
+- Each family/group should set up their own Supabase project
+- Choose a unique, non-obvious username
+- Use a strong, randomly-generated password
+- This approach protects against casual brute force attempts
+- **Note**: This is not enterprise-grade security, but appropriate for a family prediction tracker
+
+**Session Management**: Authentication state is stored in both localStorage and cookies with a 7-day expiration.
 
 ## Architecture
 
