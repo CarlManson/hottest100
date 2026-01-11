@@ -273,4 +273,4 @@ Built with ❤️ for families who love music and friendly competition.
 
 If you found this useful, consider giving it a star! It helps others discover the project.
 
-**Ready to build your own?** → [Fork this repository](../../fork) and get started!
+**Ready to build your own?** → [Fork this repository](../../fork) and get started! 
