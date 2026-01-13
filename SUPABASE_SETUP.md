@@ -1,6 +1,6 @@
 # Supabase Setup Guide
 
-This guide will help you set up the database backend so your family can all access the app from their own devices with real-time updates.
+This guide will help you set up the database backend so your group can all access the app from their own devices with real-time updates.
 
 ## Step 1: Create a Supabase Account
 
@@ -11,7 +11,7 @@ This guide will help you set up the database backend so your family can all acce
    - 500MB database
    - 1GB file storage
    - 50,000 monthly active users
-   - More than enough for a family app!
+   - More than enough for a group app!
 
 ## Step 2: Create a New Project
 
@@ -36,7 +36,7 @@ This guide will help you set up the database backend so your family can all acce
 
 This creates all the tables you need:
 - `songs` - All eligible songs
-- `family_members` - Everyone who's voting
+- `family_members` - Everyone who's voting (database table name kept for compatibility)
 - `votes` - Each person's top 10 picks
 - `countdown_results` - The actual Hottest 100/200 results
 
@@ -83,13 +83,13 @@ The app has been updated to use Supabase instead of localStorage. The new versio
 
 2. Open http://localhost:5173
 
-3. Try adding some songs and family members
+3. Try adding some songs and members
 
 4. Open the app in multiple browser windows to see real-time updates!
 
-## Step 8: Deploy for Your Family
+## Step 8: Deploy for Your Group
 
-Once everything works locally, deploy it so your family can access it:
+Once everything works locally, deploy it so your group can access it:
 
 ### Option A: Netlify (Easiest)
 
@@ -126,7 +126,99 @@ Once everything works locally, deploy it so your family can access it:
 
 3. Follow prompts and add environment variables when asked
 
-4. Share the URL with your family!
+4. Share the URL with your mates!
+
+## Step 9: AI Member Profiles (Optional)
+
+The app includes an **optional** AI feature that generates personality profiles for each member based on their music picks and performance. This requires an Anthropic API key and deploying a Supabase Edge Function.
+
+### Why It's Optional
+
+- The app works perfectly without this feature
+- It requires an Anthropic account (free tier available)
+- Adds a small cost per profile generation (~$0.01-0.05)
+- Requires deploying a Supabase Edge Function
+
+### Setup Steps
+
+**1. Get an Anthropic API Key**
+
+1. Go to [console.anthropic.com](https://console.anthropic.com/)
+2. Sign up for an account (free tier includes $5 credit)
+3. Navigate to API Keys
+4. Create a new API key and copy it
+
+**2. Install Supabase CLI**
+
+```bash
+# macOS/Linux
+brew install supabase/tap/supabase
+
+# Windows (via Scoop)
+scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+scoop install supabase
+```
+
+**3. Login and Link Your Project**
+
+```bash
+# Login to Supabase
+supabase login
+
+# Link to your project (find YOUR_PROJECT_REF in your Supabase project URL)
+supabase link --project-ref YOUR_PROJECT_REF
+```
+
+**4. Store Your API Key as a Secret**
+
+```bash
+# Set the Anthropic API key (replace with your actual key)
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-api03-...
+```
+
+**Important:** The API key is stored securely in Supabase, **not** in your `.env` file.
+
+**5. Deploy the Edge Function**
+
+```bash
+# Deploy from your project root directory
+supabase functions deploy generate-profile
+```
+
+**6. Verify Deployment**
+
+1. Go to your Supabase Dashboard
+2. Click **Edge Functions** in the sidebar
+3. You should see `generate-profile` listed and active
+
+### What You Get
+
+Once deployed, the app will show "Generate AI Profile" buttons that create:
+- **Music Taste Analysis**: Genre preferences, mainstream vs indie, artist origins
+- **Profile Labels**: Fun 2-3 word descriptions like "Indie Purist" or "Aussie Champion"
+- **Live Commentary**: Performance updates as countdown results come in
+
+### Cost Estimate
+
+- Uses Claude 3 Haiku model (fast and cheap)
+- ~$0.01-0.05 per profile generation
+- Only runs when you click the button
+- Anthropic free tier includes $5 credit (~100-500 profiles)
+
+### Troubleshooting
+
+**Function not responding:**
+- Check Edge Function logs in Supabase Dashboard
+- Verify the secret: `supabase secrets list`
+- Ensure your API key is valid at console.anthropic.com
+
+**"ANTHROPIC_API_KEY not configured" error:**
+- Re-run: `supabase secrets set ANTHROPIC_API_KEY=your_key`
+- Redeploy: `supabase functions deploy generate-profile`
+
+**Detailed setup guide:** See [supabase/functions/README.md](supabase/functions/README.md)
+
+---
 
 ## Database Management
 
@@ -174,9 +266,9 @@ This happens automatically using Supabase Realtime.
 
 ## Security Notes
 
-### Current Setup (Family-Friendly)
+### Current Setup (Group-Friendly)
 
-The database is currently open - anyone with the app URL can read/write data. This is fine for a private family app.
+The database is currently open - anyone with the app URL can read/write data. This is fine for a private group app.
 
 ### If You Want to Add Authentication
 
@@ -229,7 +321,7 @@ If you want to require login (optional):
 
 **Your Usage:**
 - ~1,000 songs = ~1MB
-- ~10 family members = negligible
+- ~10 members = negligible
 - Real-time updates = ~1MB per day during voting
 
 **Verdict:** You'll easily stay within free tier limits! 🎉
@@ -244,4 +336,4 @@ If you run into issues:
 
 ---
 
-**You're all set! Your family can now vote together in real-time** 🔥
+**You're all set! Your group can now vote together in real-time** 🔥
