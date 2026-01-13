@@ -1,6 +1,6 @@
-# Triple J Hottest 100 Family Tracker
+# Triple J Hottest 100 Tracker
 
-A beautiful, real-time web app for tracking your family's predictions for the Triple J Hottest 100 countdown. Built with love for family fun! 🔥
+A beautiful, real-time web app for tracking your mates' predictions for the Triple J Hottest 100 countdown. Built with love for friends and music! 🔥
 
 **Live Features:** Real-time sync, multi-device support, beautiful mobile-optimized UI
 **Tech Stack:** React 18, TypeScript, Tailwind CSS v4, Supabase
@@ -10,13 +10,13 @@ A beautiful, real-time web app for tracking your family's predictions for the Tr
 
 ## 🎯 Why This Exists
 
-Every year, families across Australia gather to listen to the Triple J Hottest 100. This app makes it fun to:
-- Compete with family members to see who predicts best
+Every year, mates across Australia gather to listen to the Triple J Hottest 100. This app makes it fun to:
+- Compete with friends to see who predicts best
 - Track scores in real-time as the countdown happens
 - Vote from any device (phone, tablet, laptop)
 - Never lose your data with cloud storage
 
-**Perfect for:** Families, friend groups, office competitions, house parties
+**Perfect for:** Friend groups, mates, office competitions, house parties
 
 ---
 
@@ -31,7 +31,7 @@ Every year, families across Australia gather to listen to the Triple J Hottest 1
    - Follow [SUPABASE_SETUP.md](SUPABASE_SETUP.md)
 3. **Deploy to Netlify or Vercel** (drag & drop, 2 minutes)
    - Follow [DEPLOYMENT.md](DEPLOYMENT.md)
-4. **Share with your family** and start voting!
+4. **Share with your mates** and start voting!
 
 ### What You'll Need
 
@@ -163,13 +163,13 @@ This app is built to be customized! Here are some ideas:
 
 ### Easy Customizations
 - Change color scheme (edit Tailwind classes)
-- Add your family name to the header
+- Add your group name to the header
 - Customize scoring rules
 - Add custom badges or achievements
 - Change language/translations
 
 ### Medium Complexity
-- Add authentication (family members login)
+- Add authentication (member login)
 - Create historical year-over-year stats
 - Add Spotify integration for song previews
 - Create printable leaderboard PDFs
@@ -227,7 +227,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
 ## 🤝 Contributing
 
-This project was built for personal/family use, but contributions are welcome!
+This project was built for personal and group use, but contributions are welcome!
 
 **Ways to contribute:**
 - Report bugs via GitHub Issues
@@ -276,7 +276,7 @@ See [LICENSE](LICENSE) file for details.
 
 ## 🎉 Have Fun!
 
-Built with ❤️ for families who love music and friendly competition.
+Built with ❤️ for mates who love music and friendly competition.
 
 **May the best predictor win!** 🏆
 
