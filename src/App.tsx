@@ -342,7 +342,7 @@ function App() {
           <div className="max-w-7xl mx-auto px-6 text-center text-white text-sm">
             <p className="font-semibold">Fairest 100: The Triple J Hottest 100 Voting Scorecard</p>
             <p className="mt-2 text-white/90 text-xs">
-              Open source project • Made by Carl Manson for{' '}
+              Open source project • Made by Carl Manson,{' '}
               <a href="https://axiom.com.au" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">
                 Axiom
               </a>{' '}
