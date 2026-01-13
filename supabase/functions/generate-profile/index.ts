@@ -96,19 +96,19 @@ serve(async (req) => {
 async function generateMusicTaste(data: ProfileRequest) {
   const { memberName, picks, totalPicks } = data;
 
-  const prompt = `You're a music critic analyzing someone's song choices. Analyze ONLY the song choices below - completely ignore any performance or scores.
+  const prompt = `You're a cheeky Aussie music critic analyzing someone's Hottest 100 picks. Be funny, playful, and a bit cheeky - but never mean-spirited. Add some Aussie slang naturally (mate, reckon, ripper, bloody good, etc.) but don't overdo it.
 
 **${memberName}'s Picks:**
 ${picks}
 
-Write a music taste analysis (3-4 sentences). Comment on:
+Write a music taste analysis (3-4 sentences) with personality. Comment on:
 - Genre preferences and patterns
 - Mainstream vs indie/alternative leanings
-- Artist nationality/origin patterns (e.g., heavy Australian focus, international mix, US-centric, etc.)
-- Any notable themes or trends in their selections
-- Overall music taste profile
+- Artist nationality/origin patterns (e.g., backing the Aussies, going international, etc.)
+- Any notable themes or trends
+- Give them a bit of a roast if their taste is predictable, or props if it's interesting
 
-Be observant and insightful about their musical preferences. Focus purely on WHAT they picked, not how they're performing in any competition.
+Be observant, funny, and engaging about their musical preferences. Keep it friendly and fun!
 
 Return format:
 MUSIC_TASTE: [Your 3-4 sentence analysis here]`;
@@ -133,18 +133,18 @@ async function generateLabelAndTaste(data: ProfileRequest) {
     ? `\n\n**IMPORTANT - Labels Already Used (DO NOT USE THESE):**\n${existingLabels.join(', ')}\nChoose a DIFFERENT label that hasn't been used.`
     : '';
 
-  const prompt = `You're a music critic analyzing someone's song choices. Analyze ONLY the song choices below - completely ignore any performance or scores.
+  const prompt = `You're a cheeky Aussie music critic analyzing someone's Hottest 100 picks. Be funny, playful, and a bit cheeky - but never mean-spirited. Add some Aussie character naturally.
 
 **${memberName}'s Picks:**
 ${picks}${existingLabelsText}
 
 Write a response in this EXACT format:
 
-LABEL: [2-3 word punchy description based on their music taste - like "Indie Purist", "Pop Connoisseur", "Alt-Rock Fan", "Genre Hopper", "Mainstream Maven", "Aussie Devotee", "Global Curator", etc. Base it on the genres, styles, and artist origins they chose. MUST be unique and different from any labels already used above.]
+LABEL: [2-3 word funny/cheeky description based on their music taste - like "Triple J Bingo Winner", "Indie Snob", "Pub Rock Tragic", "TikTok Merchant", "Hipster Handbook", "True Blue Aussie", "Spotify's Top 50", "Genre Chaos Agent", "Nostalgic Dad", etc. Make it playful and based on their actual picks. MUST be unique and different from any labels already used above.]
 
-MUSIC_TASTE: [3-4 sentences analyzing their song choices - genre preferences, mainstream vs indie/alternative leanings, artist nationality/origin patterns (e.g., all Australian, international mix, US-heavy, etc.), any notable themes or trends. Focus on WHAT they picked.]
+MUSIC_TASTE: [3-4 sentences with personality analyzing their picks - genre preferences, mainstream vs indie leanings, backing Aussies vs going international, any funny patterns. Give them a friendly roast if deserved or props if they've got interesting taste. Keep it fun and cheeky!]
 
-Be observant and insightful about their musical preferences.`;
+Be funny, observant, and engaging. Never mean - just good-natured ribbing.`;
 
   const response = await callClaudeAPI(prompt);
 
@@ -178,19 +178,19 @@ async function generateRunningCommentary(data: ProfileRequest) {
 ${m.picks}
 `).join('\n');
 
-  const prompt = `You're providing running commentary for a Triple J Hottest 100 predictions competition. The countdown is in progress!
+  const prompt = `You're an Aussie sports commentator covering the Triple J Hottest 100 predictions comp like it's the footy finals! Be funny, energetic, and add some Aussie character. Use natural Aussie expressions but don't overdo it.
 
 ${membersText}
 
 IMPORTANT: Use the EXACT match counts provided above. Do NOT count or calculate them yourself from the picks list.
 
 For EACH person, write a brief (2-3 sentences) performance commentary:
-- How they're doing in the competition (use the exact score and rank numbers provided)
-- Comment on their match count (use the EXACT number provided, not what you count)
-- Their current trajectory
-- Compare to other participants if multiple
+- How they're tracking (use exact scores and ranks)
+- Comment on their match count (use EXACT number provided)
+- Their chances, trajectory, what they need to do
+- Friendly banter comparing them to others
 
-Be engaging and make it feel like live commentary.
+Be engaging, funny, and make it feel like live sports commentary. Keep it friendly - roast them if they're doing poorly but in a good-natured way!
 
 Return format (one line per member):
 MEMBER_${members[0].memberId}: [Commentary here]
@@ -218,7 +218,7 @@ async function generateFullProfile(data: ProfileRequest) {
     ? `\n\n**IMPORTANT - Labels Already Used (DO NOT USE THESE):**\n${existingLabels.join(', ')}\nChoose a DIFFERENT label that hasn't been used.`
     : '';
 
-  const prompt = `You're a music critic writing profiles for a Triple J Hottest 100 predictions competition. Be insightful and engaging.
+  const prompt = `You're a cheeky Aussie music critic covering the Triple J Hottest 100 predictions comp. Be funny, playful, and engaging - but never mean-spirited. Add some Aussie character naturally (mate, reckon, bloody, ripper, etc.) but don't force it.
 
 **${memberName}'s Picks:**
 ${picks}
@@ -232,13 +232,13 @@ IMPORTANT: Use the EXACT numbers provided above. Do NOT count or calculate them 
 
 Write a response in this EXACT format:
 
-LABEL: [2-3 word punchy description based on their music taste - like "Indie Purist", "Pop Connoisseur", "Alt-Rock Fan", "Genre Hopper", "Mainstream Maven", "Aussie Champion", "Global Selector", etc. Base it on the genres, styles, and artist origins they chose. If they picked predominantly Australian artists, acknowledge it. If they picked internationally diverse, mention it. MUST be unique and different from any labels already used above.]
+LABEL: [2-3 word funny/cheeky description of their music taste - like "Triple J Bingo Winner", "Indie Snob", "Pub Rock Tragic", "TikTok Merchant", "Spotify's Algorithm", "True Blue Aussie", "Genre Chaos Agent", "Dad Rock Enthusiast", "Mainstream Maven", etc. Make it playful and based on their picks! MUST be unique and different from any labels already used above.]
 
-MUSIC_TASTE: [3-4 sentences analyzing their song choices - genre preferences, mainstream vs indie/alternative leanings, artist nationality/origin patterns (e.g., Australian-heavy, international mix, US-centric, UK focus, etc.), any notable themes or trends. Focus on WHAT they picked.]
+MUSIC_TASTE: [3-4 sentences with personality about their picks - genre patterns, mainstream vs indie, backing the Aussies or going international, any funny observations. Give them a friendly roast if their taste is predictable, or props if it's interesting. Keep it cheeky and fun!]
 
-PERFORMANCE: [2-3 sentences about how they're performing in the competition - use the EXACT match count provided (${matchCount}/${totalPicks}), their trajectory, comparison to others. Focus on HOW they're doing.]
+PERFORMANCE: [2-3 sentences like sports commentary about how they're tracking - use EXACT match count (${matchCount}/${totalPicks}), their score and rank, whether they're killing it or need a miracle. Compare to others if relevant. Keep it funny and energetic!]
 
-Keep it short, punchy, and engaging. Focus the label on their musical preferences and artist origin patterns.`;
+Be funny, observant, and engaging. Never mean - just good-natured Aussie banter!`;
 
   const response = await callClaudeAPI(prompt);
 
