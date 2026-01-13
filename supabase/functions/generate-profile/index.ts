@@ -218,27 +218,22 @@ async function generateFullProfile(data: ProfileRequest) {
     ? `\n\n**IMPORTANT - Labels Already Used (DO NOT USE THESE):**\n${existingLabels.join(', ')}\nChoose a DIFFERENT label that hasn't been used.`
     : '';
 
-  const prompt = `You're a cheeky Aussie music critic covering the Triple J Hottest 100 predictions comp. Be funny, playful, and engaging - but never mean-spirited. Add some Aussie character naturally (mate, reckon, bloody, ripper, etc.) but don't force it.
+  const prompt = `You're a cheeky Aussie music critic analyzing someone's Hottest 100 picks. Be funny, playful, and engaging - but never mean-spirited. Add some Aussie character naturally (mate, reckon, bloody, ripper, etc.) but don't force it.
 
 **${memberName}'s Picks:**
-${picks}
+${picks}${existingLabelsText}
 
-**Their Performance:**
-- Score: ${score} points
-- Ranking: ${rank} of ${totalMembers}
-- Matches: EXACTLY ${matchCount} out of ${totalPicks} picks made the countdown${existingLabelsText}
-
-IMPORTANT: Use the EXACT numbers provided above. Do NOT count or calculate them yourself.
+**IMPORTANT:** Analyze ONLY their music taste based on the songs they picked. IGNORE any text like "Made #X" or "Didn't make it" - that's countdown info, not relevant. Focus purely on the artists, songs, and genres they chose.
 
 Write a response in this EXACT format:
 
 LABEL: [2-3 word funny/cheeky description of their music taste - like "Triple J Bingo Winner", "Indie Snob", "Pub Rock Tragic", "TikTok Merchant", "Spotify's Algorithm", "True Blue Aussie", "Genre Chaos Agent", "Dad Rock Enthusiast", "Mainstream Maven", etc. Make it playful and based on their picks! MUST be unique and different from any labels already used above.]
 
-MUSIC_TASTE: [3-4 sentences with personality about their picks - genre patterns, mainstream vs indie, backing the Aussies or going international, any funny observations. Give them a friendly roast if their taste is predictable, or props if it's interesting. Keep it cheeky and fun!]
+MUSIC_TASTE: [3-4 sentences with personality about their music choices - genre patterns, mainstream vs indie, backing the Aussies or going international, any funny observations about their taste. Give them a friendly roast if their taste is predictable, or props if it's interesting. Keep it cheeky and fun!]
 
-PERFORMANCE: [2-3 sentences like sports commentary about how they're tracking - use EXACT match count (${matchCount}/${totalPicks}), their score and rank, whether they're killing it or need a miracle. Compare to others if relevant. Keep it funny and energetic!]
+PERFORMANCE: [2-3 sentences continuing the music taste analysis - maybe predict how they'd go at a pub quiz, what their Spotify Wrapped probably looks like, or roast them for being too safe/hipster/mainstream. Keep it about their music taste, NOT competition results!]
 
-Be funny, observant, and engaging. Never mean - just good-natured Aussie banter!`;
+Be funny, observant, and engaging. Never mean - just good-natured Aussie banter about their music taste!`;
 
   const response = await callClaudeAPI(prompt);
 
