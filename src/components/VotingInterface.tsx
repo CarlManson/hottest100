@@ -4,7 +4,7 @@ import type { FamilyMember } from '../types';
 import { LazyImage } from './LazyImage';
 
 export const VotingInterface: React.FC = () => {
-  const { songs, familyMembers, addFamilyMember, updateFamilyMember, removeFamilyMember } = useApp();
+  const { songs, familyMembers, addFamilyMember, updateFamilyMember, removeFamilyMember, generateMusicTasteProfile, isGeneratingProfiles, canRegenerateMusicTaste } = useApp();
   const [newMemberName, setNewMemberName] = useState('');
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -281,6 +281,21 @@ export const VotingInterface: React.FC = () => {
                   );
                 })}
               </div>
+            )}
+            {selectedMember.votes.length > 0 && (
+              <button
+                onClick={() => generateMusicTasteProfile(selectedMember.id)}
+                disabled={isGeneratingProfiles || !canRegenerateMusicTaste(selectedMember.id)}
+                className={`w-full mt-4 px-4 py-2 rounded-lg font-semibold text-sm transition ${
+                  isGeneratingProfiles || !canRegenerateMusicTaste(selectedMember.id)
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600'
+                }`}
+              >
+                {isGeneratingProfiles ? '🎵 Analyzing...' :
+                 !canRegenerateMusicTaste(selectedMember.id) ? '✓ Analyzed (24h cooldown)' :
+                 '🎵 Analyze Music Taste'}
+              </button>
             )}
           </div>
         </div>
