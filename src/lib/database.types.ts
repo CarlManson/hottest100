@@ -98,6 +98,44 @@ export interface Database {
           created_at?: string
         }
       }
+      member_profiles: {
+        Row: {
+          id: string
+          family_member_id: string
+          label: string | null
+          music_taste_description: string | null
+          performance_commentary: string | null
+          last_label_regeneration: string | null
+          last_commentary_update: string | null
+          last_music_taste_update: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          family_member_id: string
+          label?: string | null
+          music_taste_description?: string | null
+          performance_commentary?: string | null
+          last_label_regeneration?: string | null
+          last_commentary_update?: string | null
+          last_music_taste_update?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          family_member_id?: string
+          label?: string | null
+          music_taste_description?: string | null
+          performance_commentary?: string | null
+          last_label_regeneration?: string | null
+          last_commentary_update?: string | null
+          last_music_taste_update?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

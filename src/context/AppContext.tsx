@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { AppState, Song, FamilyMember, CountdownResult, MemberProfile } from '../types';
 import { supabase } from '../lib/supabase';
-import { generateMusicTasteProfileAPI, generateLabelAndTasteAPI } from '../utils/profileGenerator';
+import { generateMusicTasteProfileAPI } from '../utils/profileGenerator';
 
 interface AppContextType extends AppState {
   loading: boolean;
@@ -471,7 +471,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           family_member_id: memberId,
           music_taste_description: result.musicTasteDescription,
           last_music_taste_update: new Date().toISOString(),
-        }, {
+        } as any, {
           onConflict: 'family_member_id'
         });
 
@@ -533,7 +533,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             last_music_taste_update: new Date().toISOString(),
             last_label_regeneration: new Date().toISOString(),
             last_commentary_update: new Date().toISOString(),
-          }, {
+          } as any, {
             onConflict: 'family_member_id'
           });
 
@@ -584,6 +584,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const { error } = await supabase
       .from('member_profiles')
+      // @ts-ignore - Type mismatch with Supabase generated types
       .update({
         last_music_taste_update: twentyFiveHoursAgo,
         last_label_regeneration: twentyFiveHoursAgo,
