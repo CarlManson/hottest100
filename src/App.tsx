@@ -341,7 +341,13 @@ function App() {
         <footer className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 border-t mt-12 py-6">
           <div className="max-w-7xl mx-auto px-6 text-center text-white text-sm">
             <p className="font-semibold">Fairest 100: The Triple J Hottest 100 Voting Scorecard</p>
-            {/* <p className="mt-1 text-white/80">Real-time family voting tracker with cloud sync</p> */}
+            <p className="mt-2 text-white/90 text-xs">
+              Open source project • Made by Carl Manson for{' '}
+              <a href="https://axiom.com.au" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">
+                Axiom
+              </a>{' '}
+              • 2026
+            </p>
             <div className="mt-4 space-y-2">
               {isAuthenticated ? (
                 <>
