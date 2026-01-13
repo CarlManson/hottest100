@@ -59,19 +59,26 @@ Perfect for first-time forkers:
 ## ✨ Features
 
 ### For Users
-- **Dashboard**: Live leaderboard and countdown progress
-- **Mobile Optimized**: Beautiful UI on phones and tablets
+- **Authentication**: Secure username/password login for your group
+- **Dashboard**: Live leaderboard with countdown progress widget
+- **Hero Display**: Featured #1 song as large square tile with podium
+- **AI Member Profiles**: Fun Aussie-themed profiles for each mate
+- **Awards System**: Hottest 100 awards and achievements
+- **Mobile Optimized**: Beautiful responsive UI on phones, tablets, and desktop
 - **Song Management**: Import songs via JSON, CSV, or manual entry
-- **Family Voting**: Everyone picks their top 10 songs
-- **Countdown Entry**: Enter results as they're announced
-- **Live Scoring**: Watch scores update in real-time
+- **Member Management**: Rename and delete mates with confirmation
+- **Voting Interface**: Everyone picks their top 10 songs with dark theme
+- **Countdown Entry**: Enter results as they're announced (supports Hottest 100 & 200)
+- **Detailed Breakdown**: Comprehensive scoring table showing all vote matches
+- **Live Scoring**: Watch scores update in real-time across all devices
 - **Multi-Device**: Vote on phone, view on TV, enter on laptop
 
 ### For Developers
 - **TypeScript**: Full type safety
 - **Real-time Sync**: Supabase subscriptions for live updates
-- **Modern Stack**: React 18, Vite, Tailwind CSS v4
-- **Mobile-First**: Responsive design with careful attention to mobile UX
+- **Modern Stack**: React 18, Vite, Tailwind CSS v4, SCSS modular library
+- **Responsive Grid**: Advanced tablet/desktop layout system
+- **Mobile-First**: Responsive design with refined breakpoints and careful UX
 - **Well Documented**: Clear code comments and comprehensive docs
 - **Easy Deploy**: Static build works anywhere
 
@@ -80,9 +87,10 @@ Perfect for first-time forkers:
 ## 🎮 How to Use
 
 ### Setup (Before Hottest 100)
-1. **Add Songs**: Import the ~100-200 eligible songs
-2. **Add Family**: Create profiles for everyone playing
-3. **Vote**: Each person picks their top 10 songs
+1. **Login**: Use your group's shared username/password
+2. **Add Songs**: Import the ~100-200 eligible songs
+3. **Add Mates**: Create profiles for everyone playing
+4. **Vote**: Each person picks their top 10 songs
 
 ### During the Countdown
 1. **Enter Results**: One person enters positions as announced
@@ -119,9 +127,11 @@ cd hottest100
 # Install dependencies
 npm install
 
-# Create .env file with your Supabase credentials
+# Create .env file with your Supabase and authentication credentials
 cp .env.example .env
-# Edit .env and add your Supabase URL and key
+# Edit .env and add:
+# - Supabase URL and anonymous key
+# - Authentication username/password for your group
 
 # Run development server
 npm run dev
@@ -199,10 +209,13 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 - **Real-time**: WebSocket subscriptions
 - **Backups**: Automatic daily backups (7-day retention on free tier)
 
-### Privacy
+### Privacy & Security
+- **Authentication**: Username/password login (shared credentials for your group)
+- **Session Management**: 7-day authentication state in localStorage and cookies
+- **Security Note**: Suitable for small group sharing; not enterprise-grade but protects against casual access
 - No analytics or tracking
 - No ads or external scripts
-- Your family's data stays in your Supabase project
+- Your group's data stays in your Supabase project
 - You control everything
 
 ### Backup & Export
