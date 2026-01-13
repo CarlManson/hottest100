@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
+import type { MemberProfile } from '../types';
+import { LazyImage } from './LazyImage';
 
 interface DashboardProps {
   onNavigate?: (tab: 'songs' | 'voting' | 'countdown' | 'leaderboard') => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
-  const { familyMembers, countdownResults, hottest200Results, songs } = useApp();
+  const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
+  const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
@@ -227,7 +230,33 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                         {index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold text-sm sm:text-base text-gray-900 truncate">{entry.member.name}</div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="font-bold text-sm sm:text-base text-gray-900 truncate">{entry.member.name}</div>
+                          {(() => {
+                            const profile = getProfileForMember(entry.member.id);
+                            if (!profile || !profile.label) return null;
+
+                            if (profile.musicTasteDescription) {
+                              return (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedProfile(profile);
+                                  }}
+                                  className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-orange-500 hover:to-pink-500 transition whitespace-nowrap cursor-pointer"
+                                >
+                                  {profile.label}
+                                </button>
+                              );
+                            } else {
+                              return (
+                                <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                  {profile.label}
+                                </span>
+                              );
+                            }
+                          })()}
+                        </div>
                         <div className="text-xs sm:text-sm text-gray-600">
                           {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
                         </div>
@@ -294,6 +323,98 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             >
               Manage Votes
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
+      {selectedProfile && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedProfile(null)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-4 sm:p-6 max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg sm:text-xl font-bold">
+                {familyMembers.find(m => m.id === selectedProfile.familyMemberId)?.name}'s Music Taste
+              </h3>
+              <button
+                onClick={() => setSelectedProfile(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {selectedProfile.musicTasteDescription ? (
+              <p className="text-sm sm:text-base text-gray-700 leading-relaxed mb-6">
+                {selectedProfile.musicTasteDescription}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500 italic mb-6">No music taste profile generated yet</p>
+            )}
+
+            {/* Member's Picks */}
+            {(() => {
+              const member = familyMembers.find(m => m.id === selectedProfile.familyMemberId);
+              if (!member || member.votes.length === 0) return null;
+
+              return (
+                <div>
+                  <h4 className="text-base sm:text-lg font-bold mb-3 text-gray-800">Their Picks</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2">
+                    {member.votes.map((vote) => {
+                      const song = songs.find((s) => s.id === vote.songId);
+                      if (!song) return null;
+
+                      // Check if song is in countdown
+                      const countdownEntry = [...countdownResults, ...hottest200Results].find(
+                        r => r.songId === vote.songId
+                      );
+                      const isMatched = !!countdownEntry;
+
+                      return (
+                        <div
+                          key={vote.songId}
+                          className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg ${
+                            isMatched
+                              ? 'bg-green-50 border-2 border-green-500'
+                              : 'bg-gray-50'
+                          }`}
+                        >
+                          {song.thumbnail && (
+                            <LazyImage
+                              src={song.thumbnail}
+                              alt={`${song.title} artwork`}
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                            <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
+                              <span className="truncate">{song.artist}</span>
+                              {song.isAustralian && (
+                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                  AUS
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {countdownEntry && (
+                            <div className="font-bold text-green-600 text-sm sm:text-lg flex-shrink-0">
+                              #{countdownEntry.position}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, getSongMatches, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
-import type { MemberProfile } from '../utils/profileGenerator';
-import type { FamilyMember } from '../types';
+import type { MemberProfile, FamilyMember } from '../types';
+import { LazyImage } from './LazyImage';
 
 export const Leaderboard: React.FC = () => {
   const {
@@ -13,11 +13,14 @@ export const Leaderboard: React.FC = () => {
     profiles,
     isGeneratingProfiles,
     profileError,
-    generateProfiles,
+    regenerateAllMusicTastes,
+    getNextAvailableRegenerationTime,
+    resetRateLimit,
     getProfileForMember
   } = useApp();
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
@@ -27,7 +30,40 @@ export const Leaderboard: React.FC = () => {
     ? getSongMatches(selectedMember, countdownResults, hottest200Results, songs)
     : [];
 
-  const hasApiKey = !!import.meta.env.VITE_ANTHROPIC_API_KEY;
+  // Update countdown timer every second
+  useEffect(() => {
+    const updateTimer = () => {
+      const nextAvailable = getNextAvailableRegenerationTime();
+      if (!nextAvailable) {
+        setTimeRemaining(null);
+        return;
+      }
+
+      const now = new Date().getTime();
+      const diff = nextAvailable.getTime() - now;
+
+      if (diff <= 0) {
+        setTimeRemaining(null);
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      if (hours > 0) {
+        setTimeRemaining(`${hours}h ${minutes}m`);
+      } else {
+        setTimeRemaining(`${minutes}m`);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [getNextAvailableRegenerationTime, profiles]);
+
+  const canRegenerate = !timeRemaining && familyMembers.length > 0;
 
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-6">
@@ -42,20 +78,33 @@ export const Leaderboard: React.FC = () => {
               View detailed vote breakdown →
             </a>
           </div>
-          <button
-            onClick={generateProfiles}
-            disabled={isGeneratingProfiles || familyMembers.length === 0}
-            className={`px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition whitespace-nowrap ${
-              isGeneratingProfiles || familyMembers.length === 0
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : hasApiKey
-                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-                : 'bg-gray-400 text-white hover:bg-gray-500'
-            }`}
-            title={!hasApiKey ? 'Requires Anthropic API key in .env file' : ''}
-          >
-            {isGeneratingProfiles ? '🤖 Generating...' : profiles.length > 0 ? '🔄 Regenerate Profiles' : hasApiKey ? '✨ Generate Profiles' : '✨ Generate Profiles (Setup Required)'}
-          </button>
+          <div className="flex gap-2">
+            {timeRemaining && (
+              <button
+                onClick={resetRateLimit}
+                disabled={isGeneratingProfiles}
+                className="px-2 sm:px-3 py-2 rounded-lg font-semibold text-xs sm:text-sm transition bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+                title="Reset rate limit for testing"
+              >
+                🔓
+              </button>
+            )}
+            <button
+              onClick={regenerateAllMusicTastes}
+              disabled={isGeneratingProfiles || !canRegenerate}
+              className={`px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition whitespace-nowrap ${
+                isGeneratingProfiles || !canRegenerate
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+              }`}
+            >
+              {isGeneratingProfiles
+                ? '🎵 Analyzing...'
+                : timeRemaining
+                  ? `⏱️ Wait ${timeRemaining}`
+                  : '✨ Generate Profiles'}
+            </button>
+          </div>
         </div>
         {profileError && (
           <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs sm:text-sm text-red-700">
@@ -88,18 +137,23 @@ export const Leaderboard: React.FC = () => {
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <div className="font-semibold text-sm sm:text-lg truncate">{entry.member.name}</div>
-                        {profile && (
+                        {profile && profile.label && profile.musicTasteDescription && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedProfile(profile);
                             }}
-                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap"
+                            className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-orange-500 hover:to-pink-500 transition whitespace-nowrap cursor-pointer"
                           >
                             {profile.label}
                           </button>
+                        )}
+                        {profile && profile.label && !profile.musicTasteDescription && (
+                          <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                            {profile.label}
+                          </span>
                         )}
                       </div>
                       <div className="text-xs sm:text-sm text-gray-600">
@@ -212,18 +266,13 @@ export const Leaderboard: React.FC = () => {
           onClick={() => setSelectedProfile(null)}
         >
           <div
-            className="bg-white rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6"
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-4 sm:p-6 max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg sm:text-xl font-bold">
-                  {familyMembers.find(m => m.id === selectedProfile.memberId)?.name}
-                </h3>
-                <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                  {selectedProfile.label}
-                </span>
-              </div>
+              <h3 className="text-lg sm:text-xl font-bold">
+                {familyMembers.find(m => m.id === selectedProfile.familyMemberId)?.name}'s Music Taste
+              </h3>
               <button
                 onClick={() => setSelectedProfile(null)}
                 className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -231,9 +280,73 @@ export const Leaderboard: React.FC = () => {
                 ×
               </button>
             </div>
-            <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-              {selectedProfile.description}
-            </p>
+
+            {selectedProfile.musicTasteDescription ? (
+              <p className="text-sm sm:text-base text-gray-700 leading-relaxed mb-6">
+                {selectedProfile.musicTasteDescription}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500 italic mb-6">No music taste profile generated yet</p>
+            )}
+
+            {/* Member's Picks */}
+            {(() => {
+              const member = familyMembers.find(m => m.id === selectedProfile.familyMemberId);
+              if (!member || member.votes.length === 0) return null;
+
+              return (
+                <div>
+                  <h4 className="text-base sm:text-lg font-bold mb-3 text-gray-800">Their Picks</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2">
+                    {member.votes.map((vote) => {
+                      const song = songs.find((s) => s.id === vote.songId);
+                      if (!song) return null;
+
+                      // Check if song is in countdown
+                      const countdownEntry = [...countdownResults, ...hottest200Results].find(
+                        r => r.songId === vote.songId
+                      );
+                      const isMatched = !!countdownEntry;
+
+                      return (
+                        <div
+                          key={vote.songId}
+                          className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg ${
+                            isMatched
+                              ? 'bg-green-50 border-2 border-green-500'
+                              : 'bg-gray-50'
+                          }`}
+                        >
+                          {song.thumbnail && (
+                            <LazyImage
+                              src={song.thumbnail}
+                              alt={`${song.title} artwork`}
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                            <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
+                              <span className="truncate">{song.artist}</span>
+                              {song.isAustralian && (
+                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                  AUS
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {countdownEntry && (
+                            <div className="font-bold text-green-600 text-sm sm:text-lg flex-shrink-0">
+                              #{countdownEntry.position}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import { calculateAwards } from '../utils/awards';
-import type { MemberProfile } from '../utils/profileGenerator';
+import type { MemberProfile } from '../types';
 import banner from '../assets/banner-bg.jpg';
+import { LazyImage } from './LazyImage';
 
 export const PublicHome: React.FC = () => {
   const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
@@ -52,14 +53,14 @@ export const PublicHome: React.FC = () => {
         style={{ '--banner-image': `url(${banner})` } as React.CSSProperties}
       >
         <div className="absolute inset-0 bg-black/30"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        <div className="relative max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Title and Progress */}
-            <div className="text-center lg:text-left text-white">
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black mb-4 drop-shadow-lg">
+            <div className="text-center xl:text-left text-white">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl 2xl:text-7xl font-black mb-4 drop-shadow-lg">
                 {hasHottest200Started ? 'Triple J Hottest 200 Tracker' : 'Triple J Hottest 100 Tracker'}
               </h1>
-              <p className="text-lg sm:text-2xl font-semibold mb-8 drop-shadow-md">
+              <p className="text-lg sm:text-2xl 2xl:text-3xl font-semibold mb-8 drop-shadow-md">
                 {totalResults === 0
                   ? 'Predictions are in! Let the countdown begin...'
                   : hasHottest200Started
@@ -94,9 +95,9 @@ export const PublicHome: React.FC = () => {
 
             {/* #1 Song Card - Only when available and Hottest 200 NOT started */}
             {numberOneSong && numberOneSongData && !hasHottest200Started && (
-              <div className="flex justify-center lg:justify-end">
+              <div className="flex justify-center xl:justify-end">
                 <div
-                  className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
+                  className="relative w-full max-w-md xl:max-w-lg aspect-square rounded-2xl shadow-2xl overflow-hidden transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
                   style={{
                     backgroundImage: numberOneSongData.thumbnail
                       ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${numberOneSongData.thumbnail})`
@@ -140,14 +141,14 @@ export const PublicHome: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {/* Current Highest Song Card + Countdown Progress - Side by side on md+ */}
         {currentHighestResult && currentHighestSong && totalResults > 0 && (
-          <div className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="mb-12 grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
             {/* Current Highest Song Card */}
-            <div className="flex justify-center md:justify-start">
+            <div className="flex justify-center xl:justify-start">
               <div
-                className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
+                className="relative w-full max-w-md aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
                 style={{
                   backgroundImage: currentHighestSong.thumbnail
                     ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${currentHighestSong.thumbnail})`
@@ -183,7 +184,7 @@ export const PublicHome: React.FC = () => {
             </div>
 
             {/* Countdown Progress Widget */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200 h-fit">
+            <div className="xl:col-span-2 bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200 h-fit">
               <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
                 📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
               </h3>
@@ -262,7 +263,7 @@ export const PublicHome: React.FC = () => {
         {currentHighestResult && currentHighestSong && totalResults === 0 && (
           <div className="mb-12 flex justify-center">
             <div
-              className="relative w-full max-w-sm aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
+              className="relative w-full max-w-md xl:max-w-2xl aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
               style={{
                 backgroundImage: currentHighestSong.thumbnail
                   ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${currentHighestSong.thumbnail})`
@@ -311,28 +312,17 @@ export const PublicHome: React.FC = () => {
             {/* Conditional Layout: Podium + Leaderboard OR Countdown + Leaderboard OR just Leaderboard */}
             {currentHighestResult && currentHighestSong ? (
               // Featured song is showing above, so show podium + leaderboard side by side on md+
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
                 {/* Podium Visualization (Top 3) */}
-                <div className="flex items-end justify-center gap-4 sm:gap-8">
+                <div className="flex items-end justify-center gap-4 sm:gap-8 lg:gap-12">
                   {/* 2nd Place */}
                   {topThree[1] && (
                     <div className="flex flex-col items-center podium-second">
-                      <div className="text-4xl sm:text-6xl mb-2">🥈</div>
-                      <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
+                      <div className="text-4xl sm:text-6xl 2xl:text-7xl mb-2">🥈</div>
+                      <div className="font-bold text-sm sm:text-lg 2xl:text-xl text-gray-800 truncate w-full text-center">
                         {topThree[1].member.name}
                       </div>
-                      {(() => {
-                        const profile = getProfileForMember(topThree[1].member.id);
-                        return profile ? (
-                          <button
-                            onClick={() => setSelectedProfile(profile)}
-                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
-                          >
-                            {profile.label}
-                          </button>
-                        ) : null;
-                      })()}
-                      <div className="text-2xl sm:text-4xl font-black text-gray-400 mt-2">
+                      <div className="text-2xl sm:text-4xl 2xl:text-5xl font-black text-gray-400 mt-2">
                         {topThree[1].score}
                       </div>
                       <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg podium-base-second">
@@ -344,22 +334,11 @@ export const PublicHome: React.FC = () => {
                   {/* 1st Place */}
                   {topThree[0] && (
                     <div className="flex flex-col items-center podium-first">
-                      <div className="text-5xl sm:text-7xl mb-2">🥇</div>
-                      <div className="font-bold text-base sm:text-xl text-gray-800 truncate w-full text-center">
+                      <div className="text-5xl sm:text-7xl 2xl:text-8xl mb-2">🥇</div>
+                      <div className="font-bold text-base sm:text-xl 2xl:text-2xl text-gray-800 truncate w-full text-center">
                         {topThree[0].member.name}
                       </div>
-                      {(() => {
-                        const profile = getProfileForMember(topThree[0].member.id);
-                        return profile ? (
-                          <button
-                            onClick={() => setSelectedProfile(profile)}
-                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
-                          >
-                            {profile.label}
-                          </button>
-                        ) : null;
-                      })()}
-                      <div className="text-3xl sm:text-5xl font-black text-yellow-600 mt-2">
+                      <div className="text-3xl sm:text-5xl 2xl:text-6xl font-black text-yellow-600 mt-2">
                         {topThree[0].score}
                       </div>
                       <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl podium-base-first">
@@ -371,22 +350,11 @@ export const PublicHome: React.FC = () => {
                   {/* 3rd Place */}
                   {topThree[2] && (
                     <div className="flex flex-col items-center podium-third">
-                      <div className="text-4xl sm:text-6xl mb-2">🥉</div>
-                      <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
+                      <div className="text-4xl sm:text-6xl 2xl:text-7xl mb-2">🥉</div>
+                      <div className="font-bold text-sm sm:text-lg 2xl:text-xl text-gray-800 truncate w-full text-center">
                         {topThree[2].member.name}
                       </div>
-                      {(() => {
-                        const profile = getProfileForMember(topThree[2].member.id);
-                        return profile ? (
-                          <button
-                            onClick={() => setSelectedProfile(profile)}
-                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
-                          >
-                            {profile.label}
-                          </button>
-                        ) : null;
-                      })()}
-                      <div className="text-2xl sm:text-4xl font-black text-orange-600 mt-2">
+                      <div className="text-2xl sm:text-4xl 2xl:text-5xl font-black text-orange-600 mt-2">
                         {topThree[2].score}
                       </div>
                       <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg podium-base-third-short">
@@ -397,11 +365,11 @@ export const PublicHome: React.FC = () => {
                 </div>
 
                 {/* Full Leaderboard */}
-                <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
+                <div className="xl:col-span-2 bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
                   <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
                     Full Leaderboard
                   </h3>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 2xl:grid-cols-2 gap-2">
                     {leaderboard.map((entry, index) => {
                       const matchCount = entry.member.votes.filter(vote =>
                         [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
@@ -426,18 +394,28 @@ export const PublicHome: React.FC = () => {
                             {index + 1}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
                               {(() => {
                                 const profile = getProfileForMember(entry.member.id);
-                                return profile ? (
-                                  <button
-                                    onClick={() => setSelectedProfile(profile)}
-                                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap"
-                                  >
-                                    {profile.label}
-                                  </button>
-                                ) : null;
+                                if (!profile || !profile.label) return null;
+
+                                if (profile.musicTasteDescription) {
+                                  return (
+                                    <button
+                                      onClick={() => setSelectedProfile(profile)}
+                                      className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-orange-500 hover:to-pink-500 transition whitespace-nowrap cursor-pointer"
+                                    >
+                                      {profile.label}
+                                    </button>
+                                  );
+                                } else {
+                                  return (
+                                    <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                      {profile.label}
+                                    </span>
+                                  );
+                                }
                               })()}
                             </div>
                             <div className="text-xs sm:text-sm text-gray-600">
@@ -479,26 +457,15 @@ export const PublicHome: React.FC = () => {
               // No featured song, show podium + countdown + leaderboard
               <>
                 {/* Podium Display for Top 3 */}
-                <div className="flex items-end justify-center gap-4 sm:gap-8 mb-8">
+                <div className="flex items-end justify-center gap-4 sm:gap-8 lg:gap-12 mb-8">
                   {/* 2nd Place */}
                   {topThree[1] && (
                     <div className="flex flex-col items-center podium-second">
-                      <div className="text-4xl sm:text-6xl mb-2">🥈</div>
-                      <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
+                      <div className="text-4xl sm:text-6xl 2xl:text-7xl mb-2">🥈</div>
+                      <div className="font-bold text-sm sm:text-lg 2xl:text-xl text-gray-800 truncate w-full text-center">
                         {topThree[1].member.name}
                       </div>
-                      {(() => {
-                        const profile = getProfileForMember(topThree[1].member.id);
-                        return profile ? (
-                          <button
-                            onClick={() => setSelectedProfile(profile)}
-                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
-                          >
-                            {profile.label}
-                          </button>
-                        ) : null;
-                      })()}
-                      <div className="text-2xl sm:text-4xl font-black text-gray-400 mt-2">
+                      <div className="text-2xl sm:text-4xl 2xl:text-5xl font-black text-gray-400 mt-2">
                         {topThree[1].score}
                       </div>
                       <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg podium-base-second">
@@ -510,22 +477,11 @@ export const PublicHome: React.FC = () => {
                   {/* 1st Place */}
                   {topThree[0] && (
                     <div className="flex flex-col items-center podium-first">
-                      <div className="text-5xl sm:text-7xl mb-2">🥇</div>
-                      <div className="font-bold text-base sm:text-xl text-gray-800 truncate w-full text-center">
+                      <div className="text-5xl sm:text-7xl 2xl:text-8xl mb-2">🥇</div>
+                      <div className="font-bold text-base sm:text-xl 2xl:text-2xl text-gray-800 truncate w-full text-center">
                         {topThree[0].member.name}
                       </div>
-                      {(() => {
-                        const profile = getProfileForMember(topThree[0].member.id);
-                        return profile ? (
-                          <button
-                            onClick={() => setSelectedProfile(profile)}
-                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
-                          >
-                            {profile.label}
-                          </button>
-                        ) : null;
-                      })()}
-                      <div className="text-3xl sm:text-5xl font-black text-yellow-600 mt-2">
+                      <div className="text-3xl sm:text-5xl 2xl:text-6xl font-black text-yellow-600 mt-2">
                         {topThree[0].score}
                       </div>
                       <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl podium-base-first">
@@ -537,22 +493,11 @@ export const PublicHome: React.FC = () => {
                   {/* 3rd Place */}
                   {topThree[2] && (
                     <div className="flex flex-col items-center podium-third">
-                      <div className="text-4xl sm:text-6xl mb-2">🥉</div>
-                      <div className="font-bold text-sm sm:text-lg text-gray-800 truncate w-full text-center">
+                      <div className="text-4xl sm:text-6xl 2xl:text-7xl mb-2">🥉</div>
+                      <div className="font-bold text-sm sm:text-lg 2xl:text-xl text-gray-800 truncate w-full text-center">
                         {topThree[2].member.name}
                       </div>
-                      {(() => {
-                        const profile = getProfileForMember(topThree[2].member.id);
-                        return profile ? (
-                          <button
-                            onClick={() => setSelectedProfile(profile)}
-                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap mt-1"
-                          >
-                            {profile.label}
-                          </button>
-                        ) : null;
-                      })()}
-                      <div className="text-2xl sm:text-4xl font-black text-orange-600 mt-2">
+                      <div className="text-2xl sm:text-4xl 2xl:text-5xl font-black text-orange-600 mt-2">
                         {topThree[2].score}
                       </div>
                       <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg podium-base-third-short">
@@ -562,8 +507,8 @@ export const PublicHome: React.FC = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Countdown Progress Widget */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
+                {/* Countdown Progress Widget - spans first column on the left */}
                 <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200 h-fit">
                   <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
                     📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
@@ -638,11 +583,11 @@ export const PublicHome: React.FC = () => {
                 </div>
 
                 {/* Full Leaderboard */}
-                <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
+                <div className="xl:col-span-2 bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
                   <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
                     Full Leaderboard
                   </h3>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-1 2xl:grid-cols-2 gap-2">
                     {leaderboard.map((entry, index) => {
                       const matchCount = entry.member.votes.filter(vote =>
                         [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
@@ -667,18 +612,28 @@ export const PublicHome: React.FC = () => {
                             {index + 1}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
                               {(() => {
                                 const profile = getProfileForMember(entry.member.id);
-                                return profile ? (
-                                  <button
-                                    onClick={() => setSelectedProfile(profile)}
-                                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap"
-                                  >
-                                    {profile.label}
-                                  </button>
-                                ) : null;
+                                if (!profile || !profile.label) return null;
+
+                                if (profile.musicTasteDescription) {
+                                  return (
+                                    <button
+                                      onClick={() => setSelectedProfile(profile)}
+                                      className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-orange-500 hover:to-pink-500 transition whitespace-nowrap cursor-pointer"
+                                    >
+                                      {profile.label}
+                                    </button>
+                                  );
+                                } else {
+                                  return (
+                                    <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                      {profile.label}
+                                    </span>
+                                  );
+                                }
                               })()}
                             </div>
                             <div className="text-xs sm:text-sm text-gray-600">
@@ -723,7 +678,7 @@ export const PublicHome: React.FC = () => {
                 <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
                   Predictions Submitted
                 </h3>
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2">
                   {leaderboard.map((entry) => {
                     const profile = getProfileForMember(entry.member.id);
                     return (
@@ -732,15 +687,20 @@ export const PublicHome: React.FC = () => {
                         className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-gray-50"
                       >
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
-                            {profile && (
+                            {profile && profile.label && profile.musicTasteDescription && (
                               <button
                                 onClick={() => setSelectedProfile(profile)}
-                                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-purple-600 hover:to-pink-600 transition whitespace-nowrap"
+                                className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-orange-500 hover:to-pink-500 transition whitespace-nowrap cursor-pointer"
                               >
                                 {profile.label}
                               </button>
+                            )}
+                            {profile && profile.label && !profile.musicTasteDescription && (
+                              <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                {profile.label}
+                              </span>
                             )}
                           </div>
                           <div className="text-xs sm:text-sm text-gray-600">
@@ -768,7 +728,7 @@ export const PublicHome: React.FC = () => {
               </h2>
               <p className="text-gray-600 text-xs sm:text-sm">Celebrating our champions!</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
               {awards.map((award) => (
                 <div
                   key={award.id}
@@ -818,18 +778,13 @@ export const PublicHome: React.FC = () => {
           onClick={() => setSelectedProfile(null)}
         >
           <div
-            className="bg-white rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6"
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-4 sm:p-6 max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg sm:text-xl font-bold">
-                  {familyMembers.find(m => m.id === selectedProfile.memberId)?.name}
-                </h3>
-                <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                  {selectedProfile.label}
-                </span>
-              </div>
+              <h3 className="text-lg sm:text-xl font-bold">
+                {familyMembers.find(m => m.id === selectedProfile.familyMemberId)?.name}'s Music Taste
+              </h3>
               <button
                 onClick={() => setSelectedProfile(null)}
                 className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -837,9 +792,73 @@ export const PublicHome: React.FC = () => {
                 ×
               </button>
             </div>
-            <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-              {selectedProfile.description}
-            </p>
+
+            {selectedProfile.musicTasteDescription ? (
+              <p className="text-sm sm:text-base text-gray-700 leading-relaxed mb-6">
+                {selectedProfile.musicTasteDescription}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500 italic mb-6">No music taste profile generated yet</p>
+            )}
+
+            {/* Member's Picks */}
+            {(() => {
+              const member = familyMembers.find(m => m.id === selectedProfile.familyMemberId);
+              if (!member || member.votes.length === 0) return null;
+
+              return (
+                <div>
+                  <h4 className="text-base sm:text-lg font-bold mb-3 text-gray-800">Their Picks</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2">
+                    {member.votes.map((vote) => {
+                      const song = songs.find((s) => s.id === vote.songId);
+                      if (!song) return null;
+
+                      // Check if song is in countdown
+                      const countdownEntry = [...countdownResults, ...hottest200Results].find(
+                        r => r.songId === vote.songId
+                      );
+                      const isMatched = !!countdownEntry;
+
+                      return (
+                        <div
+                          key={vote.songId}
+                          className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg ${
+                            isMatched
+                              ? 'bg-green-50 border-2 border-green-500'
+                              : 'bg-gray-50'
+                          }`}
+                        >
+                          {song.thumbnail && (
+                            <LazyImage
+                              src={song.thumbnail}
+                              alt={`${song.title} artwork`}
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                            <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
+                              <span className="truncate">{song.artist}</span>
+                              {song.isAustralian && (
+                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                  AUS
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {countdownEntry && (
+                            <div className="font-bold text-green-600 text-sm sm:text-lg flex-shrink-0">
+                              #{countdownEntry.position}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
