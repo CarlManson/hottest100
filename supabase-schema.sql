@@ -61,8 +61,48 @@ CREATE INDEX idx_votes_song ON votes(song_id);
 CREATE INDEX idx_countdown_results_type ON countdown_results(type);
 CREATE INDEX idx_countdown_results_position ON countdown_results(position);
 
+-- Member profiles table (AI-generated profiles with timestamps)
+CREATE TABLE member_profiles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  family_member_id UUID NOT NULL REFERENCES family_members(id) ON DELETE CASCADE,
+  label TEXT,
+  music_taste_description TEXT,
+  performance_commentary TEXT,
+  last_label_regeneration TIMESTAMPTZ,
+  last_commentary_update TIMESTAMPTZ,
+  last_music_taste_update TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(family_member_id)
+);
+
+-- Enable Row Level Security for member_profiles
+ALTER TABLE member_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Create policy for member_profiles
+CREATE POLICY "Allow all operations on member_profiles" ON member_profiles FOR ALL USING (true) WITH CHECK (true);
+
+-- Create index for better performance
+CREATE INDEX idx_member_profiles_family_member ON member_profiles(family_member_id);
+
+-- Function to automatically update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_member_profiles_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to update updated_at on every update
+CREATE TRIGGER member_profiles_updated_at
+  BEFORE UPDATE ON member_profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION update_member_profiles_updated_at();
+
 -- Enable realtime for all tables
 ALTER PUBLICATION supabase_realtime ADD TABLE songs;
 ALTER PUBLICATION supabase_realtime ADD TABLE family_members;
 ALTER PUBLICATION supabase_realtime ADD TABLE votes;
 ALTER PUBLICATION supabase_realtime ADD TABLE countdown_results;
+ALTER PUBLICATION supabase_realtime ADD TABLE member_profiles;

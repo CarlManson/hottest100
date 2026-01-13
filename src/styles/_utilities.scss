@@ -1,0 +1,35 @@
+@use 'variables' as *;
+
+// Efficiency Bar
+// Note: Width must remain inline as it's calculated based on score
+// This file provides base styles and mixins for dynamic elements
+
+@mixin progress-bar($height: 2rem, $border-radius: 9999px) {
+  height: $height;
+  border-radius: $border-radius;
+  overflow: hidden;
+}
+
+@mixin progress-fill($gradient-start, $gradient-end) {
+  background: linear-gradient(to right, $gradient-start, $gradient-end);
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+// Responsive text utilities
+@mixin text-responsive($mobile-size, $desktop-size) {
+  font-size: $mobile-size;
+
+  @media (min-width: $breakpoint-sm) {
+    font-size: $desktop-size;
+  }
+}
+
+// Hover scale effect
+@mixin hover-scale($scale: 1.05) {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: scale($scale);
+  }
+}

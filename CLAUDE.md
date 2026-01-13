@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Triple J Hottest 100 Family Tracker - a web application for tracking family predictions during the annual Triple J Hottest 100 countdown. Built with React, TypeScript, Tailwind CSS v4, and Supabase for real-time data synchronization.
+This is a Triple J Hottest 100 Prediction Tracker - a web application for tracking predictions during the annual Triple J Hottest 100 countdown. Built with React, TypeScript, Tailwind CSS v4, and Supabase for real-time data synchronization.
 
 ## Development Commands
 
@@ -26,7 +26,22 @@ npm run lint      # Run ESLint
 2. Add Supabase credentials:
    - `VITE_SUPABASE_URL` - Supabase project URL
    - `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key
-3. Run `supabase-schema.sql` in Supabase SQL Editor to create tables
+3. Set authentication credentials:
+   - `VITE_AUTH_USERNAME` - Username for admin access (choose something unique to your group)
+   - `VITE_AUTH_PASSWORD` - Strong password (recommend using a password generator)
+4. Run `supabase-schema.sql` in Supabase SQL Editor to create tables
+
+### Security & Sharing
+**Authentication**: The app uses client-side username/password authentication stored in environment variables. This is suitable for small group sharing where one set of credentials is shared among trusted users.
+
+**For sharing with other Triple J fans:**
+- Each group should set up their own Supabase project
+- Choose a unique, non-obvious username
+- Use a strong, randomly-generated password
+- This approach protects against casual brute force attempts
+- **Note**: This is not enterprise-grade security, but appropriate for a small group prediction tracker
+
+**Session Management**: Authentication state is stored in both localStorage and cookies with a 7-day expiration.
 
 ## Architecture
 
@@ -39,8 +54,8 @@ npm run lint      # Run ESLint
 ### Database Schema
 Four main tables (see `supabase-schema.sql`):
 - `songs` - Eligible songs with metadata (title, artist, thumbnail, is_australian)
-- `family_members` - Users who can vote
-- `votes` - Top 10 picks per family member (1-10 ranking)
+- `family_members` - Users who can vote (database table name kept as-is for compatibility)
+- `votes` - Top 10 picks per member (1-10 ranking)
 - `countdown_results` - Actual Hottest 100/200 results (type: 'hottest100' or 'hottest200')
 
 All tables use UUIDs as primary keys with foreign key constraints and ON DELETE CASCADE.
@@ -50,7 +65,7 @@ Single-page app with tab navigation:
 - `App.tsx` - Root component with tab navigation
 - `Dashboard.tsx` - Overview stats, leaderboard preview, recent results
 - `SongManager.tsx` - Import songs (JSON/CSV/manual), manage song list
-- `VotingInterface.tsx` - Add family members, select member, rank their top 10
+- `VotingInterface.tsx` - Add members, select member, rank their top 10
 - `CountdownEntry.tsx` - Enter actual countdown results (separate tabs for 100 vs 200)
 - `Leaderboard.tsx` - Final rankings with scoring breakdown
 
@@ -95,7 +110,7 @@ Data mapping: Snake_case in DB (PostgreSQL) → camelCase in app (JavaScript/Typ
 - Manual: Form-based single song entry
 
 ### Voting Flow
-1. Select family member from dropdown
+1. Select member from dropdown
 2. Search/filter song list
 3. Add up to 10 songs (enforced)
 4. Reorder via up/down arrows (affects Vote.rank)
@@ -109,7 +124,7 @@ Supabase channels (`*-channel`) subscribe to all operations (`event: '*'`) on re
 
 ## Important Constraints
 
-- Family members can have exactly 0-10 votes (enforced in UI)
+- Members can have exactly 0-10 votes (enforced in UI)
 - Vote ranks must be 1-10
 - Countdown positions: 1-100 for Hottest 100, 101-200 for Hottest 200
 - Song deletion cascades to votes and countdown_results (foreign key constraints)

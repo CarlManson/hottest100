@@ -1,13 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { AppState, Song, FamilyMember, CountdownResult } from '../types';
+import type { AppState, Song, FamilyMember, CountdownResult, MemberProfile } from '../types';
 import { supabase } from '../lib/supabase';
-import { generateAllProfiles, type MemberProfile } from '../utils/profileGenerator';
-import { getLeaderboard } from '../utils/scoring';
+import { generateMusicTasteProfileAPI, generateLabelAndTasteAPI } from '../utils/profileGenerator';
 
 interface AppContextType extends AppState {
   loading: boolean;
-  profiles: MemberProfile[];
   isGeneratingProfiles: boolean;
   profileError: string;
   addSong: (song: Omit<Song, 'id'>) => Promise<void>;
@@ -21,7 +19,11 @@ interface AppContextType extends AppState {
   addHottest200Result: (result: Omit<CountdownResult, 'id'>) => Promise<void>;
   updateHottest200Results: (results: Omit<CountdownResult, 'id'>[]) => Promise<void>;
   clearAllData: () => Promise<void>;
-  generateProfiles: () => Promise<void>;
+  generateMusicTasteProfile: (memberId: string) => Promise<void>;
+  regenerateAllMusicTastes: () => Promise<void>;
+  canRegenerateMusicTaste: (memberId: string) => boolean;
+  getNextAvailableRegenerationTime: () => Date | null;
+  resetRateLimit: () => Promise<void>;
   getProfileForMember: (memberId: string) => MemberProfile | undefined;
 }
 
@@ -33,9 +35,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     familyMembers: [],
     countdownResults: [],
     hottest200Results: [],
+    profiles: [],
   });
   const [loading, setLoading] = useState(true);
-  const [profiles, setProfiles] = useState<MemberProfile[]>([]);
   const [isGeneratingProfiles, setIsGeneratingProfiles] = useState(false);
   const [profileError, setProfileError] = useState<string>('');
 
@@ -78,11 +80,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       })
       .subscribe();
 
+    // Subscribe to profiles
+    const profilesSubscription = supabase
+      .channel('profiles-channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'member_profiles' }, () => {
+        loadProfiles();
+      })
+      .subscribe();
+
     return () => {
       songsSubscription.unsubscribe();
       membersSubscription.unsubscribe();
       votesSubscription.unsubscribe();
       resultsSubscription.unsubscribe();
+      profilesSubscription.unsubscribe();
     };
   }, []);
 
@@ -92,6 +103,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       loadSongs(),
       loadFamilyMembers(),
       loadCountdownResults(),
+      loadProfiles(),
     ]);
     setLoading(false);
   };
@@ -184,6 +196,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
 
     setState((prev) => ({ ...prev, countdownResults, hottest200Results }));
+  };
+
+  const loadProfiles = async () => {
+    const { data, error } = await supabase
+      .from('member_profiles')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error loading profiles:', error);
+      return;
+    }
+
+    const profiles: MemberProfile[] = (data || []).map((row: any) => ({
+      id: row.id,
+      familyMemberId: row.family_member_id,
+      label: row.label,
+      musicTasteDescription: row.music_taste_description,
+      performanceCommentary: row.performance_commentary,
+      lastLabelRegeneration: row.last_label_regeneration ? new Date(row.last_label_regeneration) : null,
+      lastCommentaryUpdate: row.last_commentary_update ? new Date(row.last_commentary_update) : null,
+      lastMusicTasteUpdate: row.last_music_taste_update ? new Date(row.last_music_taste_update) : null,
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at),
+    }));
+
+    setState((prev) => ({ ...prev, profiles }));
   };
 
   const addSong = async (song: Omit<Song, 'id'>) => {
@@ -399,37 +438,165 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await supabase.from('songs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   };
 
-  const generateProfiles = async () => {
-    const hasApiKey = !!import.meta.env.VITE_ANTHROPIC_API_KEY;
+  const canRegenerateMusicTaste = (memberId: string): boolean => {
+    const profile = state.profiles.find(p => p.familyMemberId === memberId);
 
-    if (!hasApiKey) {
-      setProfileError('Profile generation requires an Anthropic API key. Add VITE_ANTHROPIC_API_KEY to your .env file to enable this feature.');
-      return;
-    }
+    // New member (no profile) can always generate
+    if (!profile || !profile.lastMusicTasteUpdate) return true;
 
+    // Check if 24 hours have passed
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    return new Date(profile.lastMusicTasteUpdate) < twentyFourHoursAgo;
+  };
+
+  const generateMusicTasteProfile = async (memberId: string) => {
     setIsGeneratingProfiles(true);
     setProfileError('');
 
     try {
-      const leaderboard = getLeaderboard(state.familyMembers, state.countdownResults, state.hottest200Results);
-      const generatedProfiles = await generateAllProfiles(
-        state.familyMembers,
-        state.songs,
-        state.countdownResults,
-        state.hottest200Results,
-        leaderboard
-      );
-      setProfiles(generatedProfiles);
+      const member = state.familyMembers.find(m => m.id === memberId);
+      if (!member) throw new Error('Member not found');
+
+      // Check 24-hour rate limit
+      if (!canRegenerateMusicTaste(memberId)) {
+        throw new Error('Music taste was updated recently. Please wait 24 hours before regenerating.');
+      }
+
+      const result = await generateMusicTasteProfileAPI(member, state.songs);
+
+      // Upsert to database
+      const { error } = await supabase
+        .from('member_profiles')
+        .upsert({
+          family_member_id: memberId,
+          music_taste_description: result.musicTasteDescription,
+          last_music_taste_update: new Date().toISOString(),
+        }, {
+          onConflict: 'family_member_id'
+        });
+
+      if (error) throw error;
     } catch (err) {
-      setProfileError(err instanceof Error ? err.message : 'Failed to generate profiles');
-      console.error('Profile generation error:', err);
+      setProfileError(err instanceof Error ? err.message : 'Failed to generate profile');
+      console.error('Music taste generation error:', err);
+    } finally {
+      setIsGeneratingProfiles(false);
+    }
+  };
+
+  const regenerateAllMusicTastes = async () => {
+    setIsGeneratingProfiles(true);
+    setProfileError('');
+
+    try {
+      let regeneratedCount = 0;
+      let skippedCount = 0;
+
+      // Get leaderboard to calculate scores
+      const { getLeaderboard } = await import('../utils/scoring');
+      const leaderboard = getLeaderboard(state.familyMembers, state.countdownResults, state.hottest200Results);
+
+      // Collect existing labels as we generate
+      const usedLabels: string[] = [];
+
+      for (const member of state.familyMembers) {
+        // Check 24-hour rate limit
+        if (!canRegenerateMusicTaste(member.id)) {
+          console.log(`Skipping ${member.name} - updated within last 24 hours`);
+          // Still add their existing label to the used list
+          const existingProfile = state.profiles.find(p => p.familyMemberId === member.id);
+          if (existingProfile?.label) {
+            usedLabels.push(existingProfile.label);
+          }
+          skippedCount++;
+          continue;
+        }
+
+        // Use full_regeneration mode which is already deployed
+        const { generateFullProfileAPI } = await import('../utils/profileGenerator');
+        const result = await generateFullProfileAPI(
+          member,
+          state.songs,
+          state.countdownResults,
+          state.hottest200Results,
+          leaderboard,
+          usedLabels
+        );
+
+        const { error } = await supabase
+          .from('member_profiles')
+          .upsert({
+            family_member_id: member.id,
+            label: result.label,
+            music_taste_description: result.musicTasteDescription,
+            performance_commentary: result.performanceCommentary,
+            last_music_taste_update: new Date().toISOString(),
+            last_label_regeneration: new Date().toISOString(),
+            last_commentary_update: new Date().toISOString(),
+          }, {
+            onConflict: 'family_member_id'
+          });
+
+        if (error) {
+          console.error(`Error upserting profile for ${member.name}:`, error);
+          throw error;
+        }
+
+        // Add the new label to the used list
+        usedLabels.push(result.label);
+        regeneratedCount++;
+      }
+
+      console.log(`Regenerated ${regeneratedCount} profiles, skipped ${skippedCount}`);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : 'Failed to regenerate profiles');
+      console.error('Profile regeneration error:', err);
     } finally {
       setIsGeneratingProfiles(false);
     }
   };
 
   const getProfileForMember = (memberId: string): MemberProfile | undefined => {
-    return profiles.find(p => p.memberId === memberId);
+    return state.profiles.find(p => p.familyMemberId === memberId);
+  };
+
+  const getNextAvailableRegenerationTime = (): Date | null => {
+    // Find the most recent update across all profiles
+    const mostRecentUpdate = state.profiles
+      .filter(p => p.lastMusicTasteUpdate)
+      .map(p => new Date(p.lastMusicTasteUpdate!).getTime())
+      .sort((a, b) => b - a)[0];
+
+    if (!mostRecentUpdate) return null;
+
+    // Add 24 hours to the most recent update
+    const nextAvailable = new Date(mostRecentUpdate + 24 * 60 * 60 * 1000);
+
+    // If the time has passed, return null (can regenerate now)
+    if (nextAvailable <= new Date()) return null;
+
+    return nextAvailable;
+  };
+
+  const resetRateLimit = async () => {
+    // Set all profile timestamps to 25 hours ago to bypass rate limit
+    const twentyFiveHoursAgo = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+
+    const { error } = await supabase
+      .from('member_profiles')
+      .update({
+        last_music_taste_update: twentyFiveHoursAgo,
+        last_label_regeneration: twentyFiveHoursAgo,
+      })
+      .neq('id', '00000000-0000-0000-0000-000000000000'); // Update all rows
+
+    if (error) {
+      console.error('Error resetting rate limit:', error);
+      throw error;
+    }
+
+    // Reload profiles to reflect the change
+    await loadProfiles();
   };
 
   return (
@@ -437,7 +604,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       value={{
         ...state,
         loading,
-        profiles,
         isGeneratingProfiles,
         profileError,
         addSong,
@@ -451,7 +617,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addHottest200Result,
         updateHottest200Results,
         clearAllData,
-        generateProfiles,
+        generateMusicTasteProfile,
+        regenerateAllMusicTastes,
+        canRegenerateMusicTaste,
+        getNextAvailableRegenerationTime,
+        resetRateLimit,
         getProfileForMember,
       }}
     >

@@ -1,0 +1,286 @@
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+
+interface MemberData {
+  memberId: string;
+  memberName: string;
+  picks: string;
+  score?: number;
+  rank?: number;
+  totalMembers?: number;
+  matchCount?: number;
+  totalPicks?: number;
+  currentMusicTaste?: string;
+}
+
+interface ProfileRequest {
+  mode: 'music_taste' | 'label_and_taste' | 'running_commentary' | 'full_regeneration';
+  // Single member (music_taste, label_and_taste, full_regeneration)
+  memberId?: string;
+  memberName?: string;
+  picks?: string;
+  score?: number;
+  rank?: number;
+  totalMembers?: number;
+  matchCount?: number;
+  totalPicks?: number;
+  existingLabels?: string[];
+  // Batch (running_commentary)
+  members?: MemberData[];
+}
+
+serve(async (req) => {
+  // Handle CORS
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    });
+  }
+
+  try {
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY not configured in Supabase Edge Function secrets');
+    }
+
+    const requestData: ProfileRequest = await req.json();
+    const { mode } = requestData;
+
+    let result;
+
+    switch (mode) {
+      case 'music_taste':
+        result = await generateMusicTaste(requestData);
+        break;
+      case 'label_and_taste':
+        result = await generateLabelAndTaste(requestData);
+        break;
+      case 'running_commentary':
+        result = await generateRunningCommentary(requestData);
+        break;
+      case 'full_regeneration':
+        result = await generateFullProfile(requestData);
+        break;
+      default:
+        throw new Error(`Invalid mode: ${mode}`);
+    }
+
+    return new Response(
+      JSON.stringify(result),
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
+    );
+  } catch (error) {
+    console.error('Edge function error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
+    );
+  }
+});
+
+async function generateMusicTaste(data: ProfileRequest) {
+  const { memberName, picks, totalPicks } = data;
+
+  const prompt = `You're a music critic analyzing someone's song choices. Analyze ONLY the song choices below - completely ignore any performance or scores.
+
+**${memberName}'s Picks:**
+${picks}
+
+Write a music taste analysis (3-4 sentences). Comment on:
+- Genre preferences and patterns
+- Mainstream vs indie/alternative leanings
+- Artist nationality/origin patterns (e.g., heavy Australian focus, international mix, US-centric, etc.)
+- Any notable themes or trends in their selections
+- Overall music taste profile
+
+Be observant and insightful about their musical preferences. Focus purely on WHAT they picked, not how they're performing in any competition.
+
+Return format:
+MUSIC_TASTE: [Your 3-4 sentence analysis here]`;
+
+  const response = await callClaudeAPI(prompt);
+  const musicTasteMatch = response.match(/MUSIC_TASTE:\s*(.+)/is);
+
+  if (!musicTasteMatch) {
+    throw new Error('Failed to parse music taste response');
+  }
+
+  return {
+    memberId: data.memberId,
+    musicTasteDescription: musicTasteMatch[1].trim(),
+  };
+}
+
+async function generateLabelAndTaste(data: ProfileRequest) {
+  const { memberName, picks, totalPicks, existingLabels } = data;
+
+  const existingLabelsText = existingLabels && existingLabels.length > 0
+    ? `\n\n**IMPORTANT - Labels Already Used (DO NOT USE THESE):**\n${existingLabels.join(', ')}\nChoose a DIFFERENT label that hasn't been used.`
+    : '';
+
+  const prompt = `You're a music critic analyzing someone's song choices. Analyze ONLY the song choices below - completely ignore any performance or scores.
+
+**${memberName}'s Picks:**
+${picks}${existingLabelsText}
+
+Write a response in this EXACT format:
+
+LABEL: [2-3 word punchy description based on their music taste - like "Indie Purist", "Pop Connoisseur", "Alt-Rock Fan", "Genre Hopper", "Mainstream Maven", "Aussie Devotee", "Global Curator", etc. Base it on the genres, styles, and artist origins they chose. MUST be unique and different from any labels already used above.]
+
+MUSIC_TASTE: [3-4 sentences analyzing their song choices - genre preferences, mainstream vs indie/alternative leanings, artist nationality/origin patterns (e.g., all Australian, international mix, US-heavy, etc.), any notable themes or trends. Focus on WHAT they picked.]
+
+Be observant and insightful about their musical preferences.`;
+
+  const response = await callClaudeAPI(prompt);
+
+  const labelMatch = response.match(/LABEL:\s*(.+?)(?:\n|$)/i);
+  const musicTasteMatch = response.match(/MUSIC_TASTE:\s*(.+)/is);
+
+  if (!labelMatch || !musicTasteMatch) {
+    throw new Error('Failed to parse label and taste response');
+  }
+
+  return {
+    memberId: data.memberId,
+    label: labelMatch[1].trim(),
+    musicTasteDescription: musicTasteMatch[1].trim(),
+  };
+}
+
+async function generateRunningCommentary(data: ProfileRequest) {
+  const { members } = data;
+
+  if (!members || members.length === 0) {
+    throw new Error('No members provided for running commentary');
+  }
+
+  const membersText = members.map(m => `
+**${m.memberName}:**
+- Score: ${m.score} points
+- Rank: ${m.rank} of ${m.totalMembers}
+- Matches: EXACTLY ${m.matchCount} out of ${m.totalPicks} picks made the countdown
+- Picks detail:
+${m.picks}
+`).join('\n');
+
+  const prompt = `You're providing running commentary for a Triple J Hottest 100 predictions competition. The countdown is in progress!
+
+${membersText}
+
+IMPORTANT: Use the EXACT match counts provided above. Do NOT count or calculate them yourself from the picks list.
+
+For EACH person, write a brief (2-3 sentences) performance commentary:
+- How they're doing in the competition (use the exact score and rank numbers provided)
+- Comment on their match count (use the EXACT number provided, not what you count)
+- Their current trajectory
+- Compare to other participants if multiple
+
+Be engaging and make it feel like live commentary.
+
+Return format (one line per member):
+MEMBER_${members[0].memberId}: [Commentary here]
+${members.slice(1).map(m => `MEMBER_${m.memberId}: [Commentary here]`).join('\n')}`;
+
+  const response = await callClaudeAPI(prompt);
+
+  const profiles = members.map(member => {
+    const regex = new RegExp(`MEMBER_${member.memberId}:\\s*(.+?)(?=\\nMEMBER_|$)`, 'is');
+    const match = response.match(regex);
+
+    return {
+      memberId: member.memberId,
+      performanceCommentary: match ? match[1].trim() : 'Could not generate commentary for this member.',
+    };
+  });
+
+  return { profiles };
+}
+
+async function generateFullProfile(data: ProfileRequest) {
+  const { memberName, picks, score, rank, totalMembers, matchCount, totalPicks, existingLabels } = data;
+
+  const existingLabelsText = existingLabels && existingLabels.length > 0
+    ? `\n\n**IMPORTANT - Labels Already Used (DO NOT USE THESE):**\n${existingLabels.join(', ')}\nChoose a DIFFERENT label that hasn't been used.`
+    : '';
+
+  const prompt = `You're a music critic writing profiles for a Triple J Hottest 100 predictions competition. Be insightful and engaging.
+
+**${memberName}'s Picks:**
+${picks}
+
+**Their Performance:**
+- Score: ${score} points
+- Ranking: ${rank} of ${totalMembers}
+- Matches: EXACTLY ${matchCount} out of ${totalPicks} picks made the countdown${existingLabelsText}
+
+IMPORTANT: Use the EXACT numbers provided above. Do NOT count or calculate them yourself.
+
+Write a response in this EXACT format:
+
+LABEL: [2-3 word punchy description based on their music taste - like "Indie Purist", "Pop Connoisseur", "Alt-Rock Fan", "Genre Hopper", "Mainstream Maven", "Aussie Champion", "Global Selector", etc. Base it on the genres, styles, and artist origins they chose. If they picked predominantly Australian artists, acknowledge it. If they picked internationally diverse, mention it. MUST be unique and different from any labels already used above.]
+
+MUSIC_TASTE: [3-4 sentences analyzing their song choices - genre preferences, mainstream vs indie/alternative leanings, artist nationality/origin patterns (e.g., Australian-heavy, international mix, US-centric, UK focus, etc.), any notable themes or trends. Focus on WHAT they picked.]
+
+PERFORMANCE: [2-3 sentences about how they're performing in the competition - use the EXACT match count provided (${matchCount}/${totalPicks}), their trajectory, comparison to others. Focus on HOW they're doing.]
+
+Keep it short, punchy, and engaging. Focus the label on their musical preferences and artist origin patterns.`;
+
+  const response = await callClaudeAPI(prompt);
+
+  const labelMatch = response.match(/LABEL:\s*(.+?)(?:\n|$)/i);
+  const musicTasteMatch = response.match(/MUSIC_TASTE:\s*(.+?)(?=\n\n|PERFORMANCE:|$)/is);
+  const performanceMatch = response.match(/PERFORMANCE:\s*(.+?)$/is);
+
+  if (!labelMatch || !musicTasteMatch || !performanceMatch) {
+    throw new Error('Failed to parse full profile response');
+  }
+
+  return {
+    memberId: data.memberId,
+    label: labelMatch[1].trim(),
+    musicTasteDescription: musicTasteMatch[1].trim(),
+    performanceCommentary: performanceMatch[1].trim(),
+  };
+}
+
+async function callClaudeAPI(prompt: string): Promise<string> {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY!,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: prompt,
+      }],
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Anthropic API request failed: ${error}`);
+  }
+
+  const data = await response.json();
+  return data.content[0].text;
+}

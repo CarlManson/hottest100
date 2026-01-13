@@ -1,0 +1,33 @@
+// Color Palette
+$gradient-orange: #f97316;
+$gradient-red: #ef4444;
+$gradient-pink: #ec4899;
+$gradient-yellow: #fbbf24;
+
+// Podium Colors
+$podium-gold-start: #facc15;
+$podium-gold-end: #eab308;
+$podium-silver-start: #d1d5db;
+$podium-silver-end: #9ca3af;
+$podium-bronze-start: #fb923c;
+$podium-bronze-end: #f97316;
+
+// Podium Dimensions
+$podium-first-width: 35%;
+$podium-second-width: 30%;
+$podium-third-width: 30%;
+
+$podium-first-height: 160px;
+$podium-second-height: 120px;
+$podium-third-height: 90px;
+
+// Header Dimensions
+$logo-max-width: 25rem;
+$banner-right-width: 25%;
+$banner-right-offset: -25%;
+
+// Breakpoints (matching Tailwind)
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;

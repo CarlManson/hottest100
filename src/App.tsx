@@ -18,11 +18,10 @@ function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'hottest100';
 
   // Get tab from URL hash
   const getTabFromHash = (): Tab => {
@@ -35,11 +34,17 @@ function App() {
     window.location.hash = tab;
   };
 
-  // Check for existing session cookie and set initial tab from URL
+  // Check for existing session (localStorage and cookie) and set initial tab from URL
   useEffect(() => {
+    const localAuth = localStorage.getItem('hottest100_auth');
     const sessionCookie = Cookies.get('hottest100_session');
-    if (sessionCookie === 'authenticated') {
+
+    if (localAuth === 'true' || sessionCookie === 'authenticated') {
       setIsAuthenticated(true);
+      // Sync both storage methods
+      localStorage.setItem('hottest100_auth', 'true');
+      Cookies.set('hottest100_session', 'authenticated', { expires: 7 });
+
       const tabFromHash = getTabFromHash();
       if (tabFromHash !== 'home') {
         setActiveTab(tabFromHash);
@@ -59,25 +64,19 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, [isAuthenticated]);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      // Set cookie with 7-day expiration
-      Cookies.set('hottest100_session', 'authenticated', { expires: 7 });
-      setShowLoginModal(false);
-      setPassword('');
-      setLoginError('');
-      setActiveTab('dashboard');
-      updateHash('dashboard');
-    } else {
-      setLoginError('Incorrect password');
-    }
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+    // Set both localStorage and cookie with 7-day expiration
+    localStorage.setItem('hottest100_auth', 'true');
+    Cookies.set('hottest100_session', 'authenticated', { expires: 7 });
+    setActiveTab('dashboard');
+    updateHash('dashboard');
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    // Remove session cookie
+    // Remove both localStorage and cookie
+    localStorage.removeItem('hottest100_auth');
     Cookies.remove('hottest100_session');
     setActiveTab('home');
     updateHash('home');
@@ -99,17 +98,19 @@ function App() {
   return (
     <AppProvider>
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-purple-50">
-        <header className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-lg" style={{ backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        <header
+          className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-lg header-with-banner"
+          style={{ '--banner-image': `url(${banner})` } as React.CSSProperties}
+        >
           <div className="max-w-7xl mx-auto px-6 py-6 relative">
             <img
               className="logo cursor-pointer"
               src={logo}
               alt="Fairest 100 Logo"
-              style={{ width: 'calc(100% - 60px)', maxWidth: '25rem', height: 'auto' }}
               onClick={() => handleTabClick('home')}
             />
             {/* Banner right - hidden on mobile, shown on desktop */}
-            <img className="banner-right hidden md:block" src={bannerRight}  style={{ width: '25%', height: 'auto', position: 'absolute', top: '0', right: '0', transform: 'translateY(-25%)' }} />
+            <img className="banner-right hidden md:block" src={bannerRight} alt="Banner decoration" />
             {/* Mobile menu button - shown on mobile when authenticated */}
             {isAuthenticated && (
               <button
@@ -171,7 +172,7 @@ function App() {
                         : 'text-gray-700 hover:bg-orange-100'
                     }`}
                   >
-                    Family Votes
+                    Votes
                   </button>
                   <button
                     onClick={() => handleTabClick('countdown')}
@@ -216,7 +217,7 @@ function App() {
                       : 'text-gray-700 hover:bg-orange-100'
                   }`}
                 >
-                  Family Votes
+                  Votes
                 </button>
                 <button
                   onClick={() => handleTabClick('countdown')}
@@ -253,28 +254,69 @@ function App() {
           {activeTab === 'detailed-breakdown' && isAuthenticated && <DetailedBreakdown />}
         </main>
 
-        {/* Login Modal */}
+        {/* Login Modal - Shown when trying to access protected tabs */}
         {showLoginModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8">
               <h3 className="text-2xl font-bold mb-4 text-gray-800">Admin Login</h3>
-              <p className="text-gray-600 mb-6">Enter password to access admin features</p>
-              <form onSubmit={handleLogin}>
-                <input
-                  type="password"
-                  placeholder="Password"
-                  className="w-full p-3 border-2 border-gray-300 rounded-lg mb-4 focus:border-orange-500 focus:outline-none"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoFocus
-                />
+              <p className="text-gray-600 mb-6">Enter your credentials to access admin features</p>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const envUsername = import.meta.env.VITE_AUTH_USERNAME;
+                const envPassword = import.meta.env.VITE_AUTH_PASSWORD;
+
+                if (username === envUsername && password === envPassword) {
+                  setShowLoginModal(false);
+                  setUsername('');
+                  setPassword('');
+                  setLoginError('');
+                  handleLogin();
+                } else {
+                  setLoginError('Invalid username or password');
+                  setPassword('');
+                }
+              }} className="space-y-4">
+                <div>
+                  <label htmlFor="modal-username" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    id="modal-username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-500 focus:outline-none transition"
+                    placeholder="Enter username"
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="modal-password" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    id="modal-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-500 focus:outline-none transition"
+                    placeholder="Enter password"
+                    required
+                  />
+                </div>
+
                 {loginError && (
-                  <p className="text-red-600 text-sm mb-4">{loginError}</p>
+                  <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                    {loginError}
+                  </div>
                 )}
+
                 <div className="flex gap-3">
                   <button
                     type="submit"
-                    className="flex-1 bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition font-bold"
+                    className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold py-3 px-6 rounded-lg hover:from-orange-600 hover:to-pink-600 transition shadow-lg"
                   >
                     Login
                   </button>
@@ -282,6 +324,7 @@ function App() {
                     type="button"
                     onClick={() => {
                       setShowLoginModal(false);
+                      setUsername('');
                       setPassword('');
                       setLoginError('');
                     }}

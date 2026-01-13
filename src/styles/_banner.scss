@@ -1,0 +1,25 @@
+@use 'variables' as *;
+
+// Full page banner background
+.full-banner-background {
+  background-image: var(--banner-image);
+  background-size: cover;
+  background-position: center;
+}
+
+// Banner overlay mixin for darkening/lightening
+@mixin banner-overlay($color: black, $opacity: 0.3) {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: rgba($color, $opacity);
+  }
+}
+
+// Banner gradient overlay mixin
+@mixin banner-gradient-overlay($start-color, $end-color, $direction: 'to right') {
+  background: linear-gradient(#{$direction}, $start-color, $end-color);
+}

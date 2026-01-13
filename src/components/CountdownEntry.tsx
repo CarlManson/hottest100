@@ -10,6 +10,7 @@ export const CountdownEntry: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'hottest100' | 'hottest200'>(defaultTab);
   const [searchTerm, setSearchTerm] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const currentResults = activeTab === 'hottest100' ? countdownResults : hottest200Results;
   const updateResults = activeTab === 'hottest100' ? updateCountdownResults : updateHottest200Results;
@@ -29,33 +30,63 @@ export const CountdownEntry: React.FC = () => {
     return null; // All positions filled
   };
 
-  const handleAddResult = (songId: string) => {
+  const handleAddResult = async (songId: string) => {
+    if (isUpdating) return; // Prevent multiple simultaneous updates
+
     const nextPos = getNextPosition();
     if (nextPos === null) {
       alert(`All positions are filled for this countdown`);
       return;
     }
 
-    const newResults = [...currentResults];
-    newResults.push({ songId, position: nextPos });
-    newResults.sort((a, b) => a.position - b.position);
+    setIsUpdating(true);
+    try {
+      const newResults = [...currentResults];
+      newResults.push({ songId, position: nextPos });
+      newResults.sort((a, b) => a.position - b.position);
 
-    updateResults(newResults);
-    setSearchTerm('');
+      await updateResults(newResults);
+      setSearchTerm('');
+    } catch (error) {
+      console.error('Error adding countdown result:', error);
+      alert('Failed to add song. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  const handleRemoveResult = (position: number) => {
-    const newResults = currentResults.filter((r) => r.position !== position);
-    updateResults(newResults);
+  const handleRemoveResult = async (position: number) => {
+    if (isUpdating) return; // Prevent multiple simultaneous updates
+
+    setIsUpdating(true);
+    try {
+      const newResults = currentResults.filter((r) => r.position !== position);
+      await updateResults(newResults);
+    } catch (error) {
+      console.error('Error removing countdown result:', error);
+      alert('Failed to remove song. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
+    if (isUpdating) return; // Prevent multiple simultaneous updates
+
     const countdownName = activeTab === 'hottest100' ? 'Hottest 100' : 'Hottest 200';
     const confirmed = window.confirm(
       `Are you sure you want to clear ALL ${currentResults.length} songs from the ${countdownName}? This cannot be undone.`
     );
     if (confirmed) {
-      updateResults([]);
+      setIsUpdating(true);
+      try {
+        await updateResults([]);
+      } catch (error) {
+        console.error('Error clearing countdown:', error);
+        alert('Failed to clear countdown. Please try again.');
+      } finally {
+        setIsUpdating(false);
+      }
     }
   };
 
@@ -67,30 +98,38 @@ export const CountdownEntry: React.FC = () => {
     e.preventDefault();
   };
 
-  const handleDrop = (targetIndex: number) => {
-    if (draggedIndex === null || draggedIndex === targetIndex) {
+  const handleDrop = async (targetIndex: number) => {
+    if (draggedIndex === null || draggedIndex === targetIndex || isUpdating) {
       setDraggedIndex(null);
       return;
     }
 
-    const sortedResults = [...currentResults].sort((a, b) => a.position - b.position);
+    setIsUpdating(true);
+    try {
+      const sortedResults = [...currentResults].sort((a, b) => a.position - b.position);
 
-    // Preserve the current position values
-    const currentPositions = sortedResults.map(r => r.position);
+      // Preserve the current position values
+      const currentPositions = sortedResults.map(r => r.position);
 
-    // Reorder the songs
-    const draggedItem = sortedResults[draggedIndex];
-    const newSortedResults = sortedResults.filter((_, i) => i !== draggedIndex);
-    newSortedResults.splice(targetIndex, 0, draggedItem);
+      // Reorder the songs
+      const draggedItem = sortedResults[draggedIndex];
+      const newSortedResults = sortedResults.filter((_, i) => i !== draggedIndex);
+      newSortedResults.splice(targetIndex, 0, draggedItem);
 
-    // Reassign the same position values to the reordered songs
-    const updatedResults = newSortedResults.map((result, index) => ({
-      ...result,
-      position: currentPositions[index]
-    }));
+      // Reassign the same position values to the reordered songs
+      const updatedResults = newSortedResults.map((result, index) => ({
+        ...result,
+        position: currentPositions[index]
+      }));
 
-    updateResults(updatedResults);
-    setDraggedIndex(null);
+      await updateResults(updatedResults);
+    } catch (error) {
+      console.error('Error reordering countdown:', error);
+      alert('Failed to reorder. Please try again.');
+    } finally {
+      setDraggedIndex(null);
+      setIsUpdating(false);
+    }
   };
 
   const filteredSongs = songs.filter(
@@ -163,8 +202,12 @@ export const CountdownEntry: React.FC = () => {
                 availableSongs.map((song) => (
                   <div
                     key={song.id}
-                    onClick={() => handleAddResult(song.id)}
-                    className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition"
+                    onClick={() => !isUpdating && handleAddResult(song.id)}
+                    className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg transition ${
+                      isUpdating
+                        ? 'cursor-not-allowed opacity-50'
+                        : 'cursor-pointer hover:bg-gray-100'
+                    }`}
                   >
                     {song.thumbnail && (
                       <LazyImage
@@ -198,9 +241,14 @@ export const CountdownEntry: React.FC = () => {
               {currentResults.length > 0 && (
                 <button
                   onClick={handleClearAll}
-                  className="bg-red-500 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg hover:bg-red-600 transition text-xs sm:text-sm font-semibold"
+                  disabled={isUpdating}
+                  className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition text-xs sm:text-sm font-semibold ${
+                    isUpdating
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : 'bg-red-500 text-white hover:bg-red-600'
+                  }`}
                 >
-                  Clear All
+                  {isUpdating ? 'Updating...' : 'Clear All'}
                 </button>
               )}
             </div>

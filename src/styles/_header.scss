@@ -1,0 +1,25 @@
+@use 'variables' as *;
+
+// Header with banner background
+.header-with-banner {
+  background-image: var(--banner-image);
+  background-size: cover;
+  background-position: center;
+}
+
+// Logo styles
+.logo {
+  width: calc(100% - 60px);
+  max-width: $logo-max-width;
+  height: auto;
+}
+
+// Banner decoration (right side)
+.banner-right {
+  width: $banner-right-width;
+  height: auto;
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translateY($banner-right-offset);
+}

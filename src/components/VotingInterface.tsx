@@ -4,7 +4,7 @@ import type { FamilyMember } from '../types';
 import { LazyImage } from './LazyImage';
 
 export const VotingInterface: React.FC = () => {
-  const { songs, familyMembers, addFamilyMember, updateFamilyMember, removeFamilyMember } = useApp();
+  const { songs, familyMembers, addFamilyMember, updateFamilyMember, removeFamilyMember, generateMusicTasteProfile, isGeneratingProfiles, canRegenerateMusicTaste } = useApp();
   const [newMemberName, setNewMemberName] = useState('');
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -101,10 +101,10 @@ export const VotingInterface: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6">
-      <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 hidden sm:block">Family Voting</h2>
+      <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 hidden sm:block">Voting</h2>
 
       <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-orange-200">
-        <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">Family Members</h3>
+        <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">Mates</h3>
         <div className="flex gap-2 mb-3 sm:mb-4">
           <input
             type="text"
@@ -282,11 +282,26 @@ export const VotingInterface: React.FC = () => {
                 })}
               </div>
             )}
+            {selectedMember.votes.length > 0 && (
+              <button
+                onClick={() => generateMusicTasteProfile(selectedMember.id)}
+                disabled={isGeneratingProfiles || !canRegenerateMusicTaste(selectedMember.id)}
+                className={`w-full mt-4 px-4 py-2 rounded-lg font-semibold text-sm transition ${
+                  isGeneratingProfiles || !canRegenerateMusicTaste(selectedMember.id)
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600'
+                }`}
+              >
+                {isGeneratingProfiles ? '🎵 Analyzing...' :
+                 !canRegenerateMusicTaste(selectedMember.id) ? '✓ Analyzed (24h cooldown)' :
+                 '🎵 Analyze Music Taste'}
+              </button>
+            )}
           </div>
         </div>
       )}
 
-      {/* All Family Members' Votes */}
+      {/* All Mates' Votes */}
       {familyMembers.length > 0 && (
         <div className="mb-4 sm:mb-6">
           <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">Everyone's Votes</h3>
