@@ -122,6 +122,46 @@ Two separate lists (Hottest 100 vs 200) stored in same table, differentiated by 
 ### Real-time Updates
 Supabase channels (`*-channel`) subscribe to all operations (`event: '*'`) on respective tables. On any change, relevant load function re-fetches data, triggering React re-renders across all connected clients.
 
+### AI Member Profiles (Optional Feature)
+The app includes an optional AI feature powered by Claude (Anthropic API) that generates personality profiles for members.
+
+**Implementation:**
+- **Supabase Edge Function**: `supabase/functions/generate-profile/index.ts`
+- **Model**: Claude 3 Haiku (fast, cost-effective)
+- **API Key Storage**: Stored as Supabase secret, NOT in client .env file
+- **Modes**:
+  - `music_taste` - Analyzes song picks for genre preferences and patterns
+  - `label_and_taste` - Generates 2-3 word label + music taste description
+  - `running_commentary` - Live performance commentary during countdown
+  - `full_regeneration` - Complete profile with label, taste, and performance
+
+**Data Flow:**
+1. Client calls Supabase Edge Function via `supabase.functions.invoke('generate-profile')`
+2. Edge Function calls Anthropic API with structured prompts
+3. Response parsed and returned to client
+4. Client updates member profile in UI
+
+**Key Features:**
+- Analyzes genre preferences (indie vs mainstream)
+- Identifies artist origin patterns (Australian-heavy, international mix, etc.)
+- Generates unique labels for each member
+- Provides live commentary based on match counts and scores
+- Graceful fallback if API key not configured
+
+**Deployment:**
+```bash
+# Set API key as Supabase secret
+supabase secrets set ANTHROPIC_API_KEY=your_key_here
+
+# Deploy edge function
+supabase functions deploy generate-profile
+```
+
+**Cost Considerations:**
+- Only runs on-demand (button click)
+- ~$0.01-0.05 per generation
+- App fully functional without this feature
+
 ## Important Constraints
 
 - Members can have exactly 0-10 votes (enforced in UI)

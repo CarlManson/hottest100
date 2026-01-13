@@ -32,6 +32,7 @@ Every year, mates across Australia gather to listen to the Triple J Hottest 100.
 3. **Deploy to Netlify or Vercel** (drag & drop, 2 minutes)
    - Follow [DEPLOYMENT.md](DEPLOYMENT.md)
 4. **Share with your mates** and start voting!
+5. **Optional**: Set up AI profiles (requires Anthropic API key - see AI Member Profiles section below)
 
 ### What You'll Need
 
@@ -62,7 +63,7 @@ Perfect for first-time forkers:
 - **Authentication**: Secure username/password login for your group
 - **Dashboard**: Live leaderboard with countdown progress widget
 - **Hero Display**: Featured #1 song as large square tile with podium
-- **AI Member Profiles**: Fun Aussie-themed profiles for each mate
+- **AI Member Profiles**: Claude AI-powered personality profiles with music taste analysis and performance commentary (requires Anthropic API key)
 - **Awards System**: Hottest 100 awards and achievements
 - **Mobile Optimized**: Beautiful responsive UI on phones, tablets, and desktop
 - **Song Management**: Import songs via JSON, CSV, or manual entry
@@ -91,6 +92,7 @@ Perfect for first-time forkers:
 2. **Add Songs**: Import the ~100-200 eligible songs
 3. **Add Mates**: Create profiles for everyone playing
 4. **Vote**: Each person picks their top 10 songs
+5. **Optional - AI Profiles**: Set up Anthropic API for AI-generated member profiles (see below)
 
 ### During the Countdown
 1. **Enter Results**: One person enters positions as announced
@@ -112,6 +114,52 @@ Perfect for first-time forkers:
 - Position #101 = **100 points**
 
 **Note:** You only score points if your song appears in the countdown. Your ranking (1-10) is just for your reference.
+
+---
+
+## 🤖 AI Member Profiles (Optional)
+
+The app includes AI-powered member profiles that analyze music taste and provide live commentary during the countdown. This feature is **optional** and requires an Anthropic API key.
+
+### What the AI Does
+
+- **Music Taste Analysis**: Analyzes each member's song picks to identify genre preferences, mainstream vs indie leanings, and artist origin patterns (Australian-heavy, international mix, etc.)
+- **Profile Labels**: Generates punchy 2-3 word labels like "Indie Purist", "Pop Connoisseur", "Aussie Champion" based on their picks
+- **Performance Commentary**: Provides live commentary on how each member is performing as countdown results come in
+
+### Setup Requirements
+
+1. **Anthropic API Key**: Get one from [console.anthropic.com](https://console.anthropic.com/)
+2. **Supabase Edge Function**: Deploy the included `generate-profile` function
+3. **Store API Key**: Add it as a Supabase secret (not in your .env file)
+
+### Deployment Steps
+
+```bash
+# 1. Install Supabase CLI
+brew install supabase/tap/supabase
+
+# 2. Login to Supabase
+supabase login
+
+# 3. Link your project
+supabase link --project-ref YOUR_PROJECT_REF
+
+# 4. Set your Anthropic API key as a secret
+supabase secrets set ANTHROPIC_API_KEY=your_anthropic_api_key_here
+
+# 5. Deploy the function
+supabase functions deploy generate-profile
+```
+
+Detailed instructions are in [supabase/functions/README.md](supabase/functions/README.md)
+
+### Cost & Usage
+
+- Uses Claude 3 Haiku (fast, cost-effective model)
+- Typical cost: ~$0.01-0.05 per profile generation
+- Only runs when you click "Generate AI Profile" buttons
+- **The app works perfectly without this feature** - it's just a fun addition!
 
 ---
 
