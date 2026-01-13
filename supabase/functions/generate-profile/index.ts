@@ -140,7 +140,7 @@ ${picks}${existingLabelsText}
 
 Write a response in this EXACT format:
 
-LABEL: [2-3 word funny/cheeky description based on their music taste - like "Indie Snob", "Pub Rock Tragic", "TikTok Merchant", "Spotify Algorithm", "Genre Hopper", "Dad Rock Enthusiast", "Mainstream Maven", "Hipster Historian", "Bedroom Pop Kid", "Festival Chaser", "Nostalgia Merchant", "Radio Friendly", "Alt Rock Purist", etc. Make it playful and based on their actual picks. Avoid using "Triple J" in the label. MUST be unique and different from any labels already used above.]
+LABEL: [BE CREATIVE! Come up with a unique 2-3 word funny/cheeky description that captures THIS person's specific music taste based on what they actually picked. Don't just use generic terms - look at their actual artists and songs! Make it specific to THEIR picks, not a generic label. Avoid "Triple J" and "Indie Darling". MUST be completely unique and different from any labels already used above.]
 
 MUSIC_TASTE: [3-4 sentences with personality analyzing their picks - genre preferences, mainstream vs indie leanings, backing Aussies vs going international, any funny patterns. Give them a friendly roast if deserved or props if they've got interesting taste. Keep it fun and cheeky!]
 
@@ -227,7 +227,7 @@ ${picks}${existingLabelsText}
 
 Write a response in this EXACT format:
 
-LABEL: [2-3 word funny/cheeky description of their music taste - like "Indie Snob", "Pub Rock Tragic", "TikTok Merchant", "Spotify Algorithm", "Genre Hopper", "Dad Rock Enthusiast", "Mainstream Maven", "Hipster Historian", "Bedroom Pop Kid", "Festival Chaser", "Nostalgia Merchant", "Future Classic", "Radio Friendly", etc. Make it playful and based on their actual picks! Avoid using "Triple J" in the label. MUST be unique and different from any labels already used above.]
+LABEL: [BE CREATIVE! Come up with a unique 2-3 word funny/cheeky description that captures THIS person's specific music taste based on what they actually picked. Don't just use generic terms - look at their actual artists and songs! Examples of the style: if they picked all pop hits call them "Chart Chaser", if they picked obscure indie call them "Bandcamp Browser", if they love pub rock call them "Pub Rock Warrior", if they picked sad songs call them "Sad Boy Summer", etc. Make it specific to THEIR picks, not a generic label. Avoid "Triple J" and "Indie Darling". MUST be completely unique and different from any labels already used above.]
 
 MUSIC_TASTE: [3-4 sentences with personality about their music choices - genre patterns, mainstream vs indie, backing the Aussies or going international, any funny observations about their taste. Give them a friendly roast if their taste is predictable, or props if it's interesting. Keep it cheeky and fun!]
 
