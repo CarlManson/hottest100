@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import { calculateAwards } from '../utils/awards';
 import type { MemberProfile } from '../types';
 import banner from '../assets/banner-bg.jpg';
 import { LazyImage } from './LazyImage';
+import { CountdownQuip } from './CountdownQuip';
+import { getPodiumQuip } from '../data/podiumQuips';
 
 export const PublicHome: React.FC = () => {
   const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
@@ -44,6 +46,48 @@ export const PublicHome: React.FC = () => {
   // For countdown progress widget
   const displayResults = hasHottest200Started ? hottest200Results : countdownResults;
   const recentResults = [...displayResults].sort((a, b) => a.position - b.position);
+
+  // Get stored quip for most recent countdown entry
+  const countdownQuip = useMemo(() => {
+    if (recentResults.length === 0) return '';
+    return recentResults[0].quip || '';
+  }, [recentResults]);
+
+  // Calculate podium quip based on leaderboard state
+  const podiumQuip = useMemo(() => {
+    if (countdownResults.length === 0 || leaderboard.length === 0) return '';
+
+    // Get the current highest song position (same logic as currentHighestResult)
+    // This sorts ascending and takes the first (lowest position = most recently revealed)
+    const sortedByPosition = [...countdownResults].sort((a, b) => a.position - b.position);
+    const currentPosition = sortedByPosition[0].position;
+
+    // Check if everyone has 0 score FIRST (no score state takes priority)
+    const allZero = leaderboard.every(entry => entry.score === 0);
+    if (allZero) {
+      return getPodiumQuip(currentPosition, '', '', 0);
+    }
+
+    // Check for ties in first place
+    const firstPlaceScore = leaderboard[0].score;
+    const tiedForFirst = leaderboard.filter(entry => entry.score === firstPlaceScore);
+
+    if (tiedForFirst.length >= 3) {
+      // Three-way tie (or more)
+      const tiedNames = tiedForFirst.slice(0, 3).map(entry => entry.member.name);
+      return getPodiumQuip(currentPosition, '', '', 0, tiedNames);
+    } else if (tiedForFirst.length === 2) {
+      // Two-way tie
+      const tiedNames = tiedForFirst.map(entry => entry.member.name);
+      return getPodiumQuip(currentPosition, '', '', 0, tiedNames);
+    }
+
+    // Normal update - leader vs loser
+    const leader = leaderboard[0].member.name;
+    const loser = leaderboard[leaderboard.length - 1].member.name;
+    const margin = leaderboard.length > 1 ? leaderboard[0].score - leaderboard[1].score : leaderboard[0].score;
+    return getPodiumQuip(currentPosition, leader, loser, margin);
+  }, [countdownResults, leaderboard]);
 
   return (
     <div className="min-h-screen">
@@ -148,7 +192,7 @@ export const PublicHome: React.FC = () => {
             {/* Current Highest Song Card */}
             <div className="flex justify-center xl:justify-start">
               <div
-                className="relative w-full max-w-md aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
+                className="relative w-full max-w-md aspect-square rounded-2xl shadow-2xl overflow-hidden group transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
                 style={{
                   backgroundImage: currentHighestSong.thumbnail
                     ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${currentHighestSong.thumbnail})`
@@ -184,77 +228,82 @@ export const PublicHome: React.FC = () => {
             </div>
 
             {/* Countdown Progress Widget */}
-            <div className="xl:col-span-2 bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200 h-fit">
-              <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
-              </h3>
+            <div className="xl:col-span-2">
+              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200 h-fit">
+                <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                  📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
+                </h3>
 
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-semibold text-gray-700">
-                    {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
-                  </span>
-                  <span className="text-gray-600">
-                    {hasHottest200Started
-                      ? `${totalResults}/200 songs`
-                      : `${countdownResults.length}/100 songs`
-                    }
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div
-                    className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
-                    style={{
-                      width: hasHottest200Started
-                        ? `${(totalResults / 200) * 100}%`
-                        : `${(countdownResults.length / 100) * 100}%`
-                    }}
-                  />
-                </div>
-              </div>
-
-              {recentResults.length > 0 && (
-                <div>
-                  <div className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                    {hasHottest200Started ? 'Latest Entries (Hottest 200)' : 'Latest Entries'}
+                <div className="mb-4">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="font-semibold text-gray-700">
+                      {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
+                    </span>
+                    <span className="text-gray-600">
+                      {hasHottest200Started
+                        ? `${totalResults}/200 songs`
+                        : `${countdownResults.length}/100 songs`
+                      }
+                    </span>
                   </div>
-                  <div className="max-h-80 overflow-y-auto space-y-1.5 sm:space-y-2 pr-2">
-                    {recentResults.map((result) => {
-                      const song = songs.find(s => s.id === result.songId);
-                      if (!song) return null;
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
+                      style={{
+                        width: hasHottest200Started
+                          ? `${(totalResults / 200) * 100}%`
+                          : `${(countdownResults.length / 100) * 100}%`
+                      }}
+                    />
+                  </div>
+                </div>
 
-                      return (
-                        <div
-                          key={result.position}
-                          className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
-                        >
-                          {song.thumbnail && (
-                            <img
-                              src={song.thumbnail}
-                              alt=""
-                              className="w-8 h-8 sm:w-10 sm:h-10 rounded object-cover flex-shrink-0"
-                            />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
-                            <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
-                              <span className="truncate">{song.artist}</span>
-                              {song.isAustralian && (
-                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
-                                  AUS
-                                </span>
-                              )}
+                {recentResults.length > 0 && (
+                  <div>
+                    <div className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                      {hasHottest200Started ? 'Latest Entries (Hottest 200)' : 'Latest Entries'}
+                    </div>
+                    <div className="max-h-80 overflow-y-auto space-y-1.5 sm:space-y-2 pr-2">
+                      {recentResults.map((result) => {
+                        const song = songs.find(s => s.id === result.songId);
+                        if (!song) return null;
+
+                        return (
+                          <div
+                            key={result.position}
+                            className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
+                          >
+                            {song.thumbnail && (
+                              <img
+                                src={song.thumbnail}
+                                alt=""
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded object-cover flex-shrink-0"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                              <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
+                                <span className="truncate">{song.artist}</span>
+                                {song.isAustralian && (
+                                  <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                    AUS
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="font-bold text-orange-600 text-sm sm:text-lg flex-shrink-0">
+                              #{result.position}
                             </div>
                           </div>
-                          <div className="font-bold text-orange-600 text-sm sm:text-lg flex-shrink-0">
-                            #{result.position}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              {/* Commentator Quip */}
+              <CountdownQuip quip={countdownQuip} />
             </div>
           </div>
         )}
@@ -263,7 +312,7 @@ export const PublicHome: React.FC = () => {
         {currentHighestResult && currentHighestSong && totalResults === 0 && (
           <div className="mb-12 flex justify-center">
             <div
-              className="relative w-full max-w-md xl:max-w-2xl aspect-square rounded-2xl shadow-2xl overflow-hidden group cursor-pointer transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
+              className="relative w-full max-w-md xl:max-w-2xl aspect-square rounded-2xl shadow-2xl overflow-hidden group transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
               style={{
                 backgroundImage: currentHighestSong.thumbnail
                   ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${currentHighestSong.thumbnail})`
@@ -313,8 +362,9 @@ export const PublicHome: React.FC = () => {
             {currentHighestResult && currentHighestSong ? (
               // Featured song is showing above, so show podium + leaderboard side by side on md+
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
-                {/* Podium Visualization (Top 3) */}
-                <div className="flex items-end justify-center gap-4 sm:gap-8 lg:gap-12">
+                {/* Podium Visualization (Top 3) + Commentary */}
+                <div>
+                  <div className="flex items-end justify-center gap-4 sm:gap-8 lg:gap-12">
                   {/* 2nd Place */}
                   {topThree[1] && (
                     <div className="flex flex-col items-center podium-second">
@@ -362,6 +412,10 @@ export const PublicHome: React.FC = () => {
                       </div>
                     </div>
                   )}
+                  </div>
+
+                  {/* Podium Commentator Quip */}
+                  <CountdownQuip quip={podiumQuip} />
                 </div>
 
                 {/* Full Leaderboard */}
@@ -507,79 +561,87 @@ export const PublicHome: React.FC = () => {
                   )}
                 </div>
 
+                {/* Podium Commentator Quip */}
+                <CountdownQuip quip={podiumQuip} />
+
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
                 {/* Countdown Progress Widget - spans first column on the left */}
-                <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200 h-fit">
-                  <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                    📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
-                  </h3>
+                <div>
+                  <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200 h-fit">
+                    <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                      📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
+                    </h3>
 
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="font-semibold text-gray-700">
-                        {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
-                      </span>
-                      <span className="text-gray-600">
-                        {hasHottest200Started
-                          ? `${totalResults}/200 songs`
-                          : `${countdownResults.length}/100 songs`
-                        }
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
-                        style={{
-                          width: hasHottest200Started
-                            ? `${(totalResults / 200) * 100}%`
-                            : `${(countdownResults.length / 100) * 100}%`
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {recentResults.length > 0 && (
-                    <div>
-                      <div className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                        {hasHottest200Started ? 'Latest Entries (Hottest 200)' : 'Latest Entries'}
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="font-semibold text-gray-700">
+                          {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
+                        </span>
+                        <span className="text-gray-600">
+                          {hasHottest200Started
+                            ? `${totalResults}/200 songs`
+                            : `${countdownResults.length}/100 songs`
+                          }
+                        </span>
                       </div>
-                      <div className="max-h-80 overflow-y-auto space-y-1.5 sm:space-y-2 pr-2">
-                        {recentResults.map((result) => {
-                          const song = songs.find(s => s.id === result.songId);
-                          if (!song) return null;
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                          className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
+                          style={{
+                            width: hasHottest200Started
+                              ? `${(totalResults / 200) * 100}%`
+                              : `${(countdownResults.length / 100) * 100}%`
+                          }}
+                        />
+                      </div>
+                    </div>
 
-                          return (
-                            <div
-                              key={result.position}
-                              className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
-                            >
-                              {song.thumbnail && (
-                                <img
-                                  src={song.thumbnail}
-                                  alt=""
-                                  className="w-8 h-8 sm:w-10 sm:h-10 rounded object-cover flex-shrink-0"
-                                />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
-                                <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
-                                  <span className="truncate">{song.artist}</span>
-                                  {song.isAustralian && (
-                                    <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
-                                      AUS
-                                    </span>
-                                  )}
+                    {recentResults.length > 0 && (
+                      <div>
+                        <div className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                          {hasHottest200Started ? 'Latest Entries (Hottest 200)' : 'Latest Entries'}
+                        </div>
+                        <div className="max-h-80 overflow-y-auto space-y-1.5 sm:space-y-2 pr-2">
+                          {recentResults.map((result) => {
+                            const song = songs.find(s => s.id === result.songId);
+                            if (!song) return null;
+
+                            return (
+                              <div
+                                key={result.position}
+                                className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
+                              >
+                                {song.thumbnail && (
+                                  <img
+                                    src={song.thumbnail}
+                                    alt=""
+                                    className="w-8 h-8 sm:w-10 sm:h-10 rounded object-cover flex-shrink-0"
+                                  />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                                  <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
+                                    <span className="truncate">{song.artist}</span>
+                                    {song.isAustralian && (
+                                      <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                        AUS
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="font-bold text-orange-600 text-sm sm:text-lg flex-shrink-0">
+                                  #{result.position}
                                 </div>
                               </div>
-                              <div className="font-bold text-orange-600 text-sm sm:text-lg flex-shrink-0">
-                                #{result.position}
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+
+                  {/* Commentator Quip */}
+                  <CountdownQuip quip={countdownQuip} />
                 </div>
 
                 {/* Full Leaderboard */}

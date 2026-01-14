@@ -20,6 +20,7 @@ export interface FamilyMember {
 export interface CountdownResult {
   songId: string;
   position: number; // 1-100 for Hottest 100, 101-200 for extended
+  quip?: string; // Commentator quip for this entry
 }
 
 export interface MemberProfile {

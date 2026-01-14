@@ -6,7 +6,26 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(npm install:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh secret set:*)",
+      "Bash(gh secret list:*)",
+      "Bash(open:*)",
+      "Bash(git pull:*)",
+      "Bash(cat:*)",
+      "Bash(gh api:*)",
+      "Bash(npm run dev:*)",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)",
+      "Bash(lsof:*)",
+      "Bash(supabase login:*)",
+      "Bash(export SUPABASE_ACCESS_TOKEN:*)",
+      "Bash(supabase link:*)",
+      "Bash(supabase secrets set:*)",
+      "Bash(supabase functions deploy:*)",
+      "Bash(export SUPABASE_ACCESS_TOKEN=sbp_7e3b237100d69012a76037b906169c303fca2e83)"
     ]
   }
 }
