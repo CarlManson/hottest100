@@ -351,12 +351,6 @@ export const PublicHome: React.FC = () => {
         {/* Leader Podium - Visual representation of top 3 */}
         {leaderboard.length > 0 && (
           <div className="mb-12">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
-                {hottest200Results.length === 100 ? "Winners Podium" : "Current Standings"}
-              </h2>
-              <p className="text-gray-600 text-sm sm:text-base">Who's leading the pack?</p>
-            </div>
 
             {/* Conditional Layout: Podium + Leaderboard OR Countdown + Leaderboard OR just Leaderboard */}
             {currentHighestResult && currentHighestSong ? (
@@ -364,6 +358,9 @@ export const PublicHome: React.FC = () => {
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
                 {/* Podium Visualization (Top 3) + Commentary */}
                 <div>
+                  <h2 className="text-center text-3xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                {hottest200Results.length === 100 ? "Winners Podium" : "Current Standings"}</h2>
+                <p className="text-center text-gray-600 text-sm sm:text-base mb-5">Who's leading the pack?</p>
                   <div className="flex items-end justify-center gap-4 sm:gap-8 lg:gap-12">
                   {/* 2nd Place */}
                   {topThree[1] && (
