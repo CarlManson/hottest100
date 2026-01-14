@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, getSongMatches, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import type { MemberProfile, FamilyMember } from '../types';
@@ -25,6 +25,29 @@ export const Leaderboard: React.FC = () => {
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const hasHottest200 = hottest200Results.length > 0;
+
+  // Calculate ranks with tie handling
+  const getRank = useMemo(() => {
+    const rankMap = new Map<string, number>();
+    let currentRank = 1;
+
+    for (let i = 0; i < leaderboard.length; i++) {
+      const entry = leaderboard[i];
+      if (i === 0) {
+        rankMap.set(entry.member.id, currentRank);
+      } else {
+        const prevEntry = leaderboard[i - 1];
+        if (entry.score === prevEntry.score) {
+          rankMap.set(entry.member.id, rankMap.get(prevEntry.member.id)!);
+        } else {
+          currentRank = i + 1;
+          rankMap.set(entry.member.id, currentRank);
+        }
+      }
+    }
+
+    return (memberId: string) => rankMap.get(memberId) || 0;
+  }, [leaderboard]);
 
   const matches = selectedMember
     ? getSongMatches(selectedMember, countdownResults, hottest200Results, songs)
@@ -120,9 +143,10 @@ export const Leaderboard: React.FC = () => {
             <p className="text-sm sm:text-base text-gray-500">No mates yet</p>
           ) : (
             <div className="space-y-2 sm:space-y-3">
-              {leaderboard.map((entry, index) => {
+              {leaderboard.map((entry) => {
                 const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
                 const profile = getProfileForMember(entry.member.id);
+                const rank = getRank(entry.member.id);
                 return (
                   <div
                     key={entry.member.id}
@@ -133,8 +157,14 @@ export const Leaderboard: React.FC = () => {
                         : 'bg-gray-50 hover:bg-gray-100'
                     }`}
                   >
-                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-bold text-lg sm:text-xl">
-                      {index + 1}
+                    <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${
+                      entry.score === 0 ? 'bg-gray-200 text-gray-400' :
+                      rank === 1 ? 'bg-yellow-500 text-white' :
+                      rank === 2 ? 'bg-gray-400 text-white' :
+                      rank === 3 ? 'bg-orange-600 text-white' :
+                      'bg-gray-300 text-gray-700'
+                    }`}>
+                      {entry.score === 0 ? '-' : rank}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">

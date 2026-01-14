@@ -6,6 +6,7 @@ import type { MemberProfile } from '../types';
 import banner from '../assets/banner-bg.jpg';
 import { LazyImage } from './LazyImage';
 import { CountdownQuip } from './CountdownQuip';
+import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 
 export const PublicHome: React.FC = () => {
@@ -16,12 +17,34 @@ export const PublicHome: React.FC = () => {
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
 
+  // Calculate ranks with tie handling
+  const getRank = useMemo(() => {
+    const rankMap = new Map<string, number>();
+    let currentRank = 1;
+
+    for (let i = 0; i < leaderboard.length; i++) {
+      const entry = leaderboard[i];
+      if (i === 0) {
+        rankMap.set(entry.member.id, currentRank);
+      } else {
+        const prevEntry = leaderboard[i - 1];
+        if (entry.score === prevEntry.score) {
+          // Same score = same rank
+          rankMap.set(entry.member.id, rankMap.get(prevEntry.member.id)!);
+        } else {
+          // Different score = rank is current position + 1
+          currentRank = i + 1;
+          rankMap.set(entry.member.id, currentRank);
+        }
+      }
+    }
+
+    return (memberId: string) => rankMap.get(memberId) || 0;
+  }, [leaderboard]);
+
   // Calculate awards when Hottest 100 is complete
   const awards = calculateAwards(familyMembers, songs, countdownResults);
   const isHottest100Complete = countdownResults.length === 100;
-
-  // Get top 3 for podium display
-  const topThree = leaderboard.slice(0, 3);
 
   // Get the #1 song if available
   const numberOneSong = countdownResults.find(r => r.position === 1);
@@ -361,55 +384,10 @@ export const PublicHome: React.FC = () => {
                   <h2 className="text-center text-3xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
                 {hottest200Results.length === 100 ? "Winners Podium" : "Current Standings"}</h2>
                 <p className="text-center text-gray-600 text-sm sm:text-base mb-5">Who's leading the pack?</p>
-                  <div className="flex items-end justify-center gap-4 sm:gap-8 lg:gap-12">
-                  {/* 2nd Place */}
-                  {topThree[1] && (
-                    <div className="flex flex-col items-center podium-second">
-                      <div className="text-4xl sm:text-6xl 2xl:text-7xl mb-2">🥈</div>
-                      <div className="font-bold text-sm sm:text-lg 2xl:text-xl text-gray-800 truncate w-full text-center">
-                        {topThree[1].member.name}
-                      </div>
-                      <div className="text-2xl sm:text-4xl 2xl:text-5xl font-black text-gray-400 mt-2">
-                        {topThree[1].score}
-                      </div>
-                      <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg podium-base-second">
-                        <div className="text-white font-black text-3xl sm:text-5xl pt-6 text-center">2</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 1st Place */}
-                  {topThree[0] && (
-                    <div className="flex flex-col items-center podium-first">
-                      <div className="text-5xl sm:text-7xl 2xl:text-8xl mb-2">🥇</div>
-                      <div className="font-bold text-base sm:text-xl 2xl:text-2xl text-gray-800 truncate w-full text-center">
-                        {topThree[0].member.name}
-                      </div>
-                      <div className="text-3xl sm:text-5xl 2xl:text-6xl font-black text-yellow-600 mt-2">
-                        {topThree[0].score}
-                      </div>
-                      <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl podium-base-first">
-                        <div className="text-white font-black text-4xl sm:text-6xl pt-8 text-center drop-shadow-lg">1</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 3rd Place */}
-                  {topThree[2] && (
-                    <div className="flex flex-col items-center podium-third">
-                      <div className="text-4xl sm:text-6xl 2xl:text-7xl mb-2">🥉</div>
-                      <div className="font-bold text-sm sm:text-lg 2xl:text-xl text-gray-800 truncate w-full text-center">
-                        {topThree[2].member.name}
-                      </div>
-                      <div className="text-2xl sm:text-4xl 2xl:text-5xl font-black text-orange-600 mt-2">
-                        {topThree[2].score}
-                      </div>
-                      <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg podium-base-third-short">
-                        <div className="text-white font-black text-3xl sm:text-5xl pt-4 text-center">3</div>
-                      </div>
-                    </div>
-                  )}
-                  </div>
+                  <Podium
+                    entries={leaderboard}
+                    isComplete={hottest200Results.length === 100}
+                  />
 
                   {/* Podium Commentator Quip */}
                   <CountdownQuip quip={podiumQuip} />
@@ -421,7 +399,7 @@ export const PublicHome: React.FC = () => {
                     Full Leaderboard
                   </h3>
                   <div className="grid grid-cols-1 2xl:grid-cols-2 gap-2">
-                    {leaderboard.map((entry, index) => {
+                    {leaderboard.map((entry) => {
                       const matchCount = entry.member.votes.filter(vote =>
                         [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
                       ).length;
@@ -431,18 +409,19 @@ export const PublicHome: React.FC = () => {
                         <div
                           key={entry.member.id}
                           className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
-                            index < 3
+                            getRank(entry.member.id) <= 3 && entry.score > 0
                               ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
                               : 'bg-gray-50'
                           }`}
                         >
                           <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${
-                            index === 0 ? 'bg-yellow-500 text-white' :
-                            index === 1 ? 'bg-gray-400 text-white' :
-                            index === 2 ? 'bg-orange-600 text-white' :
+                            entry.score === 0 ? 'bg-gray-200 text-gray-400' :
+                            getRank(entry.member.id) === 1 ? 'bg-yellow-500 text-white' :
+                            getRank(entry.member.id) === 2 ? 'bg-gray-400 text-white' :
+                            getRank(entry.member.id) === 3 ? 'bg-orange-600 text-white' :
                             'bg-gray-300 text-gray-700'
                           }`}>
-                            {index + 1}
+                            {entry.score === 0 ? '-' : getRank(entry.member.id)}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -508,54 +487,11 @@ export const PublicHome: React.FC = () => {
               // No featured song, show podium + countdown + leaderboard
               <>
                 {/* Podium Display for Top 3 */}
-                <div className="flex items-end justify-center gap-4 sm:gap-8 lg:gap-12 mb-8">
-                  {/* 2nd Place */}
-                  {topThree[1] && (
-                    <div className="flex flex-col items-center podium-second">
-                      <div className="text-4xl sm:text-6xl 2xl:text-7xl mb-2">🥈</div>
-                      <div className="font-bold text-sm sm:text-lg 2xl:text-xl text-gray-800 truncate w-full text-center">
-                        {topThree[1].member.name}
-                      </div>
-                      <div className="text-2xl sm:text-4xl 2xl:text-5xl font-black text-gray-400 mt-2">
-                        {topThree[1].score}
-                      </div>
-                      <div className="w-full bg-gradient-to-br from-gray-300 to-gray-400 rounded-t-lg mt-4 shadow-lg podium-base-second">
-                        <div className="text-white font-black text-3xl sm:text-5xl pt-6 text-center">2</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 1st Place */}
-                  {topThree[0] && (
-                    <div className="flex flex-col items-center podium-first">
-                      <div className="text-5xl sm:text-7xl 2xl:text-8xl mb-2">🥇</div>
-                      <div className="font-bold text-base sm:text-xl 2xl:text-2xl text-gray-800 truncate w-full text-center">
-                        {topThree[0].member.name}
-                      </div>
-                      <div className="text-3xl sm:text-5xl 2xl:text-6xl font-black text-yellow-600 mt-2">
-                        {topThree[0].score}
-                      </div>
-                      <div className="w-full bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-t-lg mt-4 shadow-xl podium-base-first">
-                        <div className="text-white font-black text-4xl sm:text-6xl pt-8 text-center drop-shadow-lg">1</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 3rd Place */}
-                  {topThree[2] && (
-                    <div className="flex flex-col items-center podium-third">
-                      <div className="text-4xl sm:text-6xl 2xl:text-7xl mb-2">🥉</div>
-                      <div className="font-bold text-sm sm:text-lg 2xl:text-xl text-gray-800 truncate w-full text-center">
-                        {topThree[2].member.name}
-                      </div>
-                      <div className="text-2xl sm:text-4xl 2xl:text-5xl font-black text-orange-600 mt-2">
-                        {topThree[2].score}
-                      </div>
-                      <div className="w-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-t-lg mt-4 shadow-lg podium-base-third-short">
-                        <div className="text-white font-black text-3xl sm:text-5xl pt-4 text-center">3</div>
-                      </div>
-                    </div>
-                  )}
+                <div className="mb-8">
+                  <Podium
+                    entries={leaderboard}
+                    isComplete={hottest200Results.length === 100}
+                  />
                 </div>
 
                 {/* Podium Commentator Quip */}
@@ -647,7 +583,7 @@ export const PublicHome: React.FC = () => {
                     Full Leaderboard
                   </h3>
                   <div className="grid grid-cols-1 2xl:grid-cols-2 gap-2">
-                    {leaderboard.map((entry, index) => {
+                    {leaderboard.map((entry) => {
                       const matchCount = entry.member.votes.filter(vote =>
                         [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
                       ).length;
@@ -657,18 +593,19 @@ export const PublicHome: React.FC = () => {
                         <div
                           key={entry.member.id}
                           className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
-                            index < 3
+                            getRank(entry.member.id) <= 3 && entry.score > 0
                               ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
                               : 'bg-gray-50'
                           }`}
                         >
                           <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${
-                            index === 0 ? 'bg-yellow-500 text-white' :
-                            index === 1 ? 'bg-gray-400 text-white' :
-                            index === 2 ? 'bg-orange-600 text-white' :
+                            entry.score === 0 ? 'bg-gray-200 text-gray-400' :
+                            getRank(entry.member.id) === 1 ? 'bg-yellow-500 text-white' :
+                            getRank(entry.member.id) === 2 ? 'bg-gray-400 text-white' :
+                            getRank(entry.member.id) === 3 ? 'bg-orange-600 text-white' :
                             'bg-gray-300 text-gray-700'
                           }`}>
-                            {index + 1}
+                            {entry.score === 0 ? '-' : getRank(entry.member.id)}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">

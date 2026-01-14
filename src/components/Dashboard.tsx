@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import type { MemberProfile } from '../types';
@@ -15,6 +15,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
+
+  // Calculate ranks with tie handling
+  const getRank = useMemo(() => {
+    const rankMap = new Map<string, number>();
+    let currentRank = 1;
+
+    for (let i = 0; i < leaderboard.length; i++) {
+      const entry = leaderboard[i];
+      if (i === 0) {
+        rankMap.set(entry.member.id, currentRank);
+      } else {
+        const prevEntry = leaderboard[i - 1];
+        if (entry.score === prevEntry.score) {
+          rankMap.set(entry.member.id, rankMap.get(prevEntry.member.id)!);
+        } else {
+          currentRank = i + 1;
+          rankMap.set(entry.member.id, currentRank);
+        }
+      }
+    }
+
+    return (memberId: string) => rankMap.get(memberId) || 0;
+  }, [leaderboard]);
   const hasVotes = familyMembers.some(m => m.votes.length > 0);
 
   // Determine which results to show in "Latest Entries" and "Featured Song"
@@ -206,28 +229,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               <p className="text-sm sm:text-base text-gray-500 text-center py-6 sm:py-8">No votes yet</p>
             ) : (
               <div className="space-y-2 sm:space-y-3">
-                {leaderboard.slice(0, 5).map((entry, index) => {
+                {leaderboard.slice(0, 5).map((entry) => {
                   const matchCount = entry.member.votes.filter(vote =>
                     [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
                   ).length;
                   const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
+                  const rank = getRank(entry.member.id);
 
                   return (
                     <div
                       key={entry.member.id}
                       className={`flex items-center gap-2 sm:gap-4 p-2 sm:p-4 rounded-lg ${
-                        index === 0
+                        rank === 1 && entry.score > 0
                           ? 'bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-400'
                           : 'bg-gray-50'
                       }`}
                     >
                       <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full font-bold text-sm sm:text-lg ${
-                        index === 0 ? 'bg-yellow-500 text-white' :
-                        index === 1 ? 'bg-gray-400 text-white' :
-                        index === 2 ? 'bg-orange-600 text-white' :
+                        entry.score === 0 ? 'bg-gray-200 text-gray-400' :
+                        rank === 1 ? 'bg-yellow-500 text-white' :
+                        rank === 2 ? 'bg-gray-400 text-white' :
+                        rank === 3 ? 'bg-orange-600 text-white' :
                         'bg-gray-300 text-gray-700'
                       }`}>
-                        {index + 1}
+                        {entry.score === 0 ? '-' : rank}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
