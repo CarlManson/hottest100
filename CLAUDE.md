@@ -123,29 +123,49 @@ Two separate lists (Hottest 100 vs 200) stored in same table, differentiated by 
 Supabase channels (`*-channel`) subscribe to all operations (`event: '*'`) on respective tables. On any change, relevant load function re-fetches data, triggering React re-renders across all connected clients.
 
 ### AI Member Profiles (Optional Feature)
-The app includes an optional AI feature powered by Claude (Anthropic API) that generates personality profiles for members.
+The app includes an optional AI feature powered by Claude (Anthropic API) that generates personality profiles for members with cheeky Aussie personality.
 
 **Implementation:**
 - **Supabase Edge Function**: `supabase/functions/generate-profile/index.ts`
 - **Model**: Claude 3 Haiku (fast, cost-effective)
 - **API Key Storage**: Stored as Supabase secret, NOT in client .env file
+- **Tone**: Cheeky Aussie music critic - funny, playful, uses natural Aussie slang
 - **Modes**:
   - `music_taste` - Analyzes song picks for genre preferences and patterns
-  - `label_and_taste` - Generates 2-3 word label + music taste description
+  - `label_and_taste` - Generates creative 2-3 word label + music taste description
   - `running_commentary` - Live performance commentary during countdown
-  - `full_regeneration` - Complete profile with label, taste, and performance
+  - `full_regeneration` - Complete profile with label, taste, and performance commentary
+
+**User Access:**
+- Click **✎ (edit)** button next to member name on Voting page
+- Opens member management modal with:
+  - Rename functionality
+  - **🏷️ Re/generate Nickname** button (label + music taste only)
+  - **✨ Re/generate Profile** button (full profile with performance)
+- 24-hour cooldown per member after generation
+- Requires member to have at least one vote
 
 **Data Flow:**
-1. Client calls Supabase Edge Function via `supabase.functions.invoke('generate-profile')`
-2. Edge Function calls Anthropic API with structured prompts
-3. Response parsed and returned to client
-4. Client updates member profile in UI
+1. User clicks generation button in `VotingInterface.tsx` modal
+2. Client calls utility function from `src/utils/profileGenerator.ts`
+3. Utility invokes Supabase Edge Function with mode and member data
+4. Edge Function calls Anthropic API with structured prompts
+5. Response parsed and returned to client
+6. AppContext updates profile via real-time subscription
+
+**Prompt Engineering:**
+- **Music Taste Analysis**: Uses `picks` (without performance data) - focuses purely on genre, mainstream vs indie, and artist origins
+- **Performance Commentary**: Uses `picksWithPerformance` - includes countdown positions and match status
+- **Label Generation**: Creative, specific labels based on actual picks (not generic) - avoids "Triple J" and "Indie Darling"
+- **Existing Labels**: Passed to avoid duplicate labels across members
 
 **Key Features:**
-- Analyzes genre preferences (indie vs mainstream)
+- Analyzes genre preferences (indie vs mainstream) inferred from artists
 - Identifies artist origin patterns (Australian-heavy, international mix, etc.)
-- Generates unique labels for each member
-- Provides live commentary based on match counts and scores
+- Generates unique, creative labels specific to member's picks
+- Cheeky Aussie personality with natural slang (mate, reckon, ripper, bloody)
+- Friendly roasting if taste is predictable, props if interesting
+- Performance commentary with exact match counts
 - Graceful fallback if API key not configured
 
 **Deployment:**
@@ -158,8 +178,9 @@ supabase functions deploy generate-profile
 ```
 
 **Cost Considerations:**
-- Only runs on-demand (button click)
+- Only runs on-demand (per-member button clicks)
 - ~$0.01-0.05 per generation
+- 24-hour cooldown prevents excessive usage
 - App fully functional without this feature
 
 ## Important Constraints

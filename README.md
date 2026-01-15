@@ -92,7 +92,7 @@ Perfect for first-time forkers:
 2. **Add Songs**: Import the ~100-200 eligible songs
 3. **Add Mates**: Create profiles for everyone playing
 4. **Vote**: Each person picks their top 10 songs
-5. **Optional - AI Profiles**: Set up Anthropic API for AI-generated member profiles (see below)
+5. **Optional - AI Profiles**: Generate AI nicknames/profiles for members (click ✎ next to member name - see AI Member Profiles section)
 
 ### During the Countdown
 1. **Enter Results**: One person enters positions as announced
@@ -123,9 +123,18 @@ The app includes AI-powered member profiles that analyze music taste and provide
 
 ### What the AI Does
 
-- **Music Taste Analysis**: Analyzes each member's song picks to identify genre preferences, mainstream vs indie leanings, and artist origin patterns (Australian-heavy, international mix, etc.)
-- **Profile Labels**: Generates punchy 2-3 word labels like "Indie Purist", "Pop Connoisseur", "Aussie Champion" based on their picks
+- **Music Taste Analysis**: Analyzes each member's song picks to identify genre preferences, mainstream vs indie leanings, and artist origin patterns (Australian-heavy, international mix, etc.) with cheeky Aussie personality
+- **Profile Labels**: Generates creative 2-3 word labels like "Chart Chaser", "Bandcamp Browser", "Pub Rock Warrior" based on their specific picks
 - **Performance Commentary**: Provides live commentary on how each member is performing as countdown results come in
+
+### How to Use
+
+1. **Access**: Click the **✎ (edit)** button next to any member name on the Voting page
+2. **Choose Generation Type**:
+   - **🏷️ Re/generate Nickname**: Creates label + music taste description (focuses on song choices only)
+   - **✨ Re/generate Profile**: Creates full profile with label + music taste + performance commentary (includes competition stats)
+3. **Cooldown**: 24-hour cooldown per member after each generation to prevent excessive API usage
+4. **Requirement**: Member must have at least one vote to enable AI generation
 
 ### Setup Requirements
 
