@@ -21,8 +21,12 @@ interface AppContextType extends AppState {
   updateHottest200Results: (results: Omit<CountdownResult, 'id'>[]) => Promise<void>;
   clearAllData: () => Promise<void>;
   generateMusicTasteProfile: (memberId: string) => Promise<void>;
+  generateLabelAndTaste: (memberId: string) => Promise<void>;
+  generateFullProfile: (memberId: string) => Promise<void>;
   regenerateAllMusicTastes: () => Promise<void>;
   canRegenerateMusicTaste: (memberId: string) => boolean;
+  canRegenerateLabel: (memberId: string) => boolean;
+  canRegenerateFullProfile: (memberId: string) => boolean;
   getNextAvailableRegenerationTime: () => Date | null;
   resetRateLimit: () => Promise<void>;
   getProfileForMember: (memberId: string) => MemberProfile | undefined;
@@ -473,6 +477,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return new Date(profile.lastMusicTasteUpdate) < twentyFourHoursAgo;
   };
 
+  const canRegenerateLabel = (memberId: string): boolean => {
+    const profile = state.profiles.find(p => p.familyMemberId === memberId);
+
+    // New member (no profile) can always generate
+    if (!profile || !profile.lastLabelRegeneration) return true;
+
+    // Check if 24 hours have passed
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    return new Date(profile.lastLabelRegeneration) < twentyFourHoursAgo;
+  };
+
+  const canRegenerateFullProfile = (memberId: string): boolean => {
+    const profile = state.profiles.find(p => p.familyMemberId === memberId);
+
+    // New member (no profile) can always generate
+    if (!profile || !profile.lastCommentaryUpdate) return true;
+
+    // Check if 24 hours have passed since last full profile
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    return new Date(profile.lastCommentaryUpdate) < twentyFourHoursAgo;
+  };
+
   const generateMusicTasteProfile = async (memberId: string) => {
     setIsGeneratingProfiles(true);
     setProfileError('');
@@ -503,6 +529,107 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (err) {
       setProfileError(err instanceof Error ? err.message : 'Failed to generate profile');
       console.error('Music taste generation error:', err);
+    } finally {
+      setIsGeneratingProfiles(false);
+    }
+  };
+
+  const generateLabelAndTaste = async (memberId: string) => {
+    setIsGeneratingProfiles(true);
+    setProfileError('');
+
+    try {
+      const member = state.familyMembers.find(m => m.id === memberId);
+      if (!member) throw new Error('Member not found');
+
+      // Check 24-hour rate limit for label
+      if (!canRegenerateLabel(memberId)) {
+        throw new Error('Label was updated recently. Please wait 24 hours before regenerating.');
+      }
+
+      // Get existing labels from other members
+      const existingLabels = state.profiles
+        .filter(p => p.familyMemberId !== memberId && p.label)
+        .map(p => p.label!);
+
+      const { generateLabelAndTasteAPI } = await import('../utils/profileGenerator');
+      const result = await generateLabelAndTasteAPI(member, state.songs, existingLabels);
+
+      // Upsert to database
+      const { error } = await supabase
+        .from('member_profiles')
+        .upsert({
+          family_member_id: memberId,
+          label: result.label,
+          music_taste_description: result.musicTasteDescription,
+          last_label_regeneration: new Date().toISOString(),
+          last_music_taste_update: new Date().toISOString(),
+        } as any, {
+          onConflict: 'family_member_id'
+        });
+
+      if (error) throw error;
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : 'Failed to generate nickname');
+      console.error('Label generation error:', err);
+      throw err;
+    } finally {
+      setIsGeneratingProfiles(false);
+    }
+  };
+
+  const generateFullProfile = async (memberId: string) => {
+    setIsGeneratingProfiles(true);
+    setProfileError('');
+
+    try {
+      const member = state.familyMembers.find(m => m.id === memberId);
+      if (!member) throw new Error('Member not found');
+
+      // Check 24-hour rate limit for full profile
+      if (!canRegenerateFullProfile(memberId)) {
+        throw new Error('Profile was updated recently. Please wait 24 hours before regenerating.');
+      }
+
+      // Get leaderboard to calculate scores
+      const { getLeaderboard } = await import('../utils/scoring');
+      const leaderboard = getLeaderboard(state.familyMembers, state.countdownResults, state.hottest200Results);
+
+      // Get existing labels from other members
+      const existingLabels = state.profiles
+        .filter(p => p.familyMemberId !== memberId && p.label)
+        .map(p => p.label!);
+
+      const { generateFullProfileAPI } = await import('../utils/profileGenerator');
+      const result = await generateFullProfileAPI(
+        member,
+        state.songs,
+        state.countdownResults,
+        state.hottest200Results,
+        leaderboard,
+        existingLabels
+      );
+
+      // Upsert to database
+      const { error } = await supabase
+        .from('member_profiles')
+        .upsert({
+          family_member_id: memberId,
+          label: result.label,
+          music_taste_description: result.musicTasteDescription,
+          performance_commentary: result.performanceCommentary,
+          last_label_regeneration: new Date().toISOString(),
+          last_music_taste_update: new Date().toISOString(),
+          last_commentary_update: new Date().toISOString(),
+        } as any, {
+          onConflict: 'family_member_id'
+        });
+
+      if (error) throw error;
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : 'Failed to generate profile');
+      console.error('Full profile generation error:', err);
+      throw err;
     } finally {
       setIsGeneratingProfiles(false);
     }
@@ -643,8 +770,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateHottest200Results,
         clearAllData,
         generateMusicTasteProfile,
+        generateLabelAndTaste,
+        generateFullProfile,
         regenerateAllMusicTastes,
         canRegenerateMusicTaste,
+        canRegenerateLabel,
+        canRegenerateFullProfile,
         getNextAvailableRegenerationTime,
         resetRateLimit,
         getProfileForMember,

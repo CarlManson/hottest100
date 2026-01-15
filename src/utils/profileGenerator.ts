@@ -46,7 +46,8 @@ export async function generateMusicTasteProfileAPI(
 // API call for label and music taste
 export async function generateLabelAndTasteAPI(
   member: FamilyMember,
-  songs: Song[]
+  songs: Song[],
+  existingLabels?: string[]
 ): Promise<{ label: string; musicTasteDescription: string }> {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -69,6 +70,7 @@ export async function generateLabelAndTasteAPI(
       memberName: member.name,
       picks: pickDetails,
       totalPicks: member.votes.length,
+      existingLabels: existingLabels || [],
     }),
   });
 
