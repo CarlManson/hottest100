@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, getSongMatches, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import type { MemberProfile, FamilyMember } from '../types';
@@ -10,16 +10,11 @@ export const Leaderboard: React.FC = () => {
     countdownResults,
     hottest200Results,
     songs,
-    profiles,
-    isGeneratingProfiles,
     profileError,
-    regenerateAllMusicTastes,
-    getNextAvailableRegenerationTime,
     getProfileForMember
   } = useApp();
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
@@ -52,41 +47,6 @@ export const Leaderboard: React.FC = () => {
     ? getSongMatches(selectedMember, countdownResults, hottest200Results, songs)
     : [];
 
-  // Update countdown timer every second
-  useEffect(() => {
-    const updateTimer = () => {
-      const nextAvailable = getNextAvailableRegenerationTime();
-      if (!nextAvailable) {
-        setTimeRemaining(null);
-        return;
-      }
-
-      const now = new Date().getTime();
-      const diff = nextAvailable.getTime() - now;
-
-      if (diff <= 0) {
-        setTimeRemaining(null);
-        return;
-      }
-
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-      if (hours > 0) {
-        setTimeRemaining(`${hours}h ${minutes}m`);
-      } else {
-        setTimeRemaining(`${minutes}m`);
-      }
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-
-    return () => clearInterval(interval);
-  }, [getNextAvailableRegenerationTime, profiles]);
-
-  const canRegenerate = !timeRemaining && familyMembers.length > 0;
-
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-6">
       <div className="mb-4 sm:mb-6">
@@ -99,23 +59,6 @@ export const Leaderboard: React.FC = () => {
             >
               View detailed vote breakdown →
             </a>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={regenerateAllMusicTastes}
-              disabled={isGeneratingProfiles || !canRegenerate}
-              className={`px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition whitespace-nowrap ${
-                isGeneratingProfiles || !canRegenerate
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-              }`}
-            >
-              {isGeneratingProfiles
-                ? '🎵 Analyzing...'
-                : timeRemaining
-                  ? `⏱️ Wait ${timeRemaining}`
-                  : '✨ Generate Profiles'}
-            </button>
           </div>
         </div>
         {profileError && (

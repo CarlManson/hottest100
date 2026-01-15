@@ -4,12 +4,23 @@ import type { FamilyMember } from '../types';
 import { LazyImage } from './LazyImage';
 
 export const VotingInterface: React.FC = () => {
-  const { songs, familyMembers, addFamilyMember, updateFamilyMember, removeFamilyMember, generateMusicTasteProfile, isGeneratingProfiles, canRegenerateMusicTaste } = useApp();
+  const {
+    songs,
+    familyMembers,
+    addFamilyMember,
+    updateFamilyMember,
+    removeFamilyMember,
+    countdownResults,
+    hottest200Results,
+    profiles,
+    isGeneratingProfiles,
+    canRegenerateMusicTaste
+  } = useApp();
   const [newMemberName, setNewMemberName] = useState('');
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedMember, setExpandedMember] = useState<string | null>(null);
-  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [editingName, setEditingName] = useState('');
 
   const handleAddMember = () => {
@@ -26,28 +37,81 @@ export const VotingInterface: React.FC = () => {
   };
 
   const handleStartEdit = (member: FamilyMember) => {
-    setEditingMemberId(member.id);
+    setEditingMember(member);
     setEditingName(member.name);
   };
 
-  const handleSaveEdit = (member: FamilyMember) => {
-    if (editingName.trim() && editingName !== member.name) {
+  const handleSaveEdit = () => {
+    if (!editingMember) return;
+    if (editingName.trim() && editingName !== editingMember.name) {
       const updatedMember = {
-        ...member,
+        ...editingMember,
         name: editingName.trim(),
       };
       updateFamilyMember(updatedMember);
-      if (selectedMember?.id === member.id) {
+      if (selectedMember?.id === editingMember.id) {
         setSelectedMember(updatedMember);
       }
     }
-    setEditingMemberId(null);
+    setEditingMember(null);
     setEditingName('');
   };
 
   const handleCancelEdit = () => {
-    setEditingMemberId(null);
+    setEditingMember(null);
     setEditingName('');
+  };
+
+  const handleGenerateNickname = async () => {
+    if (!editingMember) return;
+
+    try {
+      const { generateLabelAndTasteAPI } = await import('../utils/profileGenerator');
+
+      // Generate label and taste
+      const result = await generateLabelAndTasteAPI(
+        editingMember,
+        songs
+      );
+
+      // The AppContext will handle updating the profile via real-time subscription
+      console.log('Generated label and taste:', result);
+    } catch (error) {
+      console.error('Failed to generate nickname:', error);
+      alert(error instanceof Error ? error.message : 'Failed to generate nickname');
+    }
+  };
+
+  const handleGenerateProfile = async () => {
+    if (!editingMember) return;
+
+    try {
+      const { generateFullProfileAPI } = await import('../utils/profileGenerator');
+      const { getLeaderboard } = await import('../utils/scoring');
+
+      const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
+
+      // Get existing labels from other members
+      const existingLabels = profiles
+        .filter(p => p.familyMemberId !== editingMember.id && p.label)
+        .map(p => p.label!);
+
+      // Generate full profile
+      const result = await generateFullProfileAPI(
+        editingMember,
+        songs,
+        countdownResults,
+        hottest200Results,
+        leaderboard,
+        existingLabels
+      );
+
+      // The AppContext will handle updating the profile via real-time subscription
+      console.log('Generated full profile:', result);
+    } catch (error) {
+      console.error('Failed to generate profile:', error);
+      alert(error instanceof Error ? error.message : 'Failed to generate profile');
+    }
   };
 
   const handleDeleteMember = (member: FamilyMember) => {
@@ -130,62 +194,30 @@ export const VotingInterface: React.FC = () => {
         <div className="flex flex-wrap gap-2">
           {familyMembers.map((member) => (
             <div key={member.id} className="flex items-center gap-1 sm:gap-2">
-              {editingMemberId === member.id ? (
-                <>
-                  <input
-                    type="text"
-                    value={editingName}
-                    onChange={(e) => setEditingName(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') handleSaveEdit(member);
-                      if (e.key === 'Escape') handleCancelEdit();
-                    }}
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-orange-500 rounded-lg focus:outline-none text-sm sm:text-base font-bold"
-                    autoFocus
-                  />
-                  <button
-                    onClick={() => handleSaveEdit(member)}
-                    className="text-green-600 hover:text-green-800 font-bold text-lg sm:text-xl"
-                    title="Save"
-                  >
-                    ✓
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="text-gray-600 hover:text-gray-800 font-bold text-lg sm:text-xl"
-                    title="Cancel"
-                  >
-                    ✕
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setSelectedMember(member)}
-                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition font-bold text-sm sm:text-base ${
-                      selectedMember?.id === member.id
-                        ? 'bg-orange-500 text-white shadow-md'
-                        : 'bg-gray-200 hover:bg-gray-300'
-                    }`}
-                  >
-                    {member.name} ({member.votes.length}/10)
-                  </button>
-                  <button
-                    onClick={() => handleStartEdit(member)}
-                    className="text-blue-600 hover:text-blue-800 font-bold text-sm sm:text-base"
-                    title="Rename"
-                  >
-                    ✎
-                  </button>
-                  <button
-                    onClick={() => handleDeleteMember(member)}
-                    className="text-red-600 hover:text-red-800 font-bold text-lg sm:text-xl"
-                    title="Delete"
-                  >
-                    ✕
-                  </button>
-                </>
-              )}
+              <button
+                onClick={() => setSelectedMember(member)}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition font-bold text-sm sm:text-base ${
+                  selectedMember?.id === member.id
+                    ? 'bg-orange-500 text-white shadow-md'
+                    : 'bg-gray-200 hover:bg-gray-300'
+                }`}
+              >
+                {member.name} ({member.votes.length}/10)
+              </button>
+              <button
+                onClick={() => handleStartEdit(member)}
+                className="text-blue-600 hover:text-blue-800 font-bold text-sm sm:text-base"
+                title="Manage Member"
+              >
+                ✎
+              </button>
+              <button
+                onClick={() => handleDeleteMember(member)}
+                className="text-red-600 hover:text-red-800 font-bold text-lg sm:text-xl"
+                title="Delete"
+              >
+                ✕
+              </button>
             </div>
           ))}
         </div>
@@ -286,21 +318,6 @@ export const VotingInterface: React.FC = () => {
                   );
                 })}
               </div>
-            )}
-            {selectedMember.votes.length > 0 && (
-              <button
-                onClick={() => generateMusicTasteProfile(selectedMember.id)}
-                disabled={isGeneratingProfiles || !canRegenerateMusicTaste(selectedMember.id)}
-                className={`w-full mt-4 px-4 py-2 rounded-lg font-semibold text-sm transition ${
-                  isGeneratingProfiles || !canRegenerateMusicTaste(selectedMember.id)
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600'
-                }`}
-              >
-                {isGeneratingProfiles ? '🎵 Analyzing...' :
-                 !canRegenerateMusicTaste(selectedMember.id) ? '✓ Analyzed (24h cooldown)' :
-                 '🎵 Analyze Music Taste'}
-              </button>
             )}
           </div>
         </div>
@@ -437,6 +454,110 @@ export const VotingInterface: React.FC = () => {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Member Modal */}
+      {editingMember && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={handleCancelEdit}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg sm:text-xl font-bold">Manage Member</h3>
+              <button
+                onClick={handleCancelEdit}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Rename Section */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold mb-2 text-gray-700">Rename Member</label>
+              <input
+                type="text"
+                value={editingName}
+                onChange={(e) => setEditingName(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') handleSaveEdit();
+                  if (e.key === 'Escape') handleCancelEdit();
+                }}
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-sm sm:text-base"
+                autoFocus
+              />
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={handleSaveEdit}
+                  className="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition font-semibold text-sm"
+                >
+                  Save Name
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition font-semibold text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            {/* AI Profile Generation Section */}
+            {editingMember.votes.length > 0 && (
+              <div className="border-t pt-4">
+                <label className="block text-sm font-semibold mb-3 text-gray-700">AI Profile Generation</label>
+                <div className="space-y-2">
+                  <button
+                    onClick={handleGenerateNickname}
+                    disabled={isGeneratingProfiles || !canRegenerateMusicTaste(editingMember.id)}
+                    className={`w-full px-4 py-2 rounded-lg font-semibold text-sm transition ${
+                      isGeneratingProfiles || !canRegenerateMusicTaste(editingMember.id)
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600'
+                    }`}
+                  >
+                    {isGeneratingProfiles
+                      ? '🎵 Generating...'
+                      : !canRegenerateMusicTaste(editingMember.id)
+                        ? '🏷️ Nickname Generated (24h cooldown)'
+                        : '🏷️ Re/generate Nickname'}
+                  </button>
+                  <button
+                    onClick={handleGenerateProfile}
+                    disabled={isGeneratingProfiles || !canRegenerateMusicTaste(editingMember.id)}
+                    className={`w-full px-4 py-2 rounded-lg font-semibold text-sm transition ${
+                      isGeneratingProfiles || !canRegenerateMusicTaste(editingMember.id)
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+                    }`}
+                  >
+                    {isGeneratingProfiles
+                      ? '✨ Generating...'
+                      : !canRegenerateMusicTaste(editingMember.id)
+                        ? '✨ Profile Generated (24h cooldown)'
+                        : '✨ Re/generate Profile'}
+                  </button>
+                  <p className="text-xs text-gray-500 mt-2">
+                    <strong>Nickname:</strong> Generates label + music taste description<br />
+                    <strong>Profile:</strong> Generates label + music taste + performance commentary
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {editingMember.votes.length === 0 && (
+              <div className="border-t pt-4">
+                <p className="text-sm text-gray-500 italic text-center">
+                  Add some votes to enable AI profile generation
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
