@@ -8,11 +8,12 @@ import { VotingInterface } from './components/VotingInterface';
 import { CountdownEntry } from './components/CountdownEntry';
 import { Leaderboard } from './components/Leaderboard';
 import { DetailedBreakdown } from './components/DetailedBreakdown';
+import { Settings } from './components/Settings';
 import logo from './assets/fairest-100-logo.png';
 import banner from './assets/banner-bg.jpg';
 import bannerRight from './assets/banner-right.png';
 
-type Tab = 'home' | 'dashboard' | 'songs' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown';
+type Tab = 'home' | 'dashboard' | 'songs' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
@@ -26,7 +27,7 @@ function App() {
   // Get tab from URL hash
   const getTabFromHash = (): Tab => {
     const hash = window.location.hash.slice(1);
-    const validTabs: Tab[] = ['home', 'dashboard', 'songs', 'voting', 'countdown', 'leaderboard', 'detailed-breakdown'];
+    const validTabs: Tab[] = ['home', 'dashboard', 'songs', 'voting', 'countdown', 'leaderboard', 'detailed-breakdown', 'settings'];
     return validTabs.includes(hash as Tab) ? (hash as Tab) : 'home';
   };
 
@@ -252,6 +253,7 @@ function App() {
           {activeTab === 'countdown' && isAuthenticated && <CountdownEntry />}
           {activeTab === 'leaderboard' && isAuthenticated && <Leaderboard />}
           {activeTab === 'detailed-breakdown' && isAuthenticated && <DetailedBreakdown />}
+          {activeTab === 'settings' && isAuthenticated && <Settings />}
         </main>
 
         {/* Login Modal - Shown when trying to access protected tabs */}
@@ -351,15 +353,21 @@ function App() {
             <div className="mt-4 space-y-2">
               {isAuthenticated ? (
                 <>
-                  <div>
+                  <div className="flex justify-center gap-4 flex-wrap">
                     <button
                       onClick={() => handleTabClick('songs')}
                       className="text-white/90 hover:text-white underline font-medium"
                     >
                       Manage Songs
                     </button>
-                  </div>
-                  <div>
+                    <span className="text-white/60">•</span>
+                    <button
+                      onClick={() => handleTabClick('settings')}
+                      className="text-white/90 hover:text-white underline font-medium"
+                    >
+                      Settings
+                    </button>
+                    <span className="text-white/60">•</span>
                     <button
                       onClick={handleLogout}
                       className="text-white/90 hover:text-white underline font-medium"

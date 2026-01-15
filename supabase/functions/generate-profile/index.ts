@@ -20,6 +20,7 @@ interface ProfileRequest {
   memberId?: string;
   memberName?: string;
   picks?: string;
+  picksWithPerformance?: string;
   score?: number;
   rank?: number;
   totalMembers?: number;
@@ -102,13 +103,13 @@ async function generateMusicTaste(data: ProfileRequest) {
 ${picks}
 
 Write a music taste analysis (3-4 sentences) with personality. Comment on:
-- Genre preferences and patterns
+- Genre preferences and patterns (infer genres from the artists and songs)
 - Mainstream vs indie/alternative leanings
 - Artist nationality/origin patterns (e.g., backing the Aussies, going international, etc.)
 - Any notable themes or trends
 - Give them a bit of a roast if their taste is predictable, or props if it's interesting
 
-Be observant, funny, and engaging about their musical preferences. Keep it friendly and fun!
+Be observant, funny, and engaging about their musical preferences. Focus purely on WHAT they picked based on artist origins and musical styles. Keep it friendly and fun!
 
 Return format:
 MUSIC_TASTE: [Your 3-4 sentence analysis here]`;
@@ -142,7 +143,7 @@ Write a response in this EXACT format:
 
 LABEL: [BE CREATIVE! Come up with a unique 2-3 word funny/cheeky description that captures THIS person's specific music taste based on what they actually picked. Don't just use generic terms - look at their actual artists and songs! Make it specific to THEIR picks, not a generic label. Avoid "Triple J" and "Indie Darling". MUST be completely unique and different from any labels already used above.]
 
-MUSIC_TASTE: [3-4 sentences with personality analyzing their picks - genre preferences, mainstream vs indie leanings, backing Aussies vs going international, any funny patterns. Give them a friendly roast if deserved or props if they've got interesting taste. Keep it fun and cheeky!]
+MUSIC_TASTE: [3-4 sentences with personality analyzing their picks - genre preferences (infer from artists), mainstream vs indie leanings, artist nationality/origin patterns (backing Aussies vs going international, etc.), any funny patterns or trends. Focus on WHAT they picked based on musical style and artist origins. Give them a friendly roast if deserved or props if they've got interesting taste. Keep it fun and cheeky!]
 
 Be funny, observant, and engaging. Never mean - just good-natured ribbing.`;
 
@@ -212,28 +213,31 @@ ${members.slice(1).map(m => `MEMBER_${m.memberId}: [Commentary here]`).join('\n'
 }
 
 async function generateFullProfile(data: ProfileRequest) {
-  const { memberName, picks, score, rank, totalMembers, matchCount, totalPicks, existingLabels } = data;
+  const { memberName, picks, picksWithPerformance, score, rank, totalMembers, matchCount, totalPicks, existingLabels } = data;
 
   const existingLabelsText = existingLabels && existingLabels.length > 0
     ? `\n\n**IMPORTANT - Labels Already Used (DO NOT USE THESE):**\n${existingLabels.join(', ')}\nChoose a DIFFERENT label that hasn't been used.`
     : '';
 
+  // Use picks (without performance) for taste analysis
   const prompt = `You're a cheeky Aussie music critic analyzing someone's Hottest 100 picks. Be funny, playful, and engaging - but never mean-spirited. Add some Aussie character naturally (mate, reckon, bloody, ripper, etc.) but don't force it.
 
 **${memberName}'s Picks:**
 ${picks}${existingLabelsText}
 
-**IMPORTANT:** Analyze ONLY their music taste based on the songs they picked. IGNORE any text like "Made #X" or "Didn't make it" - that's countdown info, not relevant. Focus purely on the artists, songs, and genres they chose.
-
 Write a response in this EXACT format:
 
 LABEL: [BE CREATIVE! Come up with a unique 2-3 word funny/cheeky description that captures THIS person's specific music taste based on what they actually picked. Don't just use generic terms - look at their actual artists and songs! Examples of the style: if they picked all pop hits call them "Chart Chaser", if they picked obscure indie call them "Bandcamp Browser", if they love pub rock call them "Pub Rock Warrior", if they picked sad songs call them "Sad Boy Summer", etc. Make it specific to THEIR picks, not a generic label. Avoid "Triple J" and "Indie Darling". MUST be completely unique and different from any labels already used above.]
 
-MUSIC_TASTE: [3-4 sentences with personality about their music choices - genre patterns, mainstream vs indie, backing the Aussies or going international, any funny observations about their taste. Give them a friendly roast if their taste is predictable, or props if it's interesting. Keep it cheeky and fun!]
+MUSIC_TASTE: [3-4 sentences with personality about their music choices - genre patterns (infer from artists), mainstream vs indie leanings, artist nationality/origin patterns (backing Aussies vs going international, etc.), any funny observations about their taste. Focus on WHAT they picked based on musical style and artist origins. Give them a friendly roast if their taste is predictable, or props if it's interesting. Keep it cheeky and fun!]
 
-PERFORMANCE: [2-3 sentences continuing the music taste analysis - maybe predict how they'd go at a pub quiz, what their Spotify Wrapped probably looks like, or roast them for being too safe/hipster/mainstream. Keep it about their music taste, NOT competition results!]
+PERFORMANCE: [2-3 sentences with cheeky Aussie commentary about how they're performing in the competition based on these stats:
+- Score: ${score} points
+- Ranking: ${rank} of ${totalMembers}
+- Matches: EXACTLY ${matchCount} out of ${totalPicks} picks made the countdown
+Use the EXACT match count provided (${matchCount}/${totalPicks}). Be funny about whether they're killing it or tanking! Keep it friendly - roast them if they're doing poorly but in a good-natured way.]
 
-Be funny, observant, and engaging. Never mean - just good-natured Aussie banter about their music taste!`;
+Be funny, observant, and engaging. Never mean - just good-natured Aussie banter!`;
 
   const response = await callClaudeAPI(prompt);
 
