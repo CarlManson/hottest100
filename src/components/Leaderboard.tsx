@@ -15,7 +15,6 @@ export const Leaderboard: React.FC = () => {
     profileError,
     regenerateAllMusicTastes,
     getNextAvailableRegenerationTime,
-    resetRateLimit,
     getProfileForMember
   } = useApp();
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
@@ -79,16 +78,6 @@ export const Leaderboard: React.FC = () => {
             </a>
           </div>
           <div className="flex gap-2">
-            {timeRemaining && (
-              <button
-                onClick={resetRateLimit}
-                disabled={isGeneratingProfiles}
-                className="px-2 sm:px-3 py-2 rounded-lg font-semibold text-xs sm:text-sm transition bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
-                title="Reset rate limit for testing"
-              >
-                🔓
-              </button>
-            )}
             <button
               onClick={regenerateAllMusicTastes}
               disabled={isGeneratingProfiles || !canRegenerate}
