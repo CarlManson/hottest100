@@ -68,10 +68,15 @@ export const VotingInterface: React.FC = () => {
     const existingVote = selectedMember.votes.find((v) => v.songId === songId);
 
     if (existingVote) {
-      // Remove vote
+      // Remove vote and re-rank remaining votes
+      const filteredVotes = selectedMember.votes.filter((v) => v.songId !== songId);
+      const rerankedVotes = filteredVotes
+        .sort((a, b) => a.rank - b.rank)
+        .map((vote, index) => ({ ...vote, rank: index + 1 }));
+
       const updatedMember = {
         ...selectedMember,
-        votes: selectedMember.votes.filter((v) => v.songId !== songId),
+        votes: rerankedVotes,
       };
       updateFamilyMember(updatedMember);
       setSelectedMember(updatedMember);

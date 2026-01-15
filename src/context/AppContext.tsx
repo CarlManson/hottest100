@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { AppState, Song, FamilyMember, CountdownResult, MemberProfile } from '../types';
 import { supabase } from '../lib/supabase';
-import { generateMusicTasteProfileAPI, generateLabelAndTasteAPI } from '../utils/profileGenerator';
+import { generateMusicTasteProfileAPI } from '../utils/profileGenerator';
+import { getRandomQuip } from '../data/songQuips';
 
 interface AppContextType extends AppState {
   loading: boolean;
@@ -186,6 +187,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const countdownResult = {
         songId: result.song_id,
         position: result.position,
+        quip: result.quip || undefined,
       };
 
       if (result.type === 'hottest100') {
@@ -339,12 +341,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addCountdownResult = async (result: Omit<CountdownResult, 'id'>) => {
     const type = result.position <= 100 ? 'hottest100' : 'hottest200';
 
+    // Find the song to generate the quip
+    const song = state.songs.find(s => s.id === result.songId);
+    const quip = song ? getRandomQuip(result.position, song.artist, song.title) : null;
+
     const { error } = await supabase
       .from('countdown_results')
       .insert([{
         song_id: result.songId,
         position: result.position,
         type,
+        quip,
       }] as any);
 
     if (error) {
@@ -365,16 +372,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       throw deleteError;
     }
 
-    // Insert new results
+    // Insert new results with quips
     if (results.length > 0) {
       const { error: insertError } = await supabase
         .from('countdown_results')
         .insert(
-          results.map((r) => ({
-            song_id: r.songId,
-            position: r.position,
-            type: 'hottest100' as const,
-          })) as any
+          results.map((r) => {
+            const song = state.songs.find(s => s.id === r.songId);
+            const quip = song ? getRandomQuip(r.position, song.artist, song.title) : null;
+
+            return {
+              song_id: r.songId,
+              position: r.position,
+              type: 'hottest100' as const,
+              quip,
+            };
+          }) as any
         );
 
       if (insertError) {
@@ -385,12 +398,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addHottest200Result = async (result: Omit<CountdownResult, 'id'>) => {
+    // Find the song to generate the quip
+    const song = state.songs.find(s => s.id === result.songId);
+    const quip = song ? getRandomQuip(result.position, song.artist, song.title) : null;
+
     const { error } = await supabase
       .from('countdown_results')
       .insert([{
         song_id: result.songId,
         position: result.position,
         type: 'hottest200',
+        quip,
       }] as any);
 
     if (error) {
@@ -411,16 +429,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       throw deleteError;
     }
 
-    // Insert new results
+    // Insert new results with quips
     if (results.length > 0) {
       const { error: insertError } = await supabase
         .from('countdown_results')
         .insert(
-          results.map((r) => ({
-            song_id: r.songId,
-            position: r.position,
-            type: 'hottest200' as const,
-          })) as any
+          results.map((r) => {
+            const song = state.songs.find(s => s.id === r.songId);
+            const quip = song ? getRandomQuip(r.position, song.artist, song.title) : null;
+
+            return {
+              song_id: r.songId,
+              position: r.position,
+              type: 'hottest200' as const,
+              quip,
+            };
+          }) as any
         );
 
       if (insertError) {
@@ -471,7 +495,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           family_member_id: memberId,
           music_taste_description: result.musicTasteDescription,
           last_music_taste_update: new Date().toISOString(),
-        }, {
+        } as any, {
           onConflict: 'family_member_id'
         });
 
@@ -533,7 +557,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             last_music_taste_update: new Date().toISOString(),
             last_label_regeneration: new Date().toISOString(),
             last_commentary_update: new Date().toISOString(),
-          }, {
+          } as any, {
             onConflict: 'family_member_id'
           });
 
@@ -584,6 +608,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const { error } = await supabase
       .from('member_profiles')
+      // @ts-ignore - Type mismatch with Supabase generated types
       .update({
         last_music_taste_update: twentyFiveHoursAgo,
         last_label_regeneration: twentyFiveHoursAgo,
