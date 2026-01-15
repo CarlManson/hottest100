@@ -20,6 +20,7 @@ interface ProfileRequest {
   memberId?: string;
   memberName?: string;
   picks?: string;
+  picksWithPerformance?: string;
   score?: number;
   rank?: number;
   totalMembers?: number;
@@ -96,19 +97,19 @@ serve(async (req) => {
 async function generateMusicTaste(data: ProfileRequest) {
   const { memberName, picks, totalPicks } = data;
 
-  const prompt = `You're a music critic analyzing someone's song choices. Analyze ONLY the song choices below - completely ignore any performance or scores.
+  const prompt = `You're a music critic analyzing someone's song choices based purely on their musical preferences.
 
 **${memberName}'s Picks:**
 ${picks}
 
 Write a music taste analysis (3-4 sentences). Comment on:
-- Genre preferences and patterns
+- Genre preferences and patterns (infer genres from the artists and songs)
 - Mainstream vs indie/alternative leanings
-- Artist nationality/origin patterns (e.g., heavy Australian focus, international mix, US-centric, etc.)
+- Artist nationality/origin patterns (Australian vs International artists)
 - Any notable themes or trends in their selections
 - Overall music taste profile
 
-Be observant and insightful about their musical preferences. Focus purely on WHAT they picked, not how they're performing in any competition.
+Be observant and insightful about their musical preferences. Focus purely on WHAT they picked based on artist origins and musical styles.
 
 Return format:
 MUSIC_TASTE: [Your 3-4 sentence analysis here]`;
@@ -133,16 +134,16 @@ async function generateLabelAndTaste(data: ProfileRequest) {
     ? `\n\n**IMPORTANT - Labels Already Used (DO NOT USE THESE):**\n${existingLabels.join(', ')}\nChoose a DIFFERENT label that hasn't been used.`
     : '';
 
-  const prompt = `You're a music critic analyzing someone's song choices. Analyze ONLY the song choices below - completely ignore any performance or scores.
+  const prompt = `You're a music critic analyzing someone's song choices based purely on their musical preferences.
 
 **${memberName}'s Picks:**
 ${picks}${existingLabelsText}
 
 Write a response in this EXACT format:
 
-LABEL: [2-3 word punchy description based on their music taste - like "Indie Purist", "Pop Connoisseur", "Alt-Rock Fan", "Genre Hopper", "Mainstream Maven", "Aussie Devotee", "Global Curator", etc. Base it on the genres, styles, and artist origins they chose. MUST be unique and different from any labels already used above.]
+LABEL: [2-3 word punchy description based on their music taste - like "Indie Purist", "Pop Connoisseur", "Alt-Rock Fan", "Genre Hopper", "Mainstream Maven", "Aussie Devotee", "Global Curator", etc. Base it on the genres, styles, and artist origins (Australian vs International) they chose. MUST be unique and different from any labels already used above.]
 
-MUSIC_TASTE: [3-4 sentences analyzing their song choices - genre preferences, mainstream vs indie/alternative leanings, artist nationality/origin patterns (e.g., all Australian, international mix, US-heavy, etc.), any notable themes or trends. Focus on WHAT they picked.]
+MUSIC_TASTE: [3-4 sentences analyzing their song choices - genre preferences (infer from artists), mainstream vs indie/alternative leanings, artist nationality/origin patterns (Australian-heavy, international mix, etc.), any notable themes or trends. Focus on WHAT they picked based on musical style and artist origins.]
 
 Be observant and insightful about their musical preferences.`;
 
@@ -212,35 +213,33 @@ ${members.slice(1).map(m => `MEMBER_${m.memberId}: [Commentary here]`).join('\n'
 }
 
 async function generateFullProfile(data: ProfileRequest) {
-  const { memberName, picks, score, rank, totalMembers, matchCount, totalPicks, existingLabels } = data;
+  const { memberName, picks, picksWithPerformance, score, rank, totalMembers, matchCount, totalPicks, existingLabels } = data;
 
   const existingLabelsText = existingLabels && existingLabels.length > 0
     ? `\n\n**IMPORTANT - Labels Already Used (DO NOT USE THESE):**\n${existingLabels.join(', ')}\nChoose a DIFFERENT label that hasn't been used.`
     : '';
 
-  const prompt = `You're a music critic writing profiles for a Triple J Hottest 100 predictions competition. Be insightful and engaging.
+  // Use picks (without performance) for taste analysis, picksWithPerformance for performance commentary
+  const tastePrompt = `You're a music critic analyzing someone's song choices based purely on their musical preferences.
 
 **${memberName}'s Picks:**
-${picks}
-
-**Their Performance:**
-- Score: ${score} points
-- Ranking: ${rank} of ${totalMembers}
-- Matches: EXACTLY ${matchCount} out of ${totalPicks} picks made the countdown${existingLabelsText}
-
-IMPORTANT: Use the EXACT numbers provided above. Do NOT count or calculate them yourself.
+${picks}${existingLabelsText}
 
 Write a response in this EXACT format:
 
-LABEL: [2-3 word punchy description based on their music taste - like "Indie Purist", "Pop Connoisseur", "Alt-Rock Fan", "Genre Hopper", "Mainstream Maven", "Aussie Champion", "Global Selector", etc. Base it on the genres, styles, and artist origins they chose. If they picked predominantly Australian artists, acknowledge it. If they picked internationally diverse, mention it. MUST be unique and different from any labels already used above.]
+LABEL: [2-3 word punchy description based on their music taste - like "Indie Purist", "Pop Connoisseur", "Alt-Rock Fan", "Genre Hopper", "Mainstream Maven", "Aussie Champion", "Global Selector", etc. Base it on the genres, styles, and artist origins (Australian vs International) they chose. MUST be unique and different from any labels already used above.]
 
-MUSIC_TASTE: [3-4 sentences analyzing their song choices - genre preferences, mainstream vs indie/alternative leanings, artist nationality/origin patterns (e.g., Australian-heavy, international mix, US-centric, UK focus, etc.), any notable themes or trends. Focus on WHAT they picked.]
+MUSIC_TASTE: [3-4 sentences analyzing their song choices - genre preferences (infer from artists), mainstream vs indie/alternative leanings, artist nationality/origin patterns (Australian-heavy, international mix, etc.), any notable themes or trends. Focus on WHAT they picked based on musical style and artist origins.]
 
-PERFORMANCE: [2-3 sentences about how they're performing in the competition - use the EXACT match count provided (${matchCount}/${totalPicks}), their trajectory, comparison to others. Focus on HOW they're doing.]
+PERFORMANCE: [2-3 sentences about how they're performing in the competition based on the following stats:
+- Score: ${score} points
+- Ranking: ${rank} of ${totalMembers}
+- Matches: EXACTLY ${matchCount} out of ${totalPicks} picks made the countdown
+Use the EXACT match count provided (${matchCount}/${totalPicks}). Focus on HOW they're doing.]
 
 Keep it short, punchy, and engaging. Focus the label on their musical preferences and artist origin patterns.`;
 
-  const response = await callClaudeAPI(prompt);
+  const response = await callClaudeAPI(tastePrompt);
 
   const labelMatch = response.match(/LABEL:\s*(.+?)(?:\n|$)/i);
   const musicTasteMatch = response.match(/MUSIC_TASTE:\s*(.+?)(?=\n\n|PERFORMANCE:|$)/is);

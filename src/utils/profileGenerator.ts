@@ -12,7 +12,7 @@ export async function generateMusicTasteProfileAPI(
     throw new Error('Supabase configuration missing');
   }
 
-  const pickDetails = buildPickDetails(member, songs, [], []);
+  const pickDetails = buildPickDetailsForTaste(member, songs);
 
   const response = await fetch(`${supabaseUrl}/functions/v1/generate-profile`, {
     method: 'POST',
@@ -55,7 +55,7 @@ export async function generateLabelAndTasteAPI(
     throw new Error('Supabase configuration missing');
   }
 
-  const pickDetails = buildPickDetails(member, songs, [], []);
+  const pickDetails = buildPickDetailsForTaste(member, songs);
 
   const response = await fetch(`${supabaseUrl}/functions/v1/generate-profile`, {
     method: 'POST',
@@ -193,7 +193,8 @@ export async function generateFullProfileAPI(
       mode: 'full_regeneration',
       memberId: member.id,
       memberName: member.name,
-      picks: buildPickDetails(member, songs, countdownResults, hottest200Results),
+      picks: buildPickDetailsForTaste(member, songs),
+      picksWithPerformance: buildPickDetails(member, songs, countdownResults, hottest200Results),
       score,
       rank,
       totalMembers: leaderboard.length,
@@ -240,5 +241,19 @@ function buildPickDetails(
     const aussie = song.isAustralian ? ' (Aussie)' : '';
 
     return `${vote.rank}. "${song.title}" by ${song.artist}${aussie} - ${madeIt}`;
+  }).filter(Boolean).join('\n');
+}
+
+// Helper function for music taste analysis (without performance data)
+function buildPickDetailsForTaste(
+  member: FamilyMember,
+  songs: Song[]
+): string {
+  return member.votes.map(vote => {
+    const song = songs.find(s => s.id === vote.songId);
+    if (!song) return null;
+
+    const origin = song.isAustralian ? ' (Australian)' : ' (International)';
+    return `${vote.rank}. "${song.title}" by ${song.artist}${origin}`;
   }).filter(Boolean).join('\n');
 }
