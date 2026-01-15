@@ -10,11 +10,12 @@ export const VotingInterface: React.FC = () => {
     addFamilyMember,
     updateFamilyMember,
     removeFamilyMember,
-    countdownResults,
-    hottest200Results,
-    profiles,
+    generateLabelAndTaste,
+    generateFullProfile,
     isGeneratingProfiles,
-    canRegenerateMusicTaste
+    canRegenerateLabel,
+    canRegenerateFullProfile,
+    getProfileForMember
   } = useApp();
   const [newMemberName, setNewMemberName] = useState('');
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
@@ -66,19 +67,11 @@ export const VotingInterface: React.FC = () => {
     if (!editingMember) return;
 
     try {
-      const { generateLabelAndTasteAPI } = await import('../utils/profileGenerator');
-
-      // Generate label and taste
-      const result = await generateLabelAndTasteAPI(
-        editingMember,
-        songs
-      );
-
-      // The AppContext will handle updating the profile via real-time subscription
-      console.log('Generated label and taste:', result);
+      await generateLabelAndTaste(editingMember.id);
+      // Success - profile will update via real-time subscription
     } catch (error) {
       console.error('Failed to generate nickname:', error);
-      alert(error instanceof Error ? error.message : 'Failed to generate nickname');
+      // Error is already shown via profileError in context
     }
   };
 
@@ -86,31 +79,11 @@ export const VotingInterface: React.FC = () => {
     if (!editingMember) return;
 
     try {
-      const { generateFullProfileAPI } = await import('../utils/profileGenerator');
-      const { getLeaderboard } = await import('../utils/scoring');
-
-      const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
-
-      // Get existing labels from other members
-      const existingLabels = profiles
-        .filter(p => p.familyMemberId !== editingMember.id && p.label)
-        .map(p => p.label!);
-
-      // Generate full profile
-      const result = await generateFullProfileAPI(
-        editingMember,
-        songs,
-        countdownResults,
-        hottest200Results,
-        leaderboard,
-        existingLabels
-      );
-
-      // The AppContext will handle updating the profile via real-time subscription
-      console.log('Generated full profile:', result);
+      await generateFullProfile(editingMember.id);
+      // Success - profile will update via real-time subscription
     } catch (error) {
       console.error('Failed to generate profile:', error);
-      alert(error instanceof Error ? error.message : 'Failed to generate profile');
+      // Error is already shown via profileError in context
     }
   };
 
@@ -459,108 +432,143 @@ export const VotingInterface: React.FC = () => {
       )}
 
       {/* Edit Member Modal */}
-      {editingMember && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={handleCancelEdit}
-        >
-          <div
-            className="bg-white rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg sm:text-xl font-bold">Manage Member</h3>
-              <button
-                onClick={handleCancelEdit}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ×
-              </button>
-            </div>
+      {editingMember && (() => {
+        const profile = getProfileForMember(editingMember.id);
+        const canGenerateLabel = canRegenerateLabel(editingMember.id);
+        const canGenerateProfile = canRegenerateFullProfile(editingMember.id);
 
-            {/* Rename Section */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold mb-2 text-gray-700">Rename Member</label>
-              <input
-                type="text"
-                value={editingName}
-                onChange={(e) => setEditingName(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') handleSaveEdit();
-                  if (e.key === 'Escape') handleCancelEdit();
-                }}
-                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-sm sm:text-base"
-                autoFocus
-              />
-              <div className="flex gap-2 mt-2">
-                <button
-                  onClick={handleSaveEdit}
-                  className="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition font-semibold text-sm"
-                >
-                  Save Name
-                </button>
+        return (
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={handleCancelEdit}
+          >
+            <div
+              className="bg-white rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg sm:text-xl font-bold">Manage Member</h3>
                 <button
                   onClick={handleCancelEdit}
-                  className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition font-semibold text-sm"
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
                 >
-                  Cancel
+                  ×
                 </button>
               </div>
-            </div>
 
-            {/* AI Profile Generation Section */}
-            {editingMember.votes.length > 0 && (
-              <div className="border-t pt-4">
-                <label className="block text-sm font-semibold mb-3 text-gray-700">AI Profile Generation</label>
-                <div className="space-y-2">
+              {/* Rename Section */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold mb-2 text-gray-700">Rename Member</label>
+                <input
+                  type="text"
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') handleSaveEdit();
+                    if (e.key === 'Escape') handleCancelEdit();
+                  }}
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-sm sm:text-base"
+                  autoFocus
+                />
+                <div className="flex gap-2 mt-2">
                   <button
-                    onClick={handleGenerateNickname}
-                    disabled={isGeneratingProfiles || !canRegenerateMusicTaste(editingMember.id)}
-                    className={`w-full px-4 py-2 rounded-lg font-semibold text-sm transition ${
-                      isGeneratingProfiles || !canRegenerateMusicTaste(editingMember.id)
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600'
-                    }`}
+                    onClick={handleSaveEdit}
+                    className="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition font-semibold text-sm"
                   >
-                    {isGeneratingProfiles
-                      ? '🎵 Generating...'
-                      : !canRegenerateMusicTaste(editingMember.id)
-                        ? '🏷️ Nickname Generated (24h cooldown)'
-                        : '🏷️ Re/generate Nickname'}
+                    Save Name
                   </button>
                   <button
-                    onClick={handleGenerateProfile}
-                    disabled={isGeneratingProfiles || !canRegenerateMusicTaste(editingMember.id)}
-                    className={`w-full px-4 py-2 rounded-lg font-semibold text-sm transition ${
-                      isGeneratingProfiles || !canRegenerateMusicTaste(editingMember.id)
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-                    }`}
+                    onClick={handleCancelEdit}
+                    className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition font-semibold text-sm"
                   >
-                    {isGeneratingProfiles
-                      ? '✨ Generating...'
-                      : !canRegenerateMusicTaste(editingMember.id)
-                        ? '✨ Profile Generated (24h cooldown)'
-                        : '✨ Re/generate Profile'}
+                    Cancel
                   </button>
-                  <p className="text-xs text-gray-500 mt-2">
-                    <strong>Nickname:</strong> Generates label + music taste description<br />
-                    <strong>Profile:</strong> Generates label + music taste + performance commentary
-                  </p>
                 </div>
               </div>
-            )}
 
-            {editingMember.votes.length === 0 && (
-              <div className="border-t pt-4">
-                <p className="text-sm text-gray-500 italic text-center">
-                  Add some votes to enable AI profile generation
-                </p>
-              </div>
-            )}
+              {/* Current Profile Display */}
+              {profile && (profile.label || profile.musicTasteDescription) && (
+                <div className="mb-6 border-t pt-4">
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">Current Profile</label>
+                  {profile.label && (
+                    <div className="mb-2">
+                      <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-sm font-bold px-3 py-1 rounded-full">
+                        {profile.label}
+                      </span>
+                    </div>
+                  )}
+                  {profile.musicTasteDescription && (
+                    <p className="text-sm text-gray-700 leading-relaxed mt-2">
+                      {profile.musicTasteDescription}
+                    </p>
+                  )}
+                  {profile.performanceCommentary && (
+                    <p className="text-sm text-gray-600 leading-relaxed mt-2 italic">
+                      {profile.performanceCommentary}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* AI Profile Generation Section */}
+              {editingMember.votes.length > 0 && (
+                <div className="border-t pt-4">
+                  <label className="block text-sm font-semibold mb-3 text-gray-700">AI Profile Generation</label>
+                  <div className="space-y-2">
+                    {!isGeneratingProfiles && canGenerateLabel && (
+                      <button
+                        onClick={handleGenerateNickname}
+                        className="w-full px-4 py-2 rounded-lg font-semibold text-sm transition bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600"
+                      >
+                        🏷️ Re/generate Nickname
+                      </button>
+                    )}
+                    {!canGenerateLabel && !isGeneratingProfiles && (
+                      <p className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                        🏷️ Nickname cooldown active (24h since last generation)
+                      </p>
+                    )}
+
+                    {!isGeneratingProfiles && canGenerateProfile && (
+                      <button
+                        onClick={handleGenerateProfile}
+                        className="w-full px-4 py-2 rounded-lg font-semibold text-sm transition bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
+                      >
+                        ✨ Re/generate Profile
+                      </button>
+                    )}
+                    {!canGenerateProfile && !isGeneratingProfiles && (
+                      <p className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                        ✨ Profile cooldown active (24h since last generation)
+                      </p>
+                    )}
+
+                    {isGeneratingProfiles && (
+                      <div className="text-center py-3">
+                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
+                        <p className="text-sm text-gray-600 mt-2">Generating...</p>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-gray-500 mt-3">
+                      <strong>Nickname:</strong> Generates label + music taste description<br />
+                      <strong>Profile:</strong> Generates label + music taste + performance commentary
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {editingMember.votes.length === 0 && (
+                <div className="border-t pt-4">
+                  <p className="text-sm text-gray-500 italic text-center">
+                    Add some votes to enable AI profile generation
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

@@ -38,10 +38,11 @@ Use the EXACT match count provided ({matchCount}/{totalPicks}). Focus on HOW the
 Keep it short, punchy, and engaging. Focus the label on their musical preferences and artist origin patterns.`;
 
 export const Settings: React.FC = () => {
-  const { resetRateLimit, isGeneratingProfiles } = useApp();
+  const { resetRateLimit, isGeneratingProfiles, getNextAvailableRegenerationTime } = useApp();
   const [labelPrompt, setLabelPrompt] = useState(DEFAULT_LABEL_PROMPT);
   const [performancePrompt, setPerformancePrompt] = useState(DEFAULT_PERFORMANCE_PROMPT);
   const [saveMessage, setSaveMessage] = useState('');
+  const hasActiveRateLimit = getNextAvailableRegenerationTime() !== null;
 
   useEffect(() => {
     // Load prompts from localStorage
@@ -152,13 +153,15 @@ export const Settings: React.FC = () => {
             >
               ↺ Reset to Defaults
             </button>
-            <button
-              onClick={handleResetRateLimit}
-              disabled={isGeneratingProfiles}
-              className="px-4 py-2 bg-purple-500 text-white font-bold rounded-lg hover:bg-purple-600 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-            >
-              🔓 Reset Rate Limit
-            </button>
+            {hasActiveRateLimit && (
+              <button
+                onClick={handleResetRateLimit}
+                disabled={isGeneratingProfiles}
+                className="px-4 py-2 bg-purple-500 text-white font-bold rounded-lg hover:bg-purple-600 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+              >
+                🔓 Reset Rate Limit
+              </button>
+            )}
           </div>
         </div>
 
