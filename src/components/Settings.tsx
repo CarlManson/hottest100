@@ -16,55 +16,51 @@ MUSIC_TASTE: [3-4 sentences analyzing their song choices - genre preferences (in
 
 Be observant and insightful about their musical preferences.`;
 
-const DEFAULT_PERFORMANCE_PROMPT = `You're a music critic writing profiles for a Triple J Hottest 100 predictions competition. Be insightful and engaging.
+const DEFAULT_MUSIC_TASTE_PROMPT = `You're a cheeky Aussie music critic analyzing someone's Hottest 100 picks. Be funny, playful, and a bit cheeky - but never mean-spirited.
 
 **{memberName}'s Picks:**
 {picks}
 
-{existingLabels}
+Write a music taste analysis (3-4 sentences) with personality. Comment on:
+- Genre preferences and patterns (infer genres from the artists and songs)
+- Mainstream vs indie/alternative leanings
+- Artist nationality/origin patterns (e.g., backing the Aussies, going international, etc.)
+- Any notable themes or trends
+- Give them a bit of a roast if their taste is predictable, or props if it's interesting
 
-Write a response in this EXACT format:
+Be observant, funny, and engaging about their musical preferences. Keep it friendly and fun!
 
-LABEL: [2-3 word punchy description based on their music taste - like "Indie Purist", "Pop Connoisseur", "Alt-Rock Fan", "Genre Hopper", "Mainstream Maven", "Aussie Champion", "Global Selector", etc. Base it on the genres, styles, and artist origins (Australian vs International) they chose. MUST be unique and different from any labels already used above.]
-
-MUSIC_TASTE: [3-4 sentences analyzing their song choices - genre preferences (infer from artists), mainstream vs indie/alternative leanings, artist nationality/origin patterns (Australian-heavy, international mix, etc.), any notable themes or trends. Focus on WHAT they picked based on musical style and artist origins.]
-
-PERFORMANCE: [2-3 sentences about how they're performing in the competition based on the following stats:
-- Score: {score} points
-- Ranking: {rank} of {totalMembers}
-- Matches: EXACTLY {matchCount} out of {totalPicks} picks made the countdown
-Use the EXACT match count provided ({matchCount}/{totalPicks}). Focus on HOW they're doing.]
-
-Keep it short, punchy, and engaging. Focus the label on their musical preferences and artist origin patterns.`;
+Return format:
+MUSIC_TASTE: [Your 3-4 sentence analysis here]`;
 
 export const Settings: React.FC = () => {
   const { resetRateLimit, isGeneratingProfiles, getNextAvailableRegenerationTime } = useApp();
   const [labelPrompt, setLabelPrompt] = useState(DEFAULT_LABEL_PROMPT);
-  const [performancePrompt, setPerformancePrompt] = useState(DEFAULT_PERFORMANCE_PROMPT);
+  const [musicTastePrompt, setMusicTastePrompt] = useState(DEFAULT_MUSIC_TASTE_PROMPT);
   const [saveMessage, setSaveMessage] = useState('');
   const hasActiveRateLimit = getNextAvailableRegenerationTime() !== null;
 
   useEffect(() => {
     // Load prompts from localStorage
     const savedLabelPrompt = localStorage.getItem('ai_label_prompt');
-    const savedPerformancePrompt = localStorage.getItem('ai_performance_prompt');
+    const savedMusicTastePrompt = localStorage.getItem('ai_music_taste_prompt');
 
     if (savedLabelPrompt) setLabelPrompt(savedLabelPrompt);
-    if (savedPerformancePrompt) setPerformancePrompt(savedPerformancePrompt);
+    if (savedMusicTastePrompt) setMusicTastePrompt(savedMusicTastePrompt);
   }, []);
 
   const handleSave = () => {
     localStorage.setItem('ai_label_prompt', labelPrompt);
-    localStorage.setItem('ai_performance_prompt', performancePrompt);
+    localStorage.setItem('ai_music_taste_prompt', musicTastePrompt);
     setSaveMessage('Prompts saved successfully!');
     setTimeout(() => setSaveMessage(''), 3000);
   };
 
   const handleResetToDefaults = () => {
     setLabelPrompt(DEFAULT_LABEL_PROMPT);
-    setPerformancePrompt(DEFAULT_PERFORMANCE_PROMPT);
+    setMusicTastePrompt(DEFAULT_MUSIC_TASTE_PROMPT);
     localStorage.removeItem('ai_label_prompt');
-    localStorage.removeItem('ai_performance_prompt');
+    localStorage.removeItem('ai_music_taste_prompt');
     setSaveMessage('Reset to default prompts');
     setTimeout(() => setSaveMessage(''), 3000);
   };
@@ -94,12 +90,12 @@ export const Settings: React.FC = () => {
       )}
 
       <div className="space-y-6">
-        {/* Label & Music Taste Prompt */}
+        {/* Label Prompt */}
         <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <div className="mb-4">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Label & Music Taste Prompt</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Nickname/Label Prompt</h2>
             <p className="text-xs sm:text-sm text-gray-600">
-              This prompt generates member labels and music taste descriptions. Available variables:
+              This prompt generates member labels (2-3 word creative descriptions) and is used by the 🏷️ Re/generate Nickname button. Available variables:
               <code className="bg-gray-100 px-1 rounded text-xs">{'{memberName}'}</code>,
               <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{picks}'}</code>,
               <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{existingLabels}'}</code>
@@ -113,26 +109,20 @@ export const Settings: React.FC = () => {
           />
         </div>
 
-        {/* Performance Prompt */}
+        {/* Music Taste Prompt */}
         <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <div className="mb-4">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Full Profile Prompt (Label + Taste + Performance)</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Music Taste Profile Prompt</h2>
             <p className="text-xs sm:text-sm text-gray-600">
-              This prompt generates complete profiles including performance commentary. Available variables:
+              This prompt generates music taste descriptions (3-4 sentence analysis) and is used by the ✨ Re/generate Profile button. Available variables:
               <code className="bg-gray-100 px-1 rounded text-xs">{'{memberName}'}</code>,
-              <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{picks}'}</code>,
-              <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{existingLabels}'}</code>,
-              <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{score}'}</code>,
-              <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{rank}'}</code>,
-              <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{totalMembers}'}</code>,
-              <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{matchCount}'}</code>,
-              <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{totalPicks}'}</code>
+              <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{picks}'}</code>
             </p>
           </div>
           <textarea
-            value={performancePrompt}
-            onChange={(e) => setPerformancePrompt(e.target.value)}
-            className="w-full h-80 p-3 border-2 border-gray-200 rounded-lg font-mono text-xs sm:text-sm focus:border-orange-500 focus:outline-none"
+            value={musicTastePrompt}
+            onChange={(e) => setMusicTastePrompt(e.target.value)}
+            className="w-full h-64 p-3 border-2 border-gray-200 rounded-lg font-mono text-xs sm:text-sm focus:border-orange-500 focus:outline-none"
             placeholder="Enter prompt template..."
           />
         </div>
@@ -172,7 +162,7 @@ export const Settings: React.FC = () => {
             <li>• These prompts show what the AI currently uses to generate profiles</li>
             <li>• Prompts are stored locally in your browser for reference</li>
             <li>• Variables in curly braces like <code className="bg-blue-100 px-1 rounded">{'{memberName}'}</code> are replaced with actual values</li>
-            <li>• The AI expects specific output formats (LABEL:, MUSIC_TASTE:, PERFORMANCE:)</li>
+            <li>• The AI expects specific output formats (LABEL: and MUSIC_TASTE:)</li>
             <li>• <strong>Note:</strong> To actually customize prompts, you need to modify and redeploy the Supabase Edge Function</li>
             <li>• These saved prompts serve as a reference for what you'd want to change in the Edge Function</li>
           </ul>
@@ -184,7 +174,7 @@ export const Settings: React.FC = () => {
           <ol className="text-xs sm:text-sm text-yellow-800 space-y-1 list-decimal list-inside">
             <li>Edit prompts here and save them as reference</li>
             <li>Open <code className="bg-yellow-100 px-1 rounded">supabase/functions/generate-profile/index.ts</code></li>
-            <li>Update the prompts in the <code className="bg-yellow-100 px-1 rounded">generateFullProfile()</code> and <code className="bg-yellow-100 px-1 rounded">generateLabelAndTaste()</code> functions</li>
+            <li>Update the prompts in the <code className="bg-yellow-100 px-1 rounded">generateLabelAndTaste()</code> and <code className="bg-yellow-100 px-1 rounded">generateMusicTaste()</code> functions</li>
             <li>Run: <code className="bg-yellow-100 px-1 rounded">supabase functions deploy generate-profile</code></li>
             <li>Your custom prompts will now be active!</li>
           </ol>
