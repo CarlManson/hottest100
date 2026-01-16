@@ -130,42 +130,50 @@ The app includes an optional AI feature powered by Claude (Anthropic API) that g
 - **Model**: Claude 3 Haiku (fast, cost-effective)
 - **API Key Storage**: Stored as Supabase secret, NOT in client .env file
 - **Tone**: Cheeky Aussie music critic - funny, playful, uses natural Aussie slang
-- **Modes**:
-  - `music_taste` - Analyzes song picks for genre preferences and patterns
-  - `label_and_taste` - Generates creative 2-3 word label + music taste description
-  - `running_commentary` - Live performance commentary during countdown
-  - `full_regeneration` - Complete profile with label, taste, and performance commentary
+
+**Two Generation Types:**
+1. **Nickname Generation** (`generateLabel`)
+   - Generates creative 2-3 word label only
+   - Examples: "Chart Chaser", "Bandcamp Browser", "Pub Rock Warrior"
+   - Saves to: `label` field + `last_label_regeneration` timestamp
+   - 24-hour cooldown per member
+
+2. **Profile Generation** (`generateMusicTaste`)
+   - Generates music taste description only (3-4 sentences)
+   - Analyzes genre preferences, mainstream vs indie, artist origins
+   - Saves to: `music_taste_description` field + `last_music_taste_update` timestamp
+   - 24-hour cooldown per member
 
 **User Access:**
 - Click **✎ (edit)** button next to member name on Voting page
 - Opens member management modal with:
   - Rename functionality
-  - **🏷️ Re/generate Nickname** button (label + music taste only)
-  - **✨ Re/generate Profile** button (full profile with performance)
-- 24-hour cooldown per member after generation
+  - **🏷️ Re/generate Nickname** button (label only)
+  - **✨ Re/generate Profile** button (music taste description only)
+- Separate 24-hour cooldowns for each generation type
 - Requires member to have at least one vote
 
 **Data Flow:**
 1. User clicks generation button in `VotingInterface.tsx` modal
-2. Client calls utility function from `src/utils/profileGenerator.ts`
-3. Utility invokes Supabase Edge Function with mode and member data
+2. Client calls `generateLabel()` or `generateMusicTaste()` from AppContext
+3. AppContext invokes Supabase Edge Function via API utility
 4. Edge Function calls Anthropic API with structured prompts
 5. Response parsed and returned to client
-6. AppContext updates profile via real-time subscription
+6. Database updated via Supabase client
+7. Real-time subscription updates UI automatically
 
 **Prompt Engineering:**
-- **Music Taste Analysis**: Uses `picks` (without performance data) - focuses purely on genre, mainstream vs indie, and artist origins
-- **Performance Commentary**: Uses `picksWithPerformance` - includes countdown positions and match status
 - **Label Generation**: Creative, specific labels based on actual picks (not generic) - avoids "Triple J" and "Indie Darling"
+- **Music Taste Analysis**: Focuses purely on genre, mainstream vs indie, and artist origins (Australian vs International)
 - **Existing Labels**: Passed to avoid duplicate labels across members
+- **Cheeky Aussie Tone**: Natural slang (mate, reckon, ripper, bloody) without overdoing it
 
 **Key Features:**
 - Analyzes genre preferences (indie vs mainstream) inferred from artists
 - Identifies artist origin patterns (Australian-heavy, international mix, etc.)
 - Generates unique, creative labels specific to member's picks
-- Cheeky Aussie personality with natural slang (mate, reckon, ripper, bloody)
-- Friendly roasting if taste is predictable, props if interesting
-- Performance commentary with exact match counts
+- Cheeky Aussie personality with friendly roasting
+- Independent cooldowns allow nickname and profile to be regenerated separately
 - Graceful fallback if API key not configured
 
 **Deployment:**
@@ -180,7 +188,7 @@ supabase functions deploy generate-profile
 **Cost Considerations:**
 - Only runs on-demand (per-member button clicks)
 - ~$0.01-0.05 per generation
-- 24-hour cooldown prevents excessive usage
+- Separate 24-hour cooldowns prevent excessive usage
 - App fully functional without this feature
 
 ## Important Constraints
