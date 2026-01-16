@@ -10,11 +10,11 @@ export const VotingInterface: React.FC = () => {
     addFamilyMember,
     updateFamilyMember,
     removeFamilyMember,
-    generateLabelAndTaste,
-    generateFullProfile,
+    generateLabel,
+    generateMusicTaste,
     isGeneratingProfiles,
     canRegenerateLabel,
-    canRegenerateFullProfile,
+    canRegenerateMusicTaste,
     getProfileForMember
   } = useApp();
   const [newMemberName, setNewMemberName] = useState('');
@@ -67,7 +67,7 @@ export const VotingInterface: React.FC = () => {
     if (!editingMember) return;
 
     try {
-      await generateLabelAndTaste(editingMember.id);
+      await generateLabel(editingMember.id);
       // Success - profile will update via real-time subscription
     } catch (error) {
       console.error('Failed to generate nickname:', error);
@@ -79,7 +79,7 @@ export const VotingInterface: React.FC = () => {
     if (!editingMember) return;
 
     try {
-      await generateFullProfile(editingMember.id);
+      await generateMusicTaste(editingMember.id);
       // Success - profile will update via real-time subscription
     } catch (error) {
       console.error('Failed to generate profile:', error);
@@ -435,7 +435,7 @@ export const VotingInterface: React.FC = () => {
       {editingMember && (() => {
         const profile = getProfileForMember(editingMember.id);
         const canGenerateLabel = canRegenerateLabel(editingMember.id);
-        const canGenerateProfile = canRegenerateFullProfile(editingMember.id);
+        const canGenerateProfile = canRegenerateMusicTaste(editingMember.id);
 
         return (
           <div
@@ -502,11 +502,6 @@ export const VotingInterface: React.FC = () => {
                       {profile.musicTasteDescription}
                     </p>
                   )}
-                  {profile.performanceCommentary && (
-                    <p className="text-sm text-gray-600 leading-relaxed mt-2 italic">
-                      {profile.performanceCommentary}
-                    </p>
-                  )}
                 </div>
               )}
 
@@ -551,8 +546,8 @@ export const VotingInterface: React.FC = () => {
                     )}
 
                     <p className="text-xs text-gray-500 mt-3">
-                      <strong>Nickname:</strong> Generates label + music taste description<br />
-                      <strong>Profile:</strong> Generates label + music taste + performance commentary
+                      <strong>Nickname:</strong> Generates label only<br />
+                      <strong>Profile:</strong> Generates music taste description only
                     </p>
                   </div>
                 </div>
