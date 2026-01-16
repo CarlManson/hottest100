@@ -1,0 +1,52 @@
+@use 'variables' as *;
+
+#main-menu {
+    $menu-border-radius: 0.375rem;
+
+    background-color: $menu-bg;
+
+    .desktop-menu, .mobile-menu {
+        .menu-link {
+            color: $menu-link-color;
+            background-color: $menu-link-bg;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+
+            &:hover {
+                color: $menu-link-hover-color;
+                background-color: $menu-link-hover-bg;
+            }
+
+            &.active {
+                color: $menu-link-active-color;
+                background-color: $menu-link-active-bg;
+            }
+        }
+    }
+
+    .desktop-menu {
+        gap: 0;
+
+        .menu-link {
+            &.active {
+                border-radius: $menu-border-radius;
+                margin-top: $menu-border-radius * -1;
+                margin-bottom: $menu-border-radius * -1;
+            }
+        }
+    }
+
+    .mobile-menu {
+        @media (width < 48rem) { display: flex; }
+        
+        flex-direction: column;
+        overflow: hidden;
+
+        margin: 0 calc(var(--spacing) * -4) 1px;
+    }
+}

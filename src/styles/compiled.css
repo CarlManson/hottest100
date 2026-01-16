@@ -1,3 +1,44 @@
+#main-menu {
+  background-color: rgb(41.226993865, 46.036809816, 70.773006135);
+}
+#main-menu .desktop-menu .menu-link, #main-menu .mobile-menu .menu-link {
+  color: #ffffff;
+  background-color: transparent;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0;
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+#main-menu .desktop-menu .menu-link:hover, #main-menu .mobile-menu .menu-link:hover {
+  color: #ffffff;
+  background-color: rgb(36.381595092, 41.6294478528, 64.418404908);
+}
+#main-menu .desktop-menu .menu-link.active, #main-menu .mobile-menu .menu-link.active {
+  color: #ffffff;
+  background-color: #f97316;
+}
+#main-menu .desktop-menu {
+  gap: 0;
+}
+#main-menu .desktop-menu .menu-link.active {
+  border-radius: 0.375rem;
+  margin-top: -0.375rem;
+  margin-bottom: -0.375rem;
+}
+@media (width < 48rem) {
+  #main-menu .mobile-menu {
+    display: flex;
+  }
+}
+#main-menu .mobile-menu {
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0 calc(var(--spacing) * -4) 1px;
+}
+
 .header-with-banner {
   background-image: var(--banner-image);
   background-size: cover;

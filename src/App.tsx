@@ -140,57 +140,57 @@ function App() {
         </header>
 
         {isAuthenticated && (
-          <nav className="bg-white border-b-2 border-orange-300 shadow-md sticky top-0 z-10">
+          <nav id="main-menu" className="sticky top-0 z-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
               {/* Mobile current tab label - hidden since menu is now in header */}
               {/* <div className="md:hidden py-3 text-center">
                 <span className="font-bold text-gray-800">
                   {activeTab === 'dashboard' && 'Dashboard'}
                   {activeTab === 'voting' && 'Family Votes'}
-                  {activeTab === 'countdown' && 'Countdown Results'}
+                  {activeTab === 'countdown' && 'Countdown'}
                   {activeTab === 'leaderboard' && 'Leaderboard'}
                 </span>
               </div> */}
 
               {/* Mobile Dropdown Menu */}
               {mobileMenuOpen && (
-                <div className="md:hidden border-t border-gray-200">
+                <div className="mobile-menu md:hidden mobile-menu">
                   <button
-                    onClick={() => handleTabClick('dashboard')}
-                    className={`w-full text-left px-4 py-3 font-bold transition ${
-                      activeTab === 'dashboard'
-                        ? 'bg-orange-500 text-white'
-                        : 'text-gray-700 hover:bg-orange-100'
+                    onClick={() => handleTabClick('home')}
+                    className={`menu-link ${
+                      activeTab === 'home'
+                        ? 'active'
+                        : ''
                     }`}
                   >
-                    Dashboard
+                    Home
                   </button>
                   <button
                     onClick={() => handleTabClick('voting')}
-                    className={`w-full text-left px-4 py-3 font-bold transition ${
+                    className={`menu-link ${
                       activeTab === 'voting'
-                        ? 'bg-orange-500 text-white'
-                        : 'text-gray-700 hover:bg-orange-100'
+                        ? 'active'
+                        : ''
                     }`}
                   >
                     Votes
                   </button>
                   <button
                     onClick={() => handleTabClick('countdown')}
-                    className={`w-full text-left px-4 py-3 font-bold transition ${
+                    className={`menu-link ${
                       activeTab === 'countdown'
-                        ? 'bg-orange-500 text-white'
-                        : 'text-gray-700 hover:bg-orange-100'
+                        ? 'active'
+                        : ''
                     }`}
                   >
-                    Countdown Results
+                    Countdown
                   </button>
                   <button
                     onClick={() => handleTabClick('leaderboard')}
-                    className={`w-full text-left px-4 py-3 font-bold transition ${
+                    className={`menu-link ${
                       activeTab === 'leaderboard'
-                        ? 'bg-orange-500 text-white'
-                        : 'text-gray-700 hover:bg-orange-100'
+                        ? 'active'
+                        : ''
                     }`}
                   >
                     Leaderboard
@@ -199,43 +199,44 @@ function App() {
               )}
 
               {/* Desktop Menu */}
-              <div className="hidden md:flex gap-2">
+              <div className="desktop-menu hidden md:flex gap-2">
                 <button
-                  onClick={() => handleTabClick('dashboard')}
-                  className={`px-6 py-4 font-bold transition whitespace-nowrap rounded-t-lg ${
-                    activeTab === 'dashboard'
-                      ? 'bg-orange-500 text-white'
-                      : 'text-gray-700 hover:bg-orange-100'
+                  onClick={() => handleTabClick('home')}
+                  className={`menu-link ${
+                    activeTab === 'home'
+                      ? 'active'
+                      : ''
                   }`}
                 >
-                  Dashboard
+                  Home
                 </button>
+                
                 <button
                   onClick={() => handleTabClick('voting')}
-                  className={`px-6 py-4 font-bold transition whitespace-nowrap rounded-t-lg ${
+                  className={`menu-link ${
                     activeTab === 'voting'
-                      ? 'bg-orange-500 text-white'
-                      : 'text-gray-700 hover:bg-orange-100'
+                      ? 'active'
+                      : ''
                   }`}
                 >
                   Votes
                 </button>
                 <button
                   onClick={() => handleTabClick('countdown')}
-                  className={`px-6 py-4 font-bold transition whitespace-nowrap rounded-t-lg ${
+                  className={`menu-link ${
                     activeTab === 'countdown'
-                      ? 'bg-orange-500 text-white'
-                      : 'text-gray-700 hover:bg-orange-100'
+                      ? 'active'
+                      : ''
                   }`}
                 >
-                  Countdown Results
+                  Countdown
                 </button>
                 <button
                   onClick={() => handleTabClick('leaderboard')}
-                  className={`px-6 py-4 font-bold transition whitespace-nowrap rounded-t-lg ${
+                  className={`menu-link ${
                     activeTab === 'leaderboard'
-                      ? 'bg-orange-500 text-white'
-                      : 'text-gray-700 hover:bg-orange-100'
+                      ? 'active'
+                      : ''
                   }`}
                 >
                   Leaderboard

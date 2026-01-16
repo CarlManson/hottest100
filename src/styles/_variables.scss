@@ -1,8 +1,31 @@
 // Color Palette
-$gradient-orange: #f97316;
-$gradient-red: #ef4444;
-$gradient-pink: #ec4899;
-$gradient-yellow: #fbbf24;
+$white: #ffffff;
+$grey: #374151;
+$black: #111827;
+$orange: #f97316;
+$red: #ef4444;
+$pink: #ec4899;
+$yellow: #fbbf24;
+$navy: #3c4367;
+$blue: #3c85b5;
+
+
+$gradient-orange: $orange;
+$gradient-red: $red;
+$gradient-pink: $pink;
+$gradient-yellow: $yellow;
+
+// Base Colors
+$text-color: $grey;
+
+// Menu Colors
+$menu-bg: darken($navy, 10%);
+$menu-link-color: $white;
+$menu-link-bg: transparent;
+$menu-link-hover-color: $white;
+$menu-link-hover-bg: mix($menu-bg, $black, 80%);
+$menu-link-active-color: $white;
+$menu-link-active-bg: $orange;
 
 // Podium Colors
 $podium-gold-start: #facc15;
