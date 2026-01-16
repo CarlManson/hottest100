@@ -1,31 +1,33 @@
 // Commentary Speech Bubble Styles
 // Customize colors, sizes, shadows, and animations here
 
+$commentary-bg: var(--color-yellow-400);
+
 .commentary-quip {
   position: relative;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+  filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, 0.15));
 
   // Speech bubble tail (triangle pointing upward)
   &__tail {
     position: absolute;
     top: -0.75rem;
-    left: 2rem;
+    left: calc(50% - 0.75rem) ;
     width: 1.5rem;
     height: 1.5rem;
-    background: linear-gradient(to bottom right, #fed7aa, #ffedd5);
+    background: $commentary-bg;
     transform: rotate(45deg);
-    border-top: 2px solid #fed7aa;
-    border-left: 2px solid #fed7aa;
+    // border-top: 2px solid #fed7aa;
+    // border-left: 2px solid #fed7aa;
   }
 
   // Main bubble container
   &__bubble {
     position: relative;
-    background: linear-gradient(to bottom right, #fed7aa, #ffedd5);
+    background: $commentary-bg;
     border-radius: 1rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     padding: 1rem 1.25rem;
-    border: 2px solid #fed7aa;
+    // border: 2px solid #fed7aa;
 
     @media (min-width: 640px) {
       padding: 1.25rem;
