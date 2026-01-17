@@ -3,7 +3,6 @@ import Cookies from 'js-cookie';
 import { AppProvider } from './context/AppContext';
 import { Dashboard } from './components/Dashboard';
 import { PublicHome } from './components/PublicHome';
-import { SongManager } from './components/SongManager';
 import { VotingInterface } from './components/VotingInterface';
 import { CountdownEntry } from './components/CountdownEntry';
 import { Leaderboard } from './components/Leaderboard';
@@ -13,7 +12,7 @@ import logo from './assets/fairest-100-logo.png';
 import banner from './assets/banner-bg.jpg';
 import bannerRight from './assets/banner-right.png';
 
-type Tab = 'home' | 'dashboard' | 'songs' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings';
+type Tab = 'home' | 'dashboard' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
@@ -27,7 +26,7 @@ function App() {
   // Get tab from URL hash
   const getTabFromHash = (): Tab => {
     const hash = window.location.hash.slice(1);
-    const validTabs: Tab[] = ['home', 'dashboard', 'songs', 'voting', 'countdown', 'leaderboard', 'detailed-breakdown', 'settings'];
+    const validTabs: Tab[] = ['home', 'dashboard', 'voting', 'countdown', 'leaderboard', 'detailed-breakdown', 'settings'];
     return validTabs.includes(hash as Tab) ? (hash as Tab) : 'home';
   };
 
@@ -248,7 +247,6 @@ function App() {
         <main>
           {activeTab === 'home' && <PublicHome />}
           {activeTab === 'dashboard' && isAuthenticated && <Dashboard onNavigate={setActiveTab} />}
-          {activeTab === 'songs' && isAuthenticated && <SongManager />}
           {activeTab === 'voting' && isAuthenticated && <VotingInterface />}
           {activeTab === 'countdown' && isAuthenticated && <CountdownEntry />}
           {activeTab === 'leaderboard' && isAuthenticated && <Leaderboard />}
@@ -354,13 +352,6 @@ function App() {
               {isAuthenticated ? (
                 <>
                   <div className="flex justify-center gap-4 flex-wrap">
-                    <button
-                      onClick={() => handleTabClick('songs')}
-                      className="text-white/90 hover:text-white underline font-medium"
-                    >
-                      Manage Songs
-                    </button>
-                    <span className="text-white/60">•</span>
                     <button
                       onClick={() => handleTabClick('settings')}
                       className="text-white/90 hover:text-white underline font-medium"
