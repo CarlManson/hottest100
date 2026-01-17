@@ -64,7 +64,7 @@ All tables use UUIDs as primary keys with foreign key constraints and ON DELETE 
 Single-page app with tab navigation:
 - `App.tsx` - Root component with tab navigation
 - `Dashboard.tsx` - Overview stats, leaderboard preview, recent results
-- `SongManager.tsx` - Import songs (JSON/CSV/manual), manage song list
+- `Settings.tsx` - Tabbed interface (AI Prompts, Songs, Data) for all administrative functions
 - `VotingInterface.tsx` - Add members, select member, rank their top 10
 - `CountdownEntry.tsx` - Enter actual countdown results (separate tabs for 100 vs 200)
 - `Leaderboard.tsx` - Final rankings with scoring breakdown
@@ -103,11 +103,25 @@ Data mapping: Snake_case in DB (PostgreSQL) → camelCase in app (JavaScript/Typ
 
 ## Key Implementation Details
 
-### Song Import
-`SongManager.tsx` supports three import methods:
-- JSON: `[{"artist": "...", "title": "...", "thumbnail": "url", "isAustralian": true}]`
-- CSV: One per line `Artist Name, Song Title`
-- Manual: Form-based single song entry
+### Settings Page
+`Settings.tsx` provides a tabbed interface for all administrative functions:
+
+**Songs Tab** - Import and manage songs:
+- JSON import: `[{"artist": "...", "title": "...", "thumbnail": "url", "isAustralian": true}]`
+- CSV import: One per line `Artist Name, Song Title`
+- Manual entry: Form-based single song entry
+- View/remove current songs
+
+**AI Prompts Tab** - Configure AI profile generation:
+- Customize nickname/label generation prompt
+- Customize music taste analysis prompt
+- Save prompts locally for reference
+- Reset rate limits
+
+**Data Tab** - Export and manage all data:
+- View statistics (songs, members, results counts)
+- Export all data as JSON
+- Clear all data (with confirmation)
 
 ### Voting Flow
 1. Select member from dropdown
@@ -121,6 +135,14 @@ Two separate lists (Hottest 100 vs 200) stored in same table, differentiated by 
 
 ### Real-time Updates
 Supabase channels (`*-channel`) subscribe to all operations (`event: '*'`) on respective tables. On any change, relevant load function re-fetches data, triggering React re-renders across all connected clients.
+
+**Countdown Update Protection:**
+During countdown updates (DELETE→INSERT operations), the app prevents the temporary 0-results state from appearing:
+- `isUpdatingCountdown` and `isUpdatingHottest200` ref flags block real-time subscription updates
+- Users maintain their current view during the DELETE→INSERT gap
+- After operation completes, manual reload syncs all users
+- Loading overlay prevents interaction during updates
+- Multi-user safe: all clients see consistent state, never flicker to 0 results
 
 ### AI Member Profiles (Optional Feature)
 The app includes an optional AI feature powered by Claude (Anthropic API) that generates personality profiles for members with cheeky Aussie personality.

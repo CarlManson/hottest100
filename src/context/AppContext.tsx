@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { AppState, Song, FamilyMember, CountdownResult, MemberProfile } from '../types';
 import { supabase } from '../lib/supabase';
@@ -44,6 +44,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [loading, setLoading] = useState(true);
   const [isGeneratingProfiles, setIsGeneratingProfiles] = useState(false);
   const [profileError, setProfileError] = useState<string>('');
+
+  // Track when we're updating countdown results to prevent real-time subscription from overwriting local state
+  const isUpdatingCountdown = useRef(false);
+  const isUpdatingHottest200 = useRef(false);
 
   // Load initial data
   useEffect(() => {
@@ -173,6 +177,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const loadCountdownResults = async () => {
+    // If we're in the middle of an update operation, ignore real-time updates
+    // This prevents the temporary 0-results state from showing during DELETE->INSERT
+    if (isUpdatingCountdown.current || isUpdatingHottest200.current) {
+      console.log('Ignoring real-time countdown update during active update operation');
+      return;
+    }
+
     const { data, error } = await supabase
       .from('countdown_results')
       .select('*')
@@ -364,39 +375,49 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateCountdownResults = async (results: Omit<CountdownResult, 'id'>[]) => {
-    // Delete existing hottest100 results
-    const { error: deleteError } = await supabase
-      .from('countdown_results')
-      .delete()
-      .eq('type', 'hottest100');
+    // Set flag to prevent real-time subscription from overwriting local state during DELETE->INSERT
+    isUpdatingCountdown.current = true;
 
-    if (deleteError) {
-      console.error('Error deleting countdown results:', deleteError);
-      throw deleteError;
-    }
-
-    // Insert new results with quips
-    if (results.length > 0) {
-      const { error: insertError } = await supabase
+    try {
+      // Delete existing hottest100 results
+      const { error: deleteError } = await supabase
         .from('countdown_results')
-        .insert(
-          results.map((r) => {
-            const song = state.songs.find(s => s.id === r.songId);
-            const quip = song ? getRandomQuip(r.position, song.artist, song.title) : null;
+        .delete()
+        .eq('type', 'hottest100');
 
-            return {
-              song_id: r.songId,
-              position: r.position,
-              type: 'hottest100' as const,
-              quip,
-            };
-          }) as any
-        );
-
-      if (insertError) {
-        console.error('Error inserting countdown results:', insertError);
-        throw insertError;
+      if (deleteError) {
+        console.error('Error deleting countdown results:', deleteError);
+        throw deleteError;
       }
+
+      // Insert new results with quips
+      if (results.length > 0) {
+        const { error: insertError } = await supabase
+          .from('countdown_results')
+          .insert(
+            results.map((r) => {
+              const song = state.songs.find(s => s.id === r.songId);
+              const quip = song ? getRandomQuip(r.position, song.artist, song.title) : null;
+
+              return {
+                song_id: r.songId,
+                position: r.position,
+                type: 'hottest100' as const,
+                quip,
+              };
+            }) as any
+          );
+
+        if (insertError) {
+          console.error('Error inserting countdown results:', insertError);
+          throw insertError;
+        }
+      }
+    } finally {
+      // Clear flag and manually reload to sync state
+      isUpdatingCountdown.current = false;
+      // Manually load the updated results (since we blocked real-time updates during the operation)
+      await loadCountdownResults();
     }
   };
 
@@ -421,39 +442,49 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateHottest200Results = async (results: Omit<CountdownResult, 'id'>[]) => {
-    // Delete existing hottest200 results
-    const { error: deleteError } = await supabase
-      .from('countdown_results')
-      .delete()
-      .eq('type', 'hottest200');
+    // Set flag to prevent real-time subscription from overwriting local state during DELETE->INSERT
+    isUpdatingHottest200.current = true;
 
-    if (deleteError) {
-      console.error('Error deleting hottest200 results:', deleteError);
-      throw deleteError;
-    }
-
-    // Insert new results with quips
-    if (results.length > 0) {
-      const { error: insertError } = await supabase
+    try {
+      // Delete existing hottest200 results
+      const { error: deleteError } = await supabase
         .from('countdown_results')
-        .insert(
-          results.map((r) => {
-            const song = state.songs.find(s => s.id === r.songId);
-            const quip = song ? getRandomQuip(r.position, song.artist, song.title) : null;
+        .delete()
+        .eq('type', 'hottest200');
 
-            return {
-              song_id: r.songId,
-              position: r.position,
-              type: 'hottest200' as const,
-              quip,
-            };
-          }) as any
-        );
-
-      if (insertError) {
-        console.error('Error inserting hottest200 results:', insertError);
-        throw insertError;
+      if (deleteError) {
+        console.error('Error deleting hottest200 results:', deleteError);
+        throw deleteError;
       }
+
+      // Insert new results with quips
+      if (results.length > 0) {
+        const { error: insertError } = await supabase
+          .from('countdown_results')
+          .insert(
+            results.map((r) => {
+              const song = state.songs.find(s => s.id === r.songId);
+              const quip = song ? getRandomQuip(r.position, song.artist, song.title) : null;
+
+              return {
+                song_id: r.songId,
+                position: r.position,
+                type: 'hottest200' as const,
+                quip,
+              };
+            }) as any
+          );
+
+        if (insertError) {
+          console.error('Error inserting hottest200 results:', insertError);
+          throw insertError;
+        }
+      }
+    } finally {
+      // Clear flag and manually reload to sync state
+      isUpdatingHottest200.current = false;
+      // Manually load the updated results (since we blocked real-time updates during the operation)
+      await loadCountdownResults();
     }
   };
 

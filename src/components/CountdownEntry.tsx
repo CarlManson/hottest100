@@ -147,15 +147,31 @@ export const CountdownEntry: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-6">
+      {/* Loading Overlay - blocks all interaction during updates */}
+      {isUpdating && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-sm mx-4">
+            <div className="flex flex-col items-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-500 mb-4"></div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Updating Countdown...</h3>
+              <p className="text-sm text-gray-600 text-center">Please wait, do not refresh or navigate away</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 hidden sm:block">Countdown Results</h2>
 
       <div className="bg-white rounded-lg shadow-md p-3 sm:p-6 mb-4 sm:mb-6">
         <div className="flex gap-2 mb-4 sm:mb-6">
           <button
-            onClick={() => setActiveTab('hottest100')}
+            onClick={() => !isUpdating && setActiveTab('hottest100')}
+            disabled={isUpdating}
             className={`flex-1 py-2 sm:py-3 px-2 rounded-lg font-semibold transition text-xs sm:text-base ${
               activeTab === 'hottest100'
                 ? 'bg-blue-600 text-white'
+                : isUpdating
+                ? 'bg-gray-200 cursor-not-allowed opacity-50'
                 : 'bg-gray-200 hover:bg-gray-300'
             }`}
           >
@@ -163,10 +179,13 @@ export const CountdownEntry: React.FC = () => {
             <span className="sm:hidden">100 ({countdownResults.length}/100)</span>
           </button>
           <button
-            onClick={() => setActiveTab('hottest200')}
+            onClick={() => !isUpdating && setActiveTab('hottest200')}
+            disabled={isUpdating}
             className={`flex-1 py-2 sm:py-3 px-2 rounded-lg font-semibold transition text-xs sm:text-base ${
               activeTab === 'hottest200'
                 ? 'bg-purple-600 text-white'
+                : isUpdating
+                ? 'bg-gray-200 cursor-not-allowed opacity-50'
                 : 'bg-gray-200 hover:bg-gray-300'
             }`}
           >
@@ -190,6 +209,7 @@ export const CountdownEntry: React.FC = () => {
                 className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg text-sm sm:text-base"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                disabled={isUpdating}
               />
             </div>
 
@@ -267,12 +287,16 @@ export const CountdownEntry: React.FC = () => {
                     return (
                       <div
                         key={result.songId}
-                        draggable
-                        onDragStart={() => handleDragStart(index)}
+                        draggable={!isUpdating}
+                        onDragStart={() => !isUpdating && handleDragStart(index)}
                         onDragOver={handleDragOver}
                         onDrop={() => handleDrop(index)}
-                        className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-800 rounded-lg cursor-move hover:bg-gray-700 transition ${
-                          draggedIndex === index ? 'opacity-50' : ''
+                        className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-800 rounded-lg transition ${
+                          isUpdating
+                            ? 'cursor-not-allowed opacity-50'
+                            : draggedIndex === index
+                            ? 'opacity-50 cursor-move'
+                            : 'cursor-move hover:bg-gray-700'
                         }`}
                       >
                         <div className="font-bold text-sm sm:text-lg w-8 sm:w-12 flex-shrink-0 text-orange-400">#{result.position}</div>
@@ -288,8 +312,13 @@ export const CountdownEntry: React.FC = () => {
                           <div className="text-[10px] sm:text-sm text-gray-400 truncate">{song.artist}</div>
                         </div>
                         <button
-                          onClick={() => handleRemoveResult(result.position)}
-                          className="text-red-400 hover:text-red-300 px-1 sm:px-2 text-lg sm:text-xl flex-shrink-0"
+                          onClick={() => !isUpdating && handleRemoveResult(result.position)}
+                          disabled={isUpdating}
+                          className={`px-1 sm:px-2 text-lg sm:text-xl flex-shrink-0 ${
+                            isUpdating
+                              ? 'text-gray-600 cursor-not-allowed'
+                              : 'text-red-400 hover:text-red-300'
+                          }`}
                         >
                           ✕
                         </button>

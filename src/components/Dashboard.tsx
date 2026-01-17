@@ -5,7 +5,7 @@ import type { MemberProfile } from '../types';
 import { LazyImage } from './LazyImage';
 
 interface DashboardProps {
-  onNavigate?: (tab: 'songs' | 'voting' | 'countdown' | 'leaderboard') => void;
+  onNavigate?: (tab: 'settings' | 'voting' | 'countdown' | 'leaderboard') => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
@@ -92,10 +92,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Get started by adding songs and mates</p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <button
-              onClick={() => onNavigate?.('songs')}
+              onClick={() => onNavigate?.('settings')}
               className="bg-orange-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-orange-600 transition font-bold text-sm sm:text-base"
             >
-              Add Songs
+              Manage Songs
             </button>
             <button
               onClick={() => onNavigate?.('voting')}
