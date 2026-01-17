@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import type { FamilyMember } from '../types';
 import { LazyImage } from './LazyImage';
@@ -23,6 +23,22 @@ export const VotingInterface: React.FC = () => {
   const [expandedMember, setExpandedMember] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [editingName, setEditingName] = useState('');
+
+  // Ref for scrolling to voting panel
+  const votingPanelRef = useRef<HTMLDivElement>(null);
+
+  const handleEditVotes = (member: FamilyMember) => {
+    setSelectedMember(member);
+    setExpandedMember(null); // Collapse any expanded accordion on mobile
+
+    // Scroll to voting panel on mobile
+    setTimeout(() => {
+      votingPanelRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }, 100);
+  };
 
   const handleAddMember = () => {
     if (!newMemberName.trim()) return;
@@ -168,7 +184,7 @@ export const VotingInterface: React.FC = () => {
           {familyMembers.map((member) => (
             <div key={member.id} className="flex items-center gap-1 sm:gap-2">
               <button
-                onClick={() => setSelectedMember(member)}
+                onClick={() => handleEditVotes(member)}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition font-bold text-sm sm:text-base ${
                   selectedMember?.id === member.id
                     ? 'bg-orange-500 text-white shadow-md'
@@ -197,7 +213,7 @@ export const VotingInterface: React.FC = () => {
       </div>
 
       {selectedMember && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <div ref={votingPanelRef} className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Select Songs</h3>
             <input
@@ -360,7 +376,7 @@ export const VotingInterface: React.FC = () => {
                       </div>
                     )}
                     <button
-                      onClick={() => setSelectedMember(member)}
+                      onClick={() => handleEditVotes(member)}
                       className="w-full bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition font-semibold text-sm"
                     >
                       Edit Votes
@@ -420,7 +436,7 @@ export const VotingInterface: React.FC = () => {
                   </div>
                 )}
                 <button
-                  onClick={() => setSelectedMember(member)}
+                  onClick={() => handleEditVotes(member)}
                   className="w-full mt-3 sm:mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition font-semibold text-sm sm:text-base"
                 >
                   Edit Votes
