@@ -709,11 +709,11 @@ export const podiumQuips: Record<number, PodiumQuipSet> = {
     soloPodium: "Is this thing on? {leader} is the only one with points! Everyone else is asleep at the wheel."
   },
   101: {
-    update: "And that wraps the Hottest 200! {leader} wins the undercard by {margin}. {loser} missed both shows. The main event finished days ago, but someone had to win this one too.",
-    twoWayTie: "Dead heat to finish the B-side! {name1} and {name2} share the Hottest 200 crown. The real winner? The Hottest 100 champion from three days ago.",
-    threeWayTie: "A three-way tie to close the support act! {name1}, {name2}, and {name3} are all equal... at being slightly less good than the Hottest 100 winner.",
-    noScore: "The Hottest 200 is done and not a single point was scored? At least someone won the Hottest 100... right?",
-    soloPodium: "Only {leader} turned up for the Hottest 200. Everyone else was still recovering from the Hottest 100 hangover. Fair enough."
+    update: "GAME OVER! {leader} is the ultimate champion, winning by {margin} points across BOTH countdowns! {loser} finishes last. That's 200 songs, folks - and we have a winner!",
+    twoWayTie: "INCREDIBLE! After 200 songs, {name1} and {name2} are PERFECTLY tied! Someone get a coin to flip - we need a champion!",
+    threeWayTie: "UNBELIEVABLE! A three-way tie after counting down 200 songs! {name1}, {name2}, and {name3} share the glory. Rock, paper, scissors for the trophy?",
+    noScore: "200 songs counted down and NO ONE scored a single point? That's... that's actually impressive in the worst way possible.",
+    soloPodium: "Congratulations {leader} - you're the ONLY person who scored across both countdowns! Everyone else combined for a magnificent zero. Embarrassing."
   }
 };
 
