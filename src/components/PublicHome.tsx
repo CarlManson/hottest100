@@ -78,12 +78,29 @@ export const PublicHome: React.FC = () => {
 
   // Calculate podium quip based on leaderboard state
   const podiumQuip = useMemo(() => {
-    if (countdownResults.length === 0 || leaderboard.length === 0) return '';
+    if (leaderboard.length === 0) return '';
 
-    // Get the current highest song position (same logic as currentHighestResult)
-    // This sorts ascending and takes the first (lowest position = most recently revealed)
-    const sortedByPosition = [...countdownResults].sort((a, b) => a.position - b.position);
-    const currentPosition = sortedByPosition[0].position;
+    // Check if position 101 (Hottest 200 finale) has been revealed
+    const hasPosition101 = hottest200Results.some(r => r.position === 101);
+
+    // If Hottest 200 has started but position 101 hasn't been revealed yet, show no quip
+    if (hottest200Results.length > 0 && !hasPosition101) {
+      return '';
+    }
+
+    // Determine which position to use for the quip
+    let currentPosition: number;
+
+    if (hasPosition101) {
+      // Always use position 101 for the grand finale quip
+      currentPosition = 101;
+    } else if (countdownResults.length > 0) {
+      // Use the most recently revealed Hottest 100 position
+      const sortedByPosition = [...countdownResults].sort((a, b) => a.position - b.position);
+      currentPosition = sortedByPosition[0].position;
+    } else {
+      return '';
+    }
 
     // Check if everyone has 0 score FIRST (no score state takes priority)
     const allZero = leaderboard.every(entry => entry.score === 0);
@@ -117,7 +134,7 @@ export const PublicHome: React.FC = () => {
     const loser = leaderboard[leaderboard.length - 1].member.name;
     const margin = leaderboard.length > 1 ? leaderboard[0].score - leaderboard[1].score : leaderboard[0].score;
     return getPodiumQuip(currentPosition, leader, loser, margin);
-  }, [countdownResults, leaderboard]);
+  }, [countdownResults, hottest200Results, leaderboard]);
 
   return (
     <div className="min-h-screen">
