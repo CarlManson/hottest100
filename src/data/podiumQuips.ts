@@ -707,6 +707,13 @@ export const podiumQuips: Record<number, PodiumQuipSet> = {
     threeWayTie: "MEXICAN STANDOFF! {name1}, {name2}, and {name3} are all pointing guns at each other! No one move!",
     noScore: "Swing and a miss! The whole group goes out for a duck. No points.",
     soloPodium: "Is this thing on? {leader} is the only one with points! Everyone else is asleep at the wheel."
+  },
+  101: {
+    update: "And that wraps the Hottest 200! {leader} wins the undercard by {margin}. {loser} missed both shows. The main event finished days ago, but someone had to win this one too.",
+    twoWayTie: "Dead heat to finish the B-side! {name1} and {name2} share the Hottest 200 crown. The real winner? The Hottest 100 champion from three days ago.",
+    threeWayTie: "A three-way tie to close the support act! {name1}, {name2}, and {name3} are all equal... at being slightly less good than the Hottest 100 winner.",
+    noScore: "The Hottest 200 is done and not a single point was scored? At least someone won the Hottest 100... right?",
+    soloPodium: "Only {leader} turned up for the Hottest 200. Everyone else was still recovering from the Hottest 100 hangover. Fair enough."
   }
 };
 
