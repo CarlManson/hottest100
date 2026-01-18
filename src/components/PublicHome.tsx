@@ -91,6 +91,13 @@ export const PublicHome: React.FC = () => {
       return getPodiumQuip(currentPosition, '', '', 0);
     }
 
+    // Check for solo podium - only one person has points
+    const peopleWithPoints = leaderboard.filter(entry => entry.score > 0);
+    if (peopleWithPoints.length === 1) {
+      const leader = peopleWithPoints[0].member.name;
+      return getPodiumQuip(currentPosition, leader, '', 0, undefined, true);
+    }
+
     // Check for ties in first place
     const firstPlaceScore = leaderboard[0].score;
     const tiedForFirst = leaderboard.filter(entry => entry.score === firstPlaceScore);
