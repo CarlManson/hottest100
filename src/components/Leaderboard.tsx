@@ -176,11 +176,11 @@ export const Leaderboard: React.FC = () => {
                 if (hasHottest200) {
                   // With Hottest 200 revealed
                   points = isHottest200
-                    ? 101 + (200 - result.position)  // Hottest 200: position 200 = 1 pt, position 101 = 100 pts
+                    ? 201 - result.position  // Hottest 200: position 200 = 1 pt, position 101 = 100 pts
                     : 101 + (100 - result.position); // Hottest 100: position 100 = 101 pts, position 1 = 200 pts
                 } else {
                   // Simple scoring when only Hottest 100 exists
-                  points = 101 - result.position; // Position 100 = 1 pt, position 1 = 100 pts
+                  points = 1 + (100 - result.position); // Position 100 = 1 pt, position 1 = 100 pts
                 }
 
                 return (

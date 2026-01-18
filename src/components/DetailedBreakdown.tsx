@@ -22,12 +22,12 @@ export const DetailedBreakdown: React.FC = () => {
         return 101 + (100 - result.position);
       } else {
         // Hottest 200: Position 200 = 1 point, Position 101 = 100 points
-        return 101 + (200 - result.position);
+        return 201 - result.position;
       }
     } else {
       // Simple scoring when only Hottest 100 exists
       // Position 100 = 1 point, Position 1 = 100 points
-      return 101 - result.position;
+      return 1 + (100 - result.position);
     }
   };
 
