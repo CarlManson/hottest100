@@ -22,7 +22,7 @@ export const calculateScore = (
     hottest200Results.forEach((result) => {
       const vote = member.votes.find((v) => v.songId === result.songId);
       if (vote) {
-        score += 101 + (200 - result.position);
+        score += 201 - result.position;
       }
     });
   } else {
@@ -90,7 +90,7 @@ export const calculateMaxPossibleScore = (
     if (hasHottest200) {
       // With Hottest 200: Hottest 100 is 101-200 pts, Hottest 200 is 1-100 pts
       return isHottest200
-        ? 101 + (200 - result.position)
+        ? 201 - result.position
         : 101 + (100 - result.position);
     } else {
       // Without Hottest 200: Simple 1-100 scoring for Hottest 100 only
