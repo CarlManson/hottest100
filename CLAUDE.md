@@ -52,29 +52,33 @@ npm run lint      # Run ESLint
 - **Real-time Sync**: Supabase real-time channels subscribe to all table changes, automatically updating local state
 
 ### Database Schema
-Four main tables (see `supabase-schema.sql`):
+Five main tables (see `supabase-schema.sql`):
 - `songs` - Eligible songs with metadata (title, artist, thumbnail, is_australian)
 - `family_members` - Users who can vote (database table name kept as-is for compatibility)
 - `votes` - Top 10 picks per member (1-10 ranking)
 - `countdown_results` - Actual Hottest 100/200 results (type: 'hottest100' or 'hottest200')
+- `member_profiles` - AI-generated profiles (label, music_taste_description, timestamps)
+- `archives` - Historical year data (year, archived_at, data as JSONB)
 
 All tables use UUIDs as primary keys with foreign key constraints and ON DELETE CASCADE.
 
 ### Component Structure
 Single-page app with tab navigation:
 - `App.tsx` - Root component with tab navigation
-- `Dashboard.tsx` - Overview stats, leaderboard preview, recent results
+- `PublicHome.tsx` - Public-facing dashboard with podium quips and live leaderboard
+- `Dashboard.tsx` - Admin dashboard with stats, leaderboard preview, recent results
 - `Settings.tsx` - Tabbed interface (AI Prompts, Songs, Data) for all administrative functions
 - `VotingInterface.tsx` - Add members, select member, rank their top 10
 - `CountdownEntry.tsx` - Enter actual countdown results (separate tabs for 100 vs 200)
 - `Leaderboard.tsx` - Final rankings with scoring breakdown
+- `Archive.tsx` - View historical years (only visible when archives exist)
 
 ### Scoring System
 Implemented in `src/utils/scoring.ts`:
 - **Hottest 100**: Position 100 = 101 points, Position 1 = 200 points
   - Formula: `101 + (100 - position)`
 - **Hottest 200**: Position 200 = 1 point, Position 101 = 100 points
-  - Formula: `101 + (200 - position)`
+  - Formula: `201 - position`
 - Only songs that appear in countdown earn points (vote ranking doesn't affect points)
 
 ### Type Definitions
@@ -109,7 +113,8 @@ Data mapping: Snake_case in DB (PostgreSQL) → camelCase in app (JavaScript/Typ
 **Songs Tab** - Import and manage songs:
 - JSON import: `[{"artist": "...", "title": "...", "thumbnail": "url", "isAustralian": true}]`
 - CSV import: One per line `Artist Name, Song Title`
-- Manual entry: Form-based single song entry
+- Manual entry: Form with fields for artist (with autocomplete), title, thumbnail URL (optional), and Australian artist checkbox
+- Artist autocomplete suggests existing artists from song list
 - View/remove current songs
 
 **AI Prompts Tab** - Configure AI profile generation:
@@ -121,6 +126,11 @@ Data mapping: Snake_case in DB (PostgreSQL) → camelCase in app (JavaScript/Typ
 **Data Tab** - Export and manage all data:
 - View statistics (songs, members, results counts)
 - Export all data as JSON
+- Archive & Reset: Available when both countdowns complete (100 songs each)
+  - Configurable year input
+  - Archives all data (songs, members, votes, results, profiles) to database
+  - Clears all current data for fresh start
+  - Two-click confirmation with warning
 - Clear all data (with confirmation)
 
 ### Voting Flow
@@ -212,6 +222,68 @@ supabase functions deploy generate-profile
 - ~$0.01-0.05 per generation
 - Separate 24-hour cooldowns prevent excessive usage
 - App fully functional without this feature
+
+### Podium Quips System
+Dynamic, humorous commentary displayed on the Dashboard during the countdown.
+
+**Implementation:**
+- **Location**: `src/data/podiumQuips.ts`
+- **Quips for positions 1-100**: Complete coverage of Hottest 100 countdown
+- **Position 101**: Special grand finale quip celebrating overall winner across both countdowns
+- **Display Logic**: In `PublicHome.tsx` using `getPodiumQuip()` function
+
+**Quip Types** (5 types per position):
+1. **update**: Normal leaderboard state (leader vs loser with margin)
+2. **twoWayTie**: Two members tied for first place
+3. **threeWayTie**: Three members tied for first place
+4. **noScore**: Everyone has 0 points
+5. **soloPodium**: Only one person has points, everyone else at 0
+
+**Selection Priority**:
+1. Three-way tie
+2. Two-way tie
+3. Solo podium (only one person has points)
+4. No score (everyone at 0)
+5. Normal update
+
+**Display Rules**:
+- Hottest 100 (positions 100→1): Shows quips for every position
+- Hottest 200 (positions 200→102): No quips shown
+- Position 101 only: Shows grand finale quip when revealed (overall winner across both countdowns)
+
+### Archive System
+Preserves completed years' data and allows viewing historical results.
+
+**Database Schema:**
+- Table: `archives`
+- Stores: year, archived_at timestamp, full data snapshot (JSONB)
+- Unique constraint on year
+
+**Functionality:**
+- **Archive & Reset Button**: Appears in Settings > Data tab when both countdowns complete (100 songs each)
+- **Year Configuration**: User specifies which year to archive (defaults to previous year)
+- **Data Preserved**: Songs, members, votes, countdown results, profiles
+- **Archive Page**: New tab appears in navigation when archives exist
+  - Year selector dropdown
+  - Full leaderboard with rankings
+  - Complete Hottest 100 results (positions 1-100)
+  - Complete Hottest 200 results (positions 101-200)
+- **Multi-year Support**: Unlimited archives, one per year
+
+**Archive Workflow:**
+1. Both countdowns complete (100 Hottest 100 + 100 Hottest 200)
+2. Archive & Reset button appears in Settings
+3. User selects year to archive
+4. Two-click confirmation with warning
+5. All current data saved to archives table
+6. All current data cleared from main tables
+7. App ready for next year
+8. Archive tab appears in navigation
+
+**Implementation Files:**
+- `src/components/Archive.tsx` - Archive viewer
+- `src/context/AppContext.tsx` - `archiveAndReset()` function
+- `supabase-schema.sql` - Archives table schema
 
 ## Important Constraints
 

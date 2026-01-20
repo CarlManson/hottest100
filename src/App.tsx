@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useApp } from './context/AppContext';
 import { Dashboard } from './components/Dashboard';
 import { PublicHome } from './components/PublicHome';
 import { VotingInterface } from './components/VotingInterface';
@@ -8,13 +8,15 @@ import { CountdownEntry } from './components/CountdownEntry';
 import { Leaderboard } from './components/Leaderboard';
 import { DetailedBreakdown } from './components/DetailedBreakdown';
 import { Settings } from './components/Settings';
+import { Archive } from './components/Archive';
 import logo from './assets/fairest-100-logo.png';
 import banner from './assets/banner-bg.jpg';
 import bannerRight from './assets/banner-right.png';
 
-type Tab = 'home' | 'dashboard' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings';
+type Tab = 'home' | 'dashboard' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings' | 'archive';
 
-function App() {
+function AppContent() {
+  const { archives } = useApp();
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -23,10 +25,12 @@ function App() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
+  const hasArchives = archives.length > 0;
+
   // Get tab from URL hash
   const getTabFromHash = (): Tab => {
     const hash = window.location.hash.slice(1);
-    const validTabs: Tab[] = ['home', 'dashboard', 'voting', 'countdown', 'leaderboard', 'detailed-breakdown', 'settings'];
+    const validTabs: Tab[] = ['home', 'dashboard', 'voting', 'countdown', 'leaderboard', 'detailed-breakdown', 'settings', 'archive'];
     return validTabs.includes(hash as Tab) ? (hash as Tab) : 'home';
   };
 
@@ -96,7 +100,6 @@ function App() {
   };
 
   return (
-    <AppProvider>
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-purple-50">
         <header
           className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-lg header-with-banner"
@@ -194,6 +197,18 @@ function App() {
                   >
                     Leaderboard
                   </button>
+                  {hasArchives && (
+                    <button
+                      onClick={() => handleTabClick('archive')}
+                      className={`w-full text-left px-4 py-3 font-bold transition ${
+                        activeTab === 'archive'
+                          ? 'bg-orange-500 text-white'
+                          : 'text-gray-700 hover:bg-orange-100'
+                      }`}
+                    >
+                      Archive
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -240,6 +255,18 @@ function App() {
                 >
                   Leaderboard
                 </button>
+                {hasArchives && (
+                  <button
+                    onClick={() => handleTabClick('archive')}
+                    className={`px-6 py-4 font-bold transition whitespace-nowrap rounded-t-lg ${
+                      activeTab === 'archive'
+                        ? 'bg-orange-500 text-white'
+                        : 'text-gray-700 hover:bg-orange-100'
+                    }`}
+                  >
+                    Archive
+                  </button>
+                )}
               </div>
             </div>
           </nav>
@@ -253,6 +280,7 @@ function App() {
           {activeTab === 'leaderboard' && isAuthenticated && <Leaderboard />}
           {activeTab === 'detailed-breakdown' && isAuthenticated && <DetailedBreakdown />}
           {activeTab === 'settings' && isAuthenticated && <Settings />}
+          {activeTab === 'archive' && isAuthenticated && hasArchives && <Archive />}
         </main>
 
         {/* Login Modal - Shown when trying to access protected tabs */}
@@ -388,6 +416,13 @@ function App() {
           </div>
         </footer>
       </div>
+  );
+}
+
+function App() {
+  return (
+    <AppProvider>
+      <AppContent />
     </AppProvider>
   );
 }
