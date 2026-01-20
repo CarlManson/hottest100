@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import type { Song } from '../types';
 
@@ -80,6 +80,12 @@ export const Settings: React.FC = () => {
     if (savedLabelPrompt) setLabelPrompt(savedLabelPrompt);
     if (savedMusicTastePrompt) setMusicTastePrompt(savedMusicTastePrompt);
   }, []);
+
+  // Get unique artists for autocomplete
+  const uniqueArtists = useMemo(() => {
+    const artists = songs.map(song => song.artist);
+    return Array.from(new Set(artists)).sort();
+  }, [songs]);
 
   // AI Prompts handlers
   const handleSave = () => {
@@ -436,13 +442,21 @@ export const Settings: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Add Song Manually</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <input
-                type="text"
-                placeholder="Artist"
-                className="p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none"
-                value={manualArtist}
-                onChange={(e) => setManualArtist(e.target.value)}
-              />
+              <div>
+                <input
+                  type="text"
+                  placeholder="Artist"
+                  list="artist-suggestions"
+                  className="p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none w-full"
+                  value={manualArtist}
+                  onChange={(e) => setManualArtist(e.target.value)}
+                />
+                <datalist id="artist-suggestions">
+                  {uniqueArtists.map(artist => (
+                    <option key={artist} value={artist} />
+                  ))}
+                </datalist>
+              </div>
               <input
                 type="text"
                 placeholder="Song Title"
