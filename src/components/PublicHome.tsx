@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import { calculateAwards } from '../utils/awards';
@@ -9,9 +9,65 @@ import { CountdownQuip } from './CountdownQuip';
 import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 
+// Hottest 100 starts Jan 24, 2026 at 9:00 AM AWST (UTC+8)
+// AWST is UTC+8, so 9:00 AM AWST = 1:00 AM UTC on Jan 24
+const COUNTDOWN_START = new Date(Date.UTC(2026, 0, 24, 1, 0, 0));
+
+interface CountdownTime {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isStarted: boolean;
+}
+
+const useCountdown = (): CountdownTime => {
+  const [timeLeft, setTimeLeft] = useState<CountdownTime>(() => {
+    const now = new Date();
+    const diff = COUNTDOWN_START.getTime() - now.getTime();
+    if (diff <= 0) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true };
+    }
+    return {
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+      seconds: Math.floor((diff % (1000 * 60)) / 1000),
+      isStarted: false,
+    };
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      const diff = COUNTDOWN_START.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true });
+        clearInterval(timer);
+        return;
+      }
+
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000),
+        isStarted: false,
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return timeLeft;
+};
+
 export const PublicHome: React.FC = () => {
   const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
+  const countdown = useCountdown();
+  const countdownStarted = countdown.isStarted;
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
@@ -183,6 +239,31 @@ export const PublicHome: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Countdown Timer - shown before countdown starts */}
+            {!countdownStarted && !numberOneSong && (
+              <div className="countdown">
+                    <h3>Countdown Starts In</h3>
+                    <div className="countdown-timer">
+                      <div className="countdown-ticker">
+                        <div className="big-number">{String(countdown.days).padStart(2, '0')}</div>
+                        <div className="small-text">Days</div>
+                      </div>
+                      <div className="countdown-ticker">
+                        <div className="big-number">{String(countdown.hours).padStart(2, '0')}</div>
+                        <div className="small-text">Hours</div>
+                      </div>
+                      <div className="countdown-ticker">
+                        <div className="big-number">{String(countdown.minutes).padStart(2, '0')}</div>
+                        <div className="small-text">Minutes</div>
+                      </div>
+                      <div className="countdown-ticker">
+                        <div className="big-number">{String(countdown.seconds).padStart(2, '0')}</div>
+                        <div className="small-text">Seconds</div>
+                      </div>
+                    </div>
+              </div>
+            )}
 
             {/* #1 Song Card - Only when available and Hottest 200 NOT started */}
             {numberOneSong && numberOneSongData && !hasHottest200Started && (
@@ -694,10 +775,50 @@ export const PublicHome: React.FC = () => {
               </>
             ) : (
               // No countdown results yet, just show member votes
-              <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
-                <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
-                  Predictions Submitted
-                </h3>
+              <>
+                {/* Welcome Message - shown before/during countdown when no results yet */}
+                {!countdownStarted ? (
+                  <div className="bg-gradient-to-r from-orange-100 via-yellow-50 to-orange-100 border-2 border-orange-300 rounded-xl p-4 sm:p-6 mb-6 welcome-message">
+                    <div className="text-center">
+                      <h3 className="text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">G'day Legends!</h3>
+                      <div className="text-sm sm:text-base text-gray-700 space-y-2 sm:space-y-3 mx-auto">
+                        <p><strong>Righto, here's how this works. You've chucked in your top 10 picks, and now we wait for Triple J to do their thing.</strong>
+                        </p>
+                        <p>
+                          <strong>Scoring is dead simple:</strong> If your song cracks the Hottest 100, you score points based on how high it lands.
+                          Position #100 gets you <span className="font-bold text-orange-600">1 point</span>, and if one of your picks somehow nabs the #1 spot,
+                          that's a whopping <span className="font-bold text-orange-600">100 points</span>. The higher the song, the more points you bag.
+                        </p>
+                        <p className="text-gray-600 italic">
+                          Good luck to all you legends. Stay hydrated, keep the snacks coming, and may your picks absolutely smash it.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gradient-to-r from-red-100 via-orange-50 to-red-100 border-2 border-red-300 rounded-xl p-4 sm:p-6 mb-6">
+                    <div className="text-center">
+                      <h3 className="text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">
+                        It's Happening!
+                      </h3>
+                      <div className="text-sm sm:text-base text-gray-700 space-y-2 sm:space-y-3 max-w-2xl mx-auto">
+                        <p>
+                          The countdown has kicked off, but someone needs to actually log the results here.
+                          Carl wasn't smart enough to make this thing update automatically, so we're doing it the old-fashioned way.
+                        </p>
+                        <p>
+                          <strong>If you're free:</strong> Log in and head to the <span className="font-bold text-orange-600">Countdown Results</span> tab
+                          to start adding songs as Triple J announces them. Don't all rush at once - one legend at a time will do the trick.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
+                  <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
+                    Predictions Submitted
+                  </h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2">
                   {leaderboard.map((entry) => {
                     const profile = getProfileForMember(entry.member.id);
@@ -735,6 +856,7 @@ export const PublicHome: React.FC = () => {
                   })}
                 </div>
               </div>
+              </>
             )}
           </div>
         )}

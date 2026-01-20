@@ -92,6 +92,64 @@
   background-position: center;
 }
 
+.full-banner-background + div:has(.welcome-message) {
+  z-index: 1;
+  position: relative;
+}
+
+.welcome-message {
+  margin-top: -4rem;
+}
+
+.countdown {
+  color: #ffffff;
+  text-align: center;
+}
+.countdown h3 {
+  font-size: 1.25rem;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+  margin-bottom: 1rem;
+  color: #f97316;
+}
+.countdown-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 640px) {
+  .countdown-timer {
+    margin-bottom: 3rem;
+  }
+}
+.countdown-ticker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 0.5rem;
+  backdrop-filter: blur(20px) brightness(0.7);
+  border-radius: 1rem;
+  padding: 1rem;
+  outline: 1px solid rgba(255, 255, 255, 0.1);
+}
+.countdown-ticker .big-number {
+  font-size: 3rem;
+  font-weight: bold;
+  line-height: 1;
+}
+.countdown-ticker .small-text {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  margin-top: 0.25rem;
+  opacity: 0.7;
+}
+@media (max-width: 640px) {
+  .countdown-ticker:nth-child(4n) {
+    display: none;
+  }
+}
+
 .commentary-quip {
   position: relative;
   margin-top: 1.5rem;

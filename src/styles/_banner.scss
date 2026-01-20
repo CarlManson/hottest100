@@ -23,3 +23,8 @@
 @mixin banner-gradient-overlay($start-color, $end-color, $direction: 'to right') {
   background: linear-gradient(#{$direction}, $start-color, $end-color);
 }
+
+.full-banner-background + div:has(.welcome-message) {
+  z-index: 1;
+  position: relative;
+}

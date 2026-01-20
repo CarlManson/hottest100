@@ -1,8 +1,163 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import type { MemberProfile } from '../types';
 import { LazyImage } from './LazyImage';
+
+// Hottest 100 starts Jan 24, 2026 at 9:00 AM AWST (UTC+8)
+// AWST is UTC+8, so 9:00 AM AWST = 1:00 AM UTC on Jan 24
+const COUNTDOWN_START = new Date(Date.UTC(2026, 0, 24, 1, 0, 0));
+
+interface CountdownTime {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isStarted: boolean;
+}
+
+const useCountdown = (): CountdownTime => {
+  const [timeLeft, setTimeLeft] = useState<CountdownTime>(() => {
+    const now = new Date();
+    const diff = COUNTDOWN_START.getTime() - now.getTime();
+    if (diff <= 0) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true };
+    }
+    return {
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+      seconds: Math.floor((diff % (1000 * 60)) / 1000),
+      isStarted: false,
+    };
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      const diff = COUNTDOWN_START.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true });
+        clearInterval(timer);
+        return;
+      }
+
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000),
+        isStarted: false,
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return timeLeft;
+};
+
+const CountdownTimer: React.FC = () => {
+  const { days, hours, minutes, seconds, isStarted } = useCountdown();
+
+  if (isStarted) return null;
+
+  return (
+    <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-blue-400">
+      <div className="text-center">
+        <div className="text-white/80 text-xs sm:text-sm font-semibold mb-2 sm:mb-3 uppercase tracking-wide">
+          Countdown Starts In
+        </div>
+        <div className="flex justify-center gap-2 sm:gap-4">
+          <div className="bg-white rounded-lg px-3 sm:px-6 py-2 sm:py-4 min-w-[60px] sm:min-w-[80px]">
+            <div className="text-2xl sm:text-4xl font-black text-gray-800">{String(days).padStart(2, '0')}</div>
+            <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase">Days</div>
+          </div>
+          <div className="bg-white rounded-lg px-3 sm:px-6 py-2 sm:py-4 min-w-[60px] sm:min-w-[80px]">
+            <div className="text-2xl sm:text-4xl font-black text-gray-800">{String(hours).padStart(2, '0')}</div>
+            <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase">Hours</div>
+          </div>
+          <div className="bg-white rounded-lg px-3 sm:px-6 py-2 sm:py-4 min-w-[60px] sm:min-w-[80px]">
+            <div className="text-2xl sm:text-4xl font-black text-gray-800">{String(minutes).padStart(2, '0')}</div>
+            <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase">Minutes</div>
+          </div>
+          <div className="bg-white rounded-lg px-3 sm:px-6 py-2 sm:py-4 min-w-[60px] sm:min-w-[80px]">
+            <div className="text-2xl sm:text-4xl font-black text-gray-800">{String(seconds).padStart(2, '0')}</div>
+            <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase">Seconds</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+interface WelcomeMessageProps {
+  countdownStarted: boolean;
+  hasResults: boolean;
+  onNavigate?: (tab: 'countdown') => void;
+}
+
+const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ countdownStarted, hasResults, onNavigate }) => {
+  // Don't show if results are already being entered
+  if (hasResults) return null;
+
+  if (!countdownStarted) {
+    // Before countdown starts - welcome message with scoring explanation
+    return (
+      <div className="bg-gradient-to-r from-orange-100 via-yellow-50 to-orange-100 border-2 border-orange-300 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="text-center">
+          <h3 className="text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">
+            🎵 G'day Legends! 🎵
+          </h3>
+          <div className="text-sm sm:text-base text-gray-700 space-y-2 sm:space-y-3 max-w-2xl mx-auto">
+            <p>
+              Righto, here's how this works. You've chucked in your top 10 picks, and now we wait for Triple J to do their thing.
+            </p>
+            <p>
+              <strong>Scoring is dead simple:</strong> If your song cracks the Hottest 100, you score points based on how high it lands.
+              Position #100 gets you <span className="font-bold text-orange-600">101 points</span>, and if one of your picks somehow nabs the #1 spot,
+              that's a whopping <span className="font-bold text-orange-600">200 points</span>. The higher the song, the more points you bag.
+            </p>
+            <p>
+              Your personal ranking (1-10) doesn't matter for scoring - it's just for your own reference so you can remember which bangers you rated highest.
+            </p>
+            <p className="text-gray-600 italic">
+              Good luck to all you legends. Stay hydrated, keep the snacks coming, and may your picks absolutely smash it. 🤞
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // After countdown starts but no results yet
+  return (
+    <div className="bg-gradient-to-r from-red-100 via-orange-50 to-red-100 border-2 border-red-300 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+      <div className="text-center">
+        <h3 className="text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">
+          🔥 It's Happening! 🔥
+        </h3>
+        <div className="text-sm sm:text-base text-gray-700 space-y-2 sm:space-y-3 max-w-2xl mx-auto">
+          <p>
+            The countdown has kicked off, but someone needs to actually log the results here.
+            Carl wasn't smart enough to make this thing update automatically, so we're doing it the old-fashioned way.
+          </p>
+          <p>
+            <strong>If you're free:</strong> Jump into the <span className="font-bold text-orange-600">Countdown Results</span> tab
+            and start adding songs as Triple J announces them. Don't all rush at once - one legend at a time will do the trick.
+          </p>
+          <button
+            onClick={() => onNavigate?.('countdown')}
+            className="mt-3 bg-orange-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-orange-600 transition font-bold text-sm sm:text-base"
+          >
+            Enter Countdown Results
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface DashboardProps {
   onNavigate?: (tab: 'settings' | 'voting' | 'countdown' | 'leaderboard') => void;
@@ -11,10 +166,12 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
+  const { isStarted: countdownStarted } = useCountdown();
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
+  const hasResults = totalResults > 0;
 
   // Calculate ranks with tie handling
   const getRank = useMemo(() => {
@@ -84,6 +241,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </div>
         )}
       </div>
+
+      {/* Countdown Timer - shown before countdown starts */}
+      <CountdownTimer />
+
+      {/* Welcome Message - shown when votes exist but no results yet */}
+      {hasVotes && (
+        <WelcomeMessage
+          countdownStarted={countdownStarted}
+          hasResults={hasResults}
+          onNavigate={onNavigate}
+        />
+      )}
 
       {!hasVotes && familyMembers.length === 0 ? (
         <div className="bg-white rounded-xl shadow-lg p-6 sm:p-12 text-center border-2 border-orange-200">
