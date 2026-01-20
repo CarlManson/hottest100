@@ -134,7 +134,7 @@ points = 101 + (100 - position)
 
 ### Hottest 200 (Positions 101-200)
 ```typescript
-points = 101 + (200 - position)
+points = 201 - position
 // Position 200 = 1 point
 // Position 101 = 100 points
 ```

@@ -106,7 +106,7 @@ Sabrina Carpenter, Espresso
 - **Position #200** = 1 point
 - **Position #150** = 51 points
 - **Position #101** = 100 points
-- Formula: `101 + (200 - position)`
+- Formula: `201 - position`
 
 ### Important Notes
 - You ONLY score points if your song appears in the countdown

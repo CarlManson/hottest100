@@ -74,7 +74,7 @@ Implemented in `src/utils/scoring.ts`:
 - **Hottest 100**: Position 100 = 101 points, Position 1 = 200 points
   - Formula: `101 + (100 - position)`
 - **Hottest 200**: Position 200 = 1 point, Position 101 = 100 points
-  - Formula: `101 + (200 - position)`
+  - Formula: `201 - position`
 - Only songs that appear in countdown earn points (vote ranking doesn't affect points)
 
 ### Type Definitions
