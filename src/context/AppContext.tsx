@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type { AppState, Song, FamilyMember, CountdownResult, MemberProfile } from '../types';
+import type { AppState, Song, FamilyMember, CountdownResult, MemberProfile, Archive } from '../types';
 import { supabase } from '../lib/supabase';
 import { generateMusicTasteProfileAPI } from '../utils/profileGenerator';
 import { getRandomQuip } from '../data/songQuips';
@@ -9,6 +9,7 @@ interface AppContextType extends AppState {
   loading: boolean;
   isGeneratingProfiles: boolean;
   profileError: string;
+  archives: Archive[];
   addSong: (song: Omit<Song, 'id'>) => Promise<void>;
   addSongs: (songs: Omit<Song, 'id'>[]) => Promise<void>;
   removeSong: (songId: string) => Promise<void>;
@@ -20,6 +21,7 @@ interface AppContextType extends AppState {
   addHottest200Result: (result: Omit<CountdownResult, 'id'>) => Promise<void>;
   updateHottest200Results: (results: Omit<CountdownResult, 'id'>[]) => Promise<void>;
   clearAllData: () => Promise<void>;
+  archiveAndReset: (year: number) => Promise<void>;
   generateMusicTasteProfile: (memberId: string) => Promise<void>;
   generateLabel: (memberId: string) => Promise<void>;
   generateMusicTaste: (memberId: string) => Promise<void>;
@@ -41,6 +43,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     hottest200Results: [],
     profiles: [],
   });
+  const [archives, setArchives] = useState<Archive[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGeneratingProfiles, setIsGeneratingProfiles] = useState(false);
   const [profileError, setProfileError] = useState<string>('');
@@ -112,6 +115,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       loadFamilyMembers(),
       loadCountdownResults(),
       loadProfiles(),
+      loadArchives(),
     ]);
     setLoading(false);
   };
@@ -239,6 +243,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
 
     setState((prev) => ({ ...prev, profiles }));
+  };
+
+  const loadArchives = async () => {
+    const { data, error } = await (supabase
+      .from('archives') as any)
+      .select('*')
+      .order('year', { ascending: false });
+
+    if (error) {
+      console.error('Error loading archives:', error);
+      return;
+    }
+
+    const archives: Archive[] = (data || []).map((row: any) => ({
+      id: row.id,
+      year: row.year,
+      archivedAt: new Date(row.archived_at),
+      data: row.data,
+    }));
+
+    setArchives(archives);
   };
 
   const addSong = async (song: Omit<Song, 'id'>) => {
@@ -492,8 +517,40 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Delete in order due to foreign key constraints
     await supabase.from('votes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('countdown_results').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await supabase.from('member_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('family_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('songs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  };
+
+  const archiveAndReset = async (year: number) => {
+    // Create archive with current data
+    const archiveData = {
+      year,
+      archived_at: new Date().toISOString(),
+      data: {
+        songs: state.songs,
+        familyMembers: state.familyMembers,
+        countdownResults: state.countdownResults,
+        hottest200Results: state.hottest200Results,
+        profiles: state.profiles,
+      },
+    };
+
+    const { error } = await (supabase
+      .from('archives') as any)
+      .insert([archiveData]);
+
+    if (error) {
+      console.error('Error creating archive:', error);
+      throw new Error('Failed to create archive');
+    }
+
+    // Clear all current data
+    await clearAllData();
+
+    // Reload archives and empty state
+    await loadArchives();
+    await loadAllData();
   };
 
   const canRegenerateMusicTaste = (memberId: string): boolean => {
@@ -755,6 +812,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         loading,
         isGeneratingProfiles,
         profileError,
+        archives,
         addSong,
         addSongs,
         removeSong,
@@ -766,6 +824,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addHottest200Result,
         updateHottest200Results,
         clearAllData,
+        archiveAndReset,
         generateMusicTasteProfile,
         generateLabel,
         generateMusicTaste,

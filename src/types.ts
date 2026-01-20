@@ -36,6 +36,19 @@ export interface MemberProfile {
   updatedAt: Date;
 }
 
+export interface Archive {
+  id: string;
+  year: number;
+  archivedAt: Date;
+  data: {
+    songs: Song[];
+    familyMembers: FamilyMember[];
+    countdownResults: CountdownResult[];
+    hottest200Results: CountdownResult[];
+    profiles: MemberProfile[];
+  };
+}
+
 export interface AppState {
   songs: Song[];
   familyMembers: FamilyMember[];

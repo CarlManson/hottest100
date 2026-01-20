@@ -45,6 +45,7 @@ export const Settings: React.FC = () => {
     addSongs,
     removeSong,
     clearAllData,
+    archiveAndReset,
     resetRateLimit,
     isGeneratingProfiles,
     getNextAvailableRegenerationTime
@@ -71,6 +72,8 @@ export const Settings: React.FC = () => {
 
   // Data state
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   useEffect(() => {
     // Load prompts from localStorage
@@ -268,6 +271,27 @@ export const Settings: React.FC = () => {
       setShowConfirm(true);
     }
   };
+
+  const handleArchiveAndReset = async () => {
+    if (showArchiveConfirm) {
+      setArchiving(true);
+      try {
+        const currentYear = new Date().getFullYear() - 1; // Assume archiving last year's data
+        await archiveAndReset(currentYear);
+        setShowArchiveConfirm(false);
+      } catch (error) {
+        console.error('Error archiving:', error);
+        setError('Failed to archive data. Please try again.');
+      } finally {
+        setArchiving(false);
+      }
+    } else {
+      setShowArchiveConfirm(true);
+    }
+  };
+
+  // Check if both countdowns are complete
+  const bothCountdownsComplete = countdownResults.length === 100 && hottest200Results.length === 100;
 
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-6">
@@ -559,6 +583,40 @@ export const Settings: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Archive & Reset for Next Year */}
+          {bothCountdownsComplete && (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-md p-4 sm:p-6 border-2 border-green-200">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Archive & Reset for Next Year</h2>
+              <p className="text-gray-600 mb-4 text-sm sm:text-base">
+                Both countdowns are complete! Archive this year's results and reset for the next Hottest 100.
+                This will save all current data to the archive and clear everything for a fresh start.
+              </p>
+              <button
+                onClick={handleArchiveAndReset}
+                disabled={archiving}
+                className={`${
+                  showArchiveConfirm
+                    ? 'bg-gradient-to-r from-red-500 to-red-600'
+                    : 'bg-gradient-to-r from-green-500 to-emerald-500'
+                } text-white px-6 py-2 rounded-lg hover:from-green-600 hover:to-emerald-600 transition font-bold disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {archiving
+                  ? '🔄 Archiving...'
+                  : showArchiveConfirm
+                  ? '⚠️ Click Again to Confirm Archive & Reset'
+                  : '📚 Archive & Reset for 2026'}
+              </button>
+              {showArchiveConfirm && !archiving && (
+                <button
+                  onClick={() => setShowArchiveConfirm(false)}
+                  className="ml-3 px-6 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition font-bold text-gray-700"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Export Data */}
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">

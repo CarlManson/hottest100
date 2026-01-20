@@ -100,9 +100,28 @@ CREATE TRIGGER member_profiles_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_member_profiles_updated_at();
 
+-- Archives table (stores completed years)
+CREATE TABLE archives (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  year INTEGER NOT NULL,
+  archived_at TIMESTAMPTZ DEFAULT NOW(),
+  data JSONB NOT NULL,
+  UNIQUE(year)
+);
+
+-- Enable Row Level Security for archives
+ALTER TABLE archives ENABLE ROW LEVEL SECURITY;
+
+-- Create policy for archives
+CREATE POLICY "Allow all operations on archives" ON archives FOR ALL USING (true) WITH CHECK (true);
+
+-- Create index for better performance
+CREATE INDEX idx_archives_year ON archives(year);
+
 -- Enable realtime for all tables
 ALTER PUBLICATION supabase_realtime ADD TABLE songs;
 ALTER PUBLICATION supabase_realtime ADD TABLE family_members;
 ALTER PUBLICATION supabase_realtime ADD TABLE votes;
 ALTER PUBLICATION supabase_realtime ADD TABLE countdown_results;
 ALTER PUBLICATION supabase_realtime ADD TABLE member_profiles;
+ALTER PUBLICATION supabase_realtime ADD TABLE archives;
