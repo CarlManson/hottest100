@@ -63,6 +63,8 @@ export const Settings: React.FC = () => {
   const [importText, setImportText] = useState('');
   const [manualTitle, setManualTitle] = useState('');
   const [manualArtist, setManualArtist] = useState('');
+  const [manualThumbnail, setManualThumbnail] = useState('');
+  const [manualIsAustralian, setManualIsAustralian] = useState(false);
   const [error, setError] = useState('');
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState('');
@@ -218,11 +220,15 @@ export const Settings: React.FC = () => {
         {
           title: manualTitle.trim(),
           artist: manualArtist.trim(),
+          thumbnail: manualThumbnail.trim() || undefined,
+          isAustralian: manualIsAustralian,
         },
       ]);
 
       setManualTitle('');
       setManualArtist('');
+      setManualThumbnail('');
+      setManualIsAustralian(false);
       setError('');
     } catch (err) {
       setError('Failed to add song. Please try again.');
@@ -444,6 +450,22 @@ export const Settings: React.FC = () => {
                 value={manualTitle}
                 onChange={(e) => setManualTitle(e.target.value)}
               />
+              <input
+                type="text"
+                placeholder="Thumbnail URL (optional)"
+                className="p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none md:col-span-2"
+                value={manualThumbnail}
+                onChange={(e) => setManualThumbnail(e.target.value)}
+              />
+              <label className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-orange-500 transition md:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={manualIsAustralian}
+                  onChange={(e) => setManualIsAustralian(e.target.checked)}
+                  className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                />
+                <span className="text-gray-700 font-medium">Australian Artist 🦘</span>
+              </label>
             </div>
             <button
               onClick={handleAddManual}
