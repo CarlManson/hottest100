@@ -43,8 +43,11 @@ Sabrina Carpenter, Espresso
 ```
 
 **Option C: Add Manually**
-1. Type artist name and song title in the form
-2. Click "Add Song"
+1. Type artist name (with autocomplete suggestions)
+2. Type song title
+3. Optionally add a thumbnail URL
+4. Check the "Australian Artist 🦘" box if applicable
+5. Click "Add Song"
 
 ### 2. Adding Family Members (Family Votes Tab)
 
@@ -130,11 +133,36 @@ Your data is automatically saved to the cloud (Supabase) with:
 4. This includes all songs, votes, and results
 5. Useful for year-over-year comparisons
 
-### Clear Everything
-1. Go to "Manage Songs" tab
+### Archive & Reset for Next Year
+After both countdowns complete, you can archive the year and start fresh:
+
+1. Go to Settings > Data tab
+2. Wait until both Hottest 100 AND Hottest 200 are complete (200 total songs)
+3. Click "Archive & Reset" button (only appears when both countdowns complete)
+4. Choose which year to archive (defaults to previous year)
+5. Review the warning - this saves everything then clears current data
+6. Click once to start, click again to confirm
+7. All data is saved to the Archive tab
+8. Your app is now empty and ready for next year!
+
+**What gets archived:**
+- All songs
+- All members and their votes
+- All countdown results (both Hottest 100 and 200)
+- All AI profiles and nicknames
+- The year you specify
+
+**Viewing past years:**
+1. Complete at least one archive
+2. "Archive" tab appears in the main menu
+3. Select which year to view from the dropdown
+4. See the final leaderboard and full countdown results
+
+### Clear Everything (Without Archiving)
+1. Go to Settings > Data tab
 2. Click "Clear All Data"
 3. Click again to confirm
-4. **Warning:** This deletes everything from the database permanently!
+4. **Warning:** This deletes everything without saving to archive!
 5. All connected devices will update instantly
 
 ---
