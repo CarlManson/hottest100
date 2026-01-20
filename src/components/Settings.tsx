@@ -74,6 +74,7 @@ export const Settings: React.FC = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [archiveYear, setArchiveYear] = useState(new Date().getFullYear() - 1);
 
   useEffect(() => {
     // Load prompts from localStorage
@@ -276,9 +277,9 @@ export const Settings: React.FC = () => {
     if (showArchiveConfirm) {
       setArchiving(true);
       try {
-        const currentYear = new Date().getFullYear() - 1; // Assume archiving last year's data
-        await archiveAndReset(currentYear);
+        await archiveAndReset(archiveYear);
         setShowArchiveConfirm(false);
+        setArchiveYear(new Date().getFullYear()); // Reset to current year for next time
       } catch (error) {
         console.error('Error archiving:', error);
         setError('Failed to archive data. Please try again.');
@@ -590,31 +591,61 @@ export const Settings: React.FC = () => {
               <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Archive & Reset for Next Year</h2>
               <p className="text-gray-600 mb-4 text-sm sm:text-base">
                 Both countdowns are complete! Archive this year's results and reset for the next Hottest 100.
-                This will save all current data to the archive and clear everything for a fresh start.
               </p>
-              <button
-                onClick={handleArchiveAndReset}
-                disabled={archiving}
-                className={`${
-                  showArchiveConfirm
-                    ? 'bg-gradient-to-r from-red-500 to-red-600'
-                    : 'bg-gradient-to-r from-green-500 to-emerald-500'
-                } text-white px-6 py-2 rounded-lg hover:from-green-600 hover:to-emerald-600 transition font-bold disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                {archiving
-                  ? '🔄 Archiving...'
-                  : showArchiveConfirm
-                  ? '⚠️ Click Again to Confirm Archive & Reset'
-                  : '📚 Archive & Reset for 2026'}
-              </button>
-              {showArchiveConfirm && !archiving && (
+
+              <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-4">
+                <p className="text-yellow-800 font-semibold text-sm mb-2">⚠️ Warning: This will permanently delete all current data!</p>
+                <ul className="text-yellow-700 text-xs space-y-1">
+                  <li>✓ All data will be saved to the archive first</li>
+                  <li>✓ Songs, members, votes, and results will be cleared</li>
+                  <li>✓ You'll start fresh for the next year</li>
+                  <li>✓ Archived data can be viewed in the Archive tab</li>
+                </ul>
+                <p className="text-yellow-800 text-xs mt-2 font-semibold">💡 Tip: Export your data first if you want an extra backup!</p>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Archive as Year:
+                </label>
+                <input
+                  type="number"
+                  value={archiveYear}
+                  onChange={(e) => setArchiveYear(parseInt(e.target.value))}
+                  min={2020}
+                  max={2030}
+                  className="w-32 p-2 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none font-semibold"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  This year will be used in the Archive dropdown
+                </p>
+              </div>
+
+              <div className="flex gap-3 flex-wrap">
                 <button
-                  onClick={() => setShowArchiveConfirm(false)}
-                  className="ml-3 px-6 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition font-bold text-gray-700"
+                  onClick={handleArchiveAndReset}
+                  disabled={archiving}
+                  className={`${
+                    showArchiveConfirm
+                      ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
+                      : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
+                  } text-white px-6 py-2 rounded-lg transition font-bold disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  Cancel
+                  {archiving
+                    ? '🔄 Archiving...'
+                    : showArchiveConfirm
+                    ? `⚠️ CONFIRM: Archive ${archiveYear} & Delete All Data`
+                    : `📚 Archive ${archiveYear} & Reset`}
                 </button>
-              )}
+                {showArchiveConfirm && !archiving && (
+                  <button
+                    onClick={() => setShowArchiveConfirm(false)}
+                    className="px-6 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition font-bold text-gray-700"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
