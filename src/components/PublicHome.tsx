@@ -509,15 +509,17 @@ export const PublicHome: React.FC = () => {
                         [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
                       ).length;
                       const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
+                      const profile = getProfileForMember(entry.member.id);
 
                       return (
                         <div
                           key={entry.member.id}
+                          onClick={() => profile && setSelectedProfile(profile)}
                           className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
                             getRank(entry.member.id) <= 3 && entry.score > 0
                               ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
                               : 'bg-gray-50'
-                          }`}
+                          } ${profile ? 'cursor-pointer hover:shadow-md' : ''}`}
                         >
                           <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${
                             entry.score === 0 ? 'bg-gray-200 text-gray-400' :
@@ -531,27 +533,11 @@ export const PublicHome: React.FC = () => {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
-                              {(() => {
-                                const profile = getProfileForMember(entry.member.id);
-                                if (!profile || !profile.label) return null;
-
-                                if (profile.musicTasteDescription) {
-                                  return (
-                                    <button
-                                      onClick={() => setSelectedProfile(profile)}
-                                      className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-orange-500 hover:to-pink-500 transition whitespace-nowrap cursor-pointer"
-                                    >
-                                      {profile.label}
-                                    </button>
-                                  );
-                                } else {
-                                  return (
-                                    <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
-                                      {profile.label}
-                                    </span>
-                                  );
-                                }
-                              })()}
+                              {profile && profile.label && (
+                                <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                  {profile.label}
+                                </span>
+                              )}
                             </div>
                             <div className="text-xs sm:text-sm text-gray-600">
                               {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
@@ -693,15 +679,17 @@ export const PublicHome: React.FC = () => {
                         [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
                       ).length;
                       const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
+                      const profile = getProfileForMember(entry.member.id);
 
                       return (
                         <div
                           key={entry.member.id}
+                          onClick={() => profile && setSelectedProfile(profile)}
                           className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
                             getRank(entry.member.id) <= 3 && entry.score > 0
                               ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
                               : 'bg-gray-50'
-                          }`}
+                          } ${profile ? 'cursor-pointer hover:shadow-md' : ''}`}
                         >
                           <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${
                             entry.score === 0 ? 'bg-gray-200 text-gray-400' :
@@ -715,27 +703,11 @@ export const PublicHome: React.FC = () => {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
-                              {(() => {
-                                const profile = getProfileForMember(entry.member.id);
-                                if (!profile || !profile.label) return null;
-
-                                if (profile.musicTasteDescription) {
-                                  return (
-                                    <button
-                                      onClick={() => setSelectedProfile(profile)}
-                                      className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-orange-500 hover:to-pink-500 transition whitespace-nowrap cursor-pointer"
-                                    >
-                                      {profile.label}
-                                    </button>
-                                  );
-                                } else {
-                                  return (
-                                    <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
-                                      {profile.label}
-                                    </span>
-                                  );
-                                }
-                              })()}
+                              {profile && profile.label && (
+                                <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                  {profile.label}
+                                </span>
+                              )}
                             </div>
                             <div className="text-xs sm:text-sm text-gray-600">
                               {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
@@ -825,20 +797,13 @@ export const PublicHome: React.FC = () => {
                     return (
                       <div
                         key={entry.member.id}
-                        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-gray-50"
+                        onClick={() => profile && setSelectedProfile(profile)}
+                        className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-gray-50 ${profile ? 'cursor-pointer hover:bg-gray-100 transition' : ''}`}
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
-                            {profile && profile.label && profile.musicTasteDescription && (
-                              <button
-                                onClick={() => setSelectedProfile(profile)}
-                                className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-orange-500 hover:to-pink-500 transition whitespace-nowrap cursor-pointer"
-                              >
-                                {profile.label}
-                              </button>
-                            )}
-                            {profile && profile.label && !profile.musicTasteDescription && (
+                            {profile && profile.label && (
                               <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
                                 {profile.label}
                               </span>
