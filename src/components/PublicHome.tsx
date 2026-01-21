@@ -424,12 +424,14 @@ export const PublicHome: React.FC = () => {
                     <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
                       Full Leaderboard
                     </h3>
-                    <button
-                      onClick={() => setShowDetailedBreakdown(true)}
-                      className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
-                    >
-                      📊 Detailed Breakdown
-                    </button>
+                    {totalResults > 0 && (
+                      <button
+                        onClick={() => setShowDetailedBreakdown(true)}
+                        className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
+                      >
+                        📊 Detailed Breakdown
+                      </button>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 2xl:grid-cols-2 gap-2">
                     {leaderboard.map((entry) => {
@@ -616,12 +618,14 @@ export const PublicHome: React.FC = () => {
                     <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
                       Full Leaderboard
                     </h3>
-                    <button
-                      onClick={() => setShowDetailedBreakdown(true)}
-                      className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
-                    >
-                      📊 Detailed Breakdown
-                    </button>
+                    {totalResults > 0 && (
+                      <button
+                        onClick={() => setShowDetailedBreakdown(true)}
+                        className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
+                      >
+                        📊 Detailed Breakdown
+                      </button>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 2xl:grid-cols-2 gap-2">
                     {leaderboard.map((entry) => {
