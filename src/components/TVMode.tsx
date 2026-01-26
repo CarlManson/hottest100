@@ -4,7 +4,6 @@ import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '
 import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 import { CountdownQuip } from './CountdownQuip';
-import type { MemberProfile } from '../types';
 import banner from '../assets/banner-bg.jpg';
 import logo from '../assets/fairest-100-logo.png';
 
