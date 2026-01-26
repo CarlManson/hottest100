@@ -3,6 +3,7 @@ import Cookies from 'js-cookie';
 import { AppProvider, useApp } from './context/AppContext';
 import { Dashboard } from './components/Dashboard';
 import { PublicHome } from './components/PublicHome';
+import { TVMode } from './components/TVMode';
 import { VotingInterface } from './components/VotingInterface';
 import { CountdownEntry } from './components/CountdownEntry';
 import { Leaderboard } from './components/Leaderboard';
@@ -13,7 +14,7 @@ import logo from './assets/fairest-100-logo.png';
 import banner from './assets/banner-bg.jpg';
 import bannerRight from './assets/banner-right.png';
 
-type Tab = 'home' | 'dashboard' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings' | 'archive';
+type Tab = 'home' | 'tv' | 'dashboard' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings' | 'archive';
 
 function AppContent() {
   const { archives } = useApp();
@@ -30,7 +31,7 @@ function AppContent() {
   // Get tab from URL hash
   const getTabFromHash = (): Tab => {
     const hash = window.location.hash.slice(1);
-    const validTabs: Tab[] = ['home', 'dashboard', 'voting', 'countdown', 'leaderboard', 'detailed-breakdown', 'settings', 'archive'];
+    const validTabs: Tab[] = ['home', 'tv', 'dashboard', 'voting', 'countdown', 'leaderboard', 'detailed-breakdown', 'settings', 'archive'];
     return validTabs.includes(hash as Tab) ? (hash as Tab) : 'home';
   };
 
@@ -53,6 +54,12 @@ function AppContent() {
       if (tabFromHash !== 'home') {
         setActiveTab(tabFromHash);
       }
+    } else {
+      // Check if trying to access public tabs (home or tv)
+      const tabFromHash = getTabFromHash();
+      if (tabFromHash === 'tv') {
+        setActiveTab('tv');
+      }
     }
   }, []);
 
@@ -60,7 +67,8 @@ function AppContent() {
   useEffect(() => {
     const handleHashChange = () => {
       const tab = getTabFromHash();
-      if (tab === 'home' || isAuthenticated) {
+      // Allow access to home and tv without authentication
+      if (tab === 'home' || tab === 'tv' || isAuthenticated) {
         setActiveTab(tab);
       }
     };
@@ -87,9 +95,10 @@ function AppContent() {
   };
 
   const handleTabClick = (tab: Tab) => {
-    if (tab === 'home') {
-      setActiveTab('home');
-      updateHash('home');
+    // Allow access to home and tv without authentication
+    if (tab === 'home' || tab === 'tv') {
+      setActiveTab(tab);
+      updateHash(tab);
     } else if (!isAuthenticated) {
       setShowLoginModal(true);
     } else {
@@ -101,6 +110,8 @@ function AppContent() {
 
   return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-purple-50">
+        {/* Hide header for TV mode */}
+        {activeTab !== 'tv' && (
         <header
           className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-lg header-with-banner"
           style={{ '--banner-image': `url(${banner})` } as React.CSSProperties}
@@ -140,8 +151,10 @@ function AppContent() {
             )}
           </div>
         </header>
+        )}
 
-        {isAuthenticated && (
+        {/* Hide nav menu for TV mode */}
+        {activeTab !== 'tv' && isAuthenticated && (
           <nav id="main-menu" className="sticky top-0 z-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
               {/* Mobile current tab label - hidden since menu is now in header */}
@@ -274,6 +287,7 @@ function AppContent() {
 
         <main>
           {activeTab === 'home' && <PublicHome />}
+          {activeTab === 'tv' && <TVMode />}
           {activeTab === 'dashboard' && isAuthenticated && <Dashboard onNavigate={setActiveTab} />}
           {activeTab === 'voting' && isAuthenticated && <VotingInterface />}
           {activeTab === 'countdown' && isAuthenticated && <CountdownEntry />}
@@ -367,6 +381,8 @@ function AppContent() {
           </div>
         )}
 
+        {/* Hide footer for TV mode */}
+        {activeTab !== 'tv' && (
         <footer className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 border-t mt-12 py-6">
           <div className="max-w-7xl mx-auto px-6 text-center text-white text-sm">
             <p className="font-semibold">Fairest 100: The Triple J Hottest 100 Voting Scorecard</p>
@@ -415,6 +431,7 @@ function AppContent() {
             </div>
           </div>
         </footer>
+        )}
       </div>
   );
 }

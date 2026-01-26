@@ -97,7 +97,7 @@ export const Podium: React.FC<PodiumProps> = ({ entries, isComplete: _isComplete
             </div>
 
             {/* Name(s) */}
-            <div className={`font-bold ${config.nameSize} text-gray-800 text-center w-full`}>
+            <div className={`font-bold ${config.nameSize} text-gray-800 text-center w-full mb-2`}>
               {isTied ? (
                 <div className="flex flex-col items-center gap-0.5">
                   {position.entries.slice(0, 3).map((entry, i) => (
@@ -117,22 +117,21 @@ export const Podium: React.FC<PodiumProps> = ({ entries, isComplete: _isComplete
               )}
             </div>
 
-            {/* Score */}
-            <div className={`${config.scoreSize} font-black ${config.scoreColor} mt-2`}>
-              {position.entries[0].score}
-              {isTied && (
-                <span className="text-xs sm:text-sm font-normal text-gray-500 ml-1">
-                  (tied)
-                </span>
-              )}
-            </div>
-
-            {/* Podium Base - only show if score > 0 */}
+            {/* Podium Base with Score Inside - only show if score > 0 */}
             {position.entries[0].score > 0 && (
               <div
-                className={`w-full bg-gradient-to-br ${config.baseGradient} rounded-t-lg mt-4 ${config.shadow} transition-all duration-500`}
+                className={`w-full bg-gradient-to-br ${config.baseGradient} rounded-t-lg ${config.shadow} transition-all duration-500 flex flex-col items-center justify-center`}
                 style={{ height: position.height }}
-              />
+              >
+                <div className={`${config.scoreSize} font-black text-white drop-shadow-lg`}>
+                  {position.entries[0].score}
+                </div>
+                {isTied && (
+                  <div className="text-xs sm:text-sm font-semibold text-white/80">
+                    (tied)
+                  </div>
+                )}
+              </div>
             )}
           </div>
         );

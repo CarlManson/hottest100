@@ -239,6 +239,16 @@ export const PublicHome: React.FC = () => {
                   </p>
                 </div>
               )}
+
+              {/* TV Mode Button */}
+              <div className="mt-6">
+                <a
+                  href="#tv"
+                  className="inline-block bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
+                >
+                  📺 TV Mode
+                </a>
+              </div>
             </div>
 
             {/* Countdown Timer - shown before countdown starts */}

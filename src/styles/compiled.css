@@ -237,4 +237,59 @@
   animation: slideInFromTop 0.3s ease-out;
 }
 
+[data-display-mode=tv] .home-link {
+  position: fixed;
+  color: var(--color-white);
+  top: 1rem;
+  right: 1rem;
+  z-index: 8;
+  opacity: 0.5;
+  border: 1px solid currentColor;
+  display: block;
+  border-radius: 3px;
+  padding: 0.15em 0.667em;
+}
+[data-display-mode=tv] .home-link:hover, [data-display-mode=tv] .home-link:focus {
+  opacity: 1;
+  color: var(--color-blue-600);
+  display: block;
+  border-radius: 3px;
+  padding: 0.15em 0.667em;
+  background-color: white;
+}
+[data-display-mode=tv] .logo {
+  width: 100%;
+  max-width: 28rem;
+  margin-right: auto;
+}
+[data-display-mode=tv] #song {
+  max-width: 27rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+[data-display-mode=tv] .commentary-quip__icon {
+  display: none;
+}
+[data-display-mode=tv] .right-column {
+  background: linear-gradient(to bottom right, color-mix(in srgb, var(--color-black) 80%, var(--color-blue-600)) 40%, var(--color-blue-600), var(--color-blue-400), var(--color-purple-400));
+}
+[data-display-mode=tv] .header-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+[data-display-mode=tv] .header-group > :nth-child(2) {
+  flex-grow: 1;
+  max-width: 50%;
+}
+[data-display-mode=tv] .list-table {
+  max-height: 30vh;
+}
+[data-display-mode=tv] .list-table.leaderboard {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: 0.5rem;
+}
+
 /*# sourceMappingURL=compiled.css.map */

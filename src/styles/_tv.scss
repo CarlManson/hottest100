@@ -1,0 +1,65 @@
+@use 'variables' as *;
+
+[data-display-mode=tv] {
+
+    .home-link {
+        position: fixed;
+        color: var(--color-white);
+        top: 1rem;
+        right: 1rem;
+        z-index: 8;
+        opacity: 0.5;
+        border: 1px solid currentColor;
+        display: block;
+        border-radius: 3px;
+        padding: 0.15em 0.667em;
+
+        &:hover, &:focus { 
+            opacity: 1;
+            color: var(--color-blue-600);
+            display: block;
+            border-radius: 3px;
+            padding: 0.15em 0.667em;
+            background-color: white;
+        } 
+    } 
+
+    .logo {
+        width: 100%;
+        max-width: 28rem;
+        margin-right: auto;
+    }
+
+    #song {
+        max-width: 27rem;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .commentary-quip__icon { display: none; }
+
+    .right-column {
+        background: linear-gradient(to bottom right, color-mix(in srgb,var(--color-black) 80%, var(--color-blue-600)) 40%, var(--color-blue-600), var(--color-blue-400), var(--color-purple-400));
+    }
+
+    .header-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
+        align-items: flex-end;
+
+        > :nth-child(2) { 
+            flex-grow: 1;
+            max-width: 50%;
+        }
+    }
+
+    .list-table { max-height: 30vh;
+    
+        &.leaderboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            column-gap: 0.5rem;
+        }
+    }
+}
