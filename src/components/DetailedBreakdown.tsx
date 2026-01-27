@@ -1,35 +1,63 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard } from '../utils/scoring';
+
+type BreakdownTab = 'hottest200' | 'hottest100' | 'positions101to200';
 
 export const DetailedBreakdown: React.FC = () => {
   const { songs, familyMembers, countdownResults, hottest200Results } = useApp();
 
+  const hasHottest200 = hottest200Results.length > 0;
+  const [activeTab, setActiveTab] = useState<BreakdownTab>('hottest200');
+
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const allResults = [...countdownResults, ...hottest200Results];
-  const hasHottest200 = hottest200Results.length > 0;
 
-  // Get score for a specific song - matches dynamic scoring in scoring.ts
+  // Get score for a specific song based on active tab filter
   const getSongScore = (songId: string) => {
     const result = allResults.find(r => r.songId === songId);
     if (!result) return null;
 
+    const isHottest200Song = result.position > 100;
+
+    // Filter by active tab
+    if (activeTab === 'hottest100' && isHottest200Song) return null;
+    if (activeTab === 'positions101to200' && !isHottest200Song) return null;
+
     // Dynamic scoring based on whether Hottest 200 has been revealed
     if (hasHottest200) {
-      // With Hottest 200 revealed
       if (result.position <= 100) {
-        // Hottest 100: Position 100 = 101 points, Position 1 = 200 points
         return 101 + (100 - result.position);
       } else {
-        // Hottest 200: Position 200 = 1 point, Position 101 = 100 points
         return 201 - result.position;
       }
     } else {
-      // Simple scoring when only Hottest 100 exists
-      // Position 100 = 1 point, Position 1 = 100 points
       return 1 + (100 - result.position);
     }
   };
+
+  // Calculate filtered totals per member based on active tab
+  const filteredScores = useMemo(() => {
+    const scores = new Map<string, number>();
+    for (const entry of leaderboard) {
+      let score = 0;
+      for (const vote of entry.member.votes) {
+        const pts = getSongScore(vote.songId);
+        if (pts !== null) score += pts;
+      }
+      scores.set(entry.member.id, score);
+    }
+    return scores;
+  }, [leaderboard, activeTab, hasHottest200]);
+
+  // Sort leaderboard by filtered scores
+  const sortedLeaderboard = useMemo(() => {
+    return [...leaderboard].sort((a, b) => {
+      const scoreA = filteredScores.get(a.member.id) || 0;
+      const scoreB = filteredScores.get(b.member.id) || 0;
+      return scoreB - scoreA;
+    });
+  }, [leaderboard, filteredScores]);
 
   return (
     <div className="max-w-[95vw] mx-auto p-3 sm:p-6">
@@ -45,6 +73,29 @@ export const DetailedBreakdown: React.FC = () => {
           Complete breakdown of all votes and scores earned
         </p>
       </div>
+
+      {/* Tabs - only shown when Hottest 200 is active */}
+      {hasHottest200 && (
+        <div className="flex gap-1 sm:gap-2 mb-4">
+          {([
+            { key: 'hottest200' as BreakdownTab, label: 'Hottest 200' },
+            { key: 'hottest100' as BreakdownTab, label: 'Hottest 100' },
+            { key: 'positions101to200' as BreakdownTab, label: '101-200' },
+          ]).map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition ${
+                activeTab === key
+                  ? 'bg-orange-500 text-white shadow-md'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
@@ -68,7 +119,7 @@ export const DetailedBreakdown: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {leaderboard.map((entry: { member: { id: string; name: string; votes: { songId: string; rank: number }[] }; score: number }, index: number) => {
+              {sortedLeaderboard.map((entry: { member: { id: string; name: string; votes: { songId: string; rank: number }[] }; score: number }, index: number) => {
                 // Sort votes by rank to display in order
                 const sortedVotes = [...entry.member.votes].sort((a, b) => a.rank - b.rank);
 
@@ -146,7 +197,7 @@ export const DetailedBreakdown: React.FC = () => {
 
                     {/* Total score column */}
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-center font-black text-base sm:text-xl text-orange-600 bg-orange-50">
-                      {entry.score}
+                      {filteredScores.get(entry.member.id) || 0}
                     </td>
                   </tr>
                 );
