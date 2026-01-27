@@ -2,13 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard } from '../utils/scoring';
 
-type BreakdownTab = 'combined' | 'hottest100' | 'hottest200';
+type BreakdownTab = 'hottest200' | 'hottest100' | 'positions101to200';
 
 export const DetailedBreakdown: React.FC = () => {
   const { songs, familyMembers, countdownResults, hottest200Results } = useApp();
 
   const hasHottest200 = hottest200Results.length > 0;
-  const [activeTab, setActiveTab] = useState<BreakdownTab>('combined');
+  const [activeTab, setActiveTab] = useState<BreakdownTab>('hottest200');
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const allResults = [...countdownResults, ...hottest200Results];
@@ -22,7 +22,7 @@ export const DetailedBreakdown: React.FC = () => {
 
     // Filter by active tab
     if (activeTab === 'hottest100' && isHottest200Song) return null;
-    if (activeTab === 'hottest200' && !isHottest200Song) return null;
+    if (activeTab === 'positions101to200' && !isHottest200Song) return null;
 
     // Dynamic scoring based on whether Hottest 200 has been revealed
     if (hasHottest200) {
@@ -78,9 +78,9 @@ export const DetailedBreakdown: React.FC = () => {
       {hasHottest200 && (
         <div className="flex gap-1 sm:gap-2 mb-4">
           {([
-            { key: 'combined' as BreakdownTab, label: 'Combined' },
-            { key: 'hottest100' as BreakdownTab, label: 'Hottest 100' },
             { key: 'hottest200' as BreakdownTab, label: 'Hottest 200' },
+            { key: 'hottest100' as BreakdownTab, label: 'Hottest 100' },
+            { key: 'positions101to200' as BreakdownTab, label: '101-200' },
           ]).map(({ key, label }) => (
             <button
               key={key}
