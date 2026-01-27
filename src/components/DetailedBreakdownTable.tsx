@@ -156,6 +156,12 @@ export const DetailedBreakdownTable: React.FC = () => {
                       const song = songs.find(s => s.id === vote.songId);
                       const score = getSongScore(vote.songId);
                       const isInCountdown = score !== null;
+                      const position = isInCountdown
+                        ? allResults.find(r => r.songId === vote.songId)?.position
+                        : undefined;
+                      const hotness = position != null
+                        ? Math.round(1 + ((position - 1) / 199) * 99)
+                        : undefined;
 
                       return (
                         <td
@@ -165,6 +171,7 @@ export const DetailedBreakdownTable: React.FC = () => {
                               ? 'bg-green-100 border-l-2 border-r-2 border-green-400'
                               : ''
                           }`}
+                          style={hotness != null ? { '--hotness': hotness } as React.CSSProperties : undefined}
                         >
                           {song ? (
                             <div className="text-center">
