@@ -24,7 +24,12 @@ export const DetailedBreakdown: React.FC = () => {
     if (activeTab === 'hottest100' && isHottest200Song) return null;
     if (activeTab === 'positions101to200' && !isHottest200Song) return null;
 
-    // Dynamic scoring based on whether Hottest 200 has been revealed
+    // Use Hottest 100 standalone scoring when viewing that tab in isolation
+    if (activeTab === 'hottest100') {
+      return 1 + (100 - result.position);
+    }
+
+    // Combined / 101-200 tab: use full dynamic scoring
     if (hasHottest200) {
       if (result.position <= 100) {
         return 101 + (100 - result.position);
