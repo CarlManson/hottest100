@@ -8,6 +8,7 @@ import { LazyImage } from './LazyImage';
 import { CountdownQuip } from './CountdownQuip';
 import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
+import { DetailedBreakdownTable } from './DetailedBreakdownTable';
 
 // Hottest 100 starts Jan 24, 2026 at 9:00 AM AWST (UTC+8)
 // AWST is UTC+8, so 9:00 AM AWST = 1:00 AM UTC on Jan 24
@@ -240,8 +241,8 @@ export const PublicHome: React.FC = () => {
                 </div>
               )}
 
-              {/* TV Mode Button */}
-              <div className="mt-6">
+              {/* TV Mode Button - large screens only */}
+              <div className="mt-6 hidden lg:block">
                 <a
                   href="#tv"
                   className="inline-block bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
@@ -1026,148 +1027,7 @@ export const PublicHome: React.FC = () => {
               </button>
             </div>
 
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs sm:text-sm">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 text-white">
-                      <th className="sticky left-0 bg-orange-500 px-2 sm:px-4 py-2 sm:py-3 text-left font-bold whitespace-nowrap z-10">
-                        Name
-                      </th>
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rank) => (
-                        <th
-                          key={rank}
-                          className="px-2 sm:px-3 py-2 sm:py-3 text-center font-bold whitespace-nowrap min-w-[120px] sm:min-w-[150px]"
-                        >
-                          Pick #{rank}
-                        </th>
-                      ))}
-                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-bold whitespace-nowrap bg-orange-600">
-                        Total
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leaderboard.map((entry, index) => {
-                      // Sort votes by rank to display in order
-                      const sortedVotes = [...entry.member.votes].sort((a, b) => a.rank - b.rank);
-
-                      // Pad with empty slots if less than 10 votes
-                      const votesWithPadding = [...sortedVotes];
-                      while (votesWithPadding.length < 10) {
-                        votesWithPadding.push({ songId: '', rank: votesWithPadding.length + 1 });
-                      }
-
-                      // Get score for a specific song - matches dynamic scoring
-                      const getSongScore = (songId: string) => {
-                        const allResults = [...countdownResults, ...hottest200Results];
-                        const result = allResults.find(r => r.songId === songId);
-                        if (!result) return null;
-
-                        const hasHottest200 = hottest200Results.length > 0;
-                        if (hasHottest200) {
-                          if (result.position <= 100) {
-                            return 101 + (100 - result.position);
-                          } else {
-                            return 201 - result.position;
-                          }
-                        } else {
-                          return 1 + (100 - result.position);
-                        }
-                      };
-
-                      return (
-                        <tr
-                          key={entry.member.id}
-                          className={`border-b border-gray-200 ${
-                            index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
-                          } hover:bg-orange-50 transition`}
-                        >
-                          {/* Name column - sticky */}
-                          <td className={`sticky left-0 px-2 sm:px-4 py-2 sm:py-3 font-bold whitespace-nowrap z-10 ${
-                            index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
-                          }`}>
-                            <div className="flex items-center gap-2">
-                              <span className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-orange-500 text-white text-[10px] sm:text-xs font-bold flex-shrink-0">
-                                {index + 1}
-                              </span>
-                              <span className="text-xs sm:text-sm">{entry.member.name}</span>
-                            </div>
-                          </td>
-
-                          {/* Vote columns */}
-                          {votesWithPadding.map((vote, voteIndex) => {
-                            if (!vote.songId) {
-                              return (
-                                <td
-                                  key={voteIndex}
-                                  className="px-2 sm:px-3 py-2 sm:py-3 text-center text-gray-400"
-                                >
-                                  —
-                                </td>
-                              );
-                            }
-
-                            const song = songs.find(s => s.id === vote.songId);
-                            const score = getSongScore(vote.songId);
-                            const isInCountdown = score !== null;
-
-                            return (
-                              <td
-                                key={vote.songId}
-                                className={`px-2 sm:px-3 py-2 sm:py-3 ${
-                                  isInCountdown
-                                    ? 'bg-green-100 border-l-2 border-r-2 border-green-400'
-                                    : ''
-                                }`}
-                              >
-                                {song ? (
-                                  <div className="text-center">
-                                    <div className="font-semibold text-[10px] sm:text-xs truncate max-w-[120px] sm:max-w-[150px] mx-auto">
-                                      {song.title}
-                                    </div>
-                                    <div className="text-[9px] sm:text-[10px] text-gray-600 truncate max-w-[120px] sm:max-w-[150px] mx-auto">
-                                      {song.artist}
-                                    </div>
-                                    {isInCountdown && (
-                                      <div className="mt-1 font-bold text-green-700 text-xs sm:text-sm">
-                                        +{score} pts
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-gray-400">—</span>
-                                )}
-                              </td>
-                            );
-                          })}
-
-                          {/* Total score column */}
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-center font-black text-base sm:text-xl text-orange-600 bg-orange-50">
-                            {entry.score}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Legend */}
-            <div className="mt-4 sm:mt-6 bg-gray-50 rounded-lg p-3 sm:p-4">
-              <h4 className="font-bold text-sm sm:text-base mb-2 sm:mb-3">Legend</h4>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-xs sm:text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-green-100 border-2 border-green-400 rounded"></div>
-                  <span>Song made the countdown (shows points earned)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-white border-2 border-gray-200 rounded"></div>
-                  <span>Song didn't make the countdown</span>
-                </div>
-              </div>
-            </div>
+            <DetailedBreakdownTable />
           </div>
         </div>
       )}
