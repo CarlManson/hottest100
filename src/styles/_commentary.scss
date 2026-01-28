@@ -3,6 +3,9 @@
 
 $commentary-bg: var(--color-yellow-400);
 
+:root {--commentary-quip-bg: #{$commentary-bg};}
+
+
 .commentary-quip {
   position: relative;
   margin-top: 1.5rem;
@@ -15,7 +18,7 @@ $commentary-bg: var(--color-yellow-400);
     left: calc(50% - 0.75rem) ;
     width: 1.5rem;
     height: 1.5rem;
-    background: $commentary-bg;
+    background: var(--commentary-quip-bg);
     transform: rotate(45deg);
     // border-top: 2px solid #fed7aa;
     // border-left: 2px solid #fed7aa;
@@ -24,7 +27,7 @@ $commentary-bg: var(--color-yellow-400);
   // Main bubble container
   &__bubble {
     position: relative;
-    background: $commentary-bg;
+    background: var(--commentary-quip-bg);
     border-radius: 1rem;
     padding: 1rem 1.25rem;
     // border: 2px solid #fed7aa;

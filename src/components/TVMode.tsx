@@ -135,19 +135,17 @@ export const TVMode: React.FC = () => {
       </a>
 
       {/* Main Layout: Banner (1/3) | Content (2/3) */}
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen" id="tv-mode-container">
         {/* Blue Banner - Vertical, 1/3 width */}
         <div
-          className="relative bg-gradient-to-b from-blue-600 via-indigo-600 to-purple-600 w-full lg:w-1/3 full-banner-background"
-          style={{ '--banner-image': `url(${banner})` } as React.CSSProperties}
+          className="relative w-full lg:w-1/3 left-column"
         >
-          <div className="absolute inset-0 bg-black/40"></div>
           <div className="relative h-full flex flex-col p-6 sm:p-8 lg:p-10">
             <div className="space-y-8">
             {/* Current Song Card - Large Display */}
             {(numberOneSong && numberOneSongData && !hasHottest200Started) || (currentHighestResult && currentHighestSong) ? (
               <div>
-                <div id="song" className="flex justify-center">
+                <div id="song" className={`flex justify-center song-rank-${currentHighestResult?.position ?? numberOneSong?.position}`}>
                   <div
                     className="relative w-full max-w-md lg:max-w-lg aspect-square rounded-2xl shadow-2xl overflow-hidden song-card-background"
                     style={{
@@ -206,16 +204,23 @@ export const TVMode: React.FC = () => {
             {/* Current Standings (Podium) */}
             {leaderboard.length > 0 && (
               <div>
-                {/* <h2 className="text-center text-white text-3xl sm:text-4xl font-black mb-4 drop-shadow-lg">
-                  {hottest200Results.length === 100 ? "Winners!" : "Current Standings"}
-                </h2> */}
+                {!numberOneSong && (
+                  <h3 className="text-center text-blue-300 font-bold text-3xl sm:text-4xl mb-4 drop-shadow-lg">
+                    {hottest200Results.length === 100 ? "Winners!" : "Current Standings"}
+                  </h3>
+                )}
                 <Podium
                   entries={leaderboard}
                   isComplete={hottest200Results.length === 100}
                 />
                 {podiumQuip && (
-                  <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 text-white text-center italic">
-                    "{podiumQuip}"
+                  <div className="commentary-quip commentary-quip--animated">
+                    <div className="commentary-quip__tail"></div>
+                    <div className="commentary-quip__bubble">
+                      <div className="commentary-quip__content">
+                        "{podiumQuip}"
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -225,33 +230,32 @@ export const TVMode: React.FC = () => {
         </div>
 
         {/* Right Side: Countdown Progress and Full Leaderboard - 2/3 width */}
-        <div className="right-column w-full lg:w-2/3">
-          <div className="p-6 sm:p-8 lg:p-10 space-y-8">
+        <div className="right-column w-full lg:w-2/3 p-6 sm:p-8 lg:p-10">
             {/* Logo */}
-            <div className="flex justify-center">
+            {/* <div className="flex justify-center">
               <img src={logo} alt="Fairest 100 Logo" className="logo" />
-            </div>
+            </div> */}
 
             {/* Countdown Progress */}
-            <div className="countdown-progress bg-white rounded-xl shadow-lg p-6 border-2 border-blue-200">
+            <div className="countdown-progress-wrapper rounded-xl shadow-lg p-6">
             <div className="header-group mb-4">
-              <h3 className="text-2xl font-bold text-gray-800">
+              <h3 className="text-2xl font-bold text-white">
                 📊 {hasHottest200Started ? "The Hottest 200 of 2025" : "Countdown Progress"}
               </h3>
 
               <div className="">
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-semibold text-gray-700">
+                  <span className="font-semibold text-orange-500">
                     {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
                   </span>
-                  <span className="text-gray-600">
+                  <span className="text-gray-400">
                     {hasHottest200Started
                       ? `${totalResults}/200 songs`
                       : `${countdownResults.length}/100 songs`
                     }
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-transparent rounded-full h-3">
                   <div
                     className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all"
                     style={{
@@ -269,7 +273,7 @@ export const TVMode: React.FC = () => {
                 {/* <div className="text-sm font-semibold text-gray-700 mb-2">
                   Latest Entries
                 </div> */}
-                <div className="list-table overflow-y-auto space-y-2">
+                <div className="list-table space-y-2">
                   {recentResults.map((result) => {
                     const song = songs.find(s => s.id === result.songId);
                     if (!song) return null;
@@ -277,18 +281,18 @@ export const TVMode: React.FC = () => {
                     return (
                       <div
                         key={result.position}
-                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                        className="list-item-song flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
                       >
                         {song.thumbnail && (
                           <img
                             src={song.thumbnail}
                             alt=""
-                            className="w-12 h-12 rounded object-cover flex-shrink-0"
+                            className="song-thumbnail w-12 h-12 rounded object-cover flex-shrink-0"
                           />
                         )}
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm truncate">{song.title}</div>
-                          <div className="text-xs text-gray-600 flex items-center gap-1">
+                        <div className="flex-1 min-w-0 song-info">
+                          <div className="font-semibold truncate song-title">{song.title}</div>
+                          <div className="text-gray-600 flex items-center gap-1 song-artist">
                             <span className="truncate">{song.artist}</span>
                             {song.isAustralian && (
                               <span className="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">
@@ -297,7 +301,7 @@ export const TVMode: React.FC = () => {
                             )}
                           </div>
                         </div>
-                        <div className="font-bold text-blue-600 text-lg flex-shrink-0">
+                        <div className="font-bold text-orange-600 text-lg flex-shrink-0 position">
                           #{result.position}
                         </div>
                       </div>
@@ -309,78 +313,79 @@ export const TVMode: React.FC = () => {
             </div>
 
             {/* Full Leaderboard */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-blue-200">
-            <h3 className="text-2xl font-bold mb-4 text-gray-800">
+            <div className="leaderboard-wrapper rounded-xl shadow-lg p-6">
+            <h3 className="text-2xl font-bold mb-4 text-white">
               Full Leaderboard
             </h3>
-            <div className="leaderboard list-table space-y-2 overflow-y-auto">
-              {leaderboard.map((entry) => {
-                const matchCount = entry.member.votes.filter(vote =>
-                  [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
-                ).length;
-                const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
-                const profile = getProfileForMember(entry.member.id);
+            <div>
+              <div className="leaderboard list-table space-y-2">
+                {leaderboard.map((entry) => {
+                  const matchCount = entry.member.votes.filter(vote =>
+                    [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
+                  ).length;
+                  const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
+                  const profile = getProfileForMember(entry.member.id);
 
-                return (
-                  <div
-                    key={entry.member.id}
-                    className={`flex items-center gap-4 p-4 rounded-lg transition ${
-                      getRank(entry.member.id) <= 3 && entry.score > 0
-                        ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
-                        : 'bg-gray-50'
-                    }`}
-                  >
-                    <div className={`flex items-center justify-center w-12 h-12 rounded-full font-bold text-xl ${
-                      entry.score === 0 ? 'bg-gray-200 text-gray-400' :
-                      getRank(entry.member.id) === 1 ? 'bg-yellow-500 text-white' :
-                      getRank(entry.member.id) === 2 ? 'bg-gray-400 text-white' :
-                      getRank(entry.member.id) === 3 ? 'bg-orange-600 text-white' :
-                      'bg-gray-300 text-gray-700'
-                    }`}>
-                      {entry.score === 0 ? '-' : getRank(entry.member.id)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <div className="font-bold text-lg text-gray-900">{entry.member.name}</div>
-                        {profile && profile.label && (
-                          <span className="bg-gradient-to-r from-blue-400 to-purple-400 text-white text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap">
-                            {profile.label}
-                          </span>
+                  return (
+                    <div
+                      key={entry.member.id}
+                      className={`flex items-center gap-4 p-4 rounded-lg transition ${
+                        getRank(entry.member.id) <= 3 && entry.score > 0
+                          ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
+                          : 'bg-gray-50'
+                      }`}
+                    >
+                      <div className={`flex items-center justify-center w-12 h-12 rounded-full font-bold text-xl ${
+                        entry.score === 0 ? 'bg-gray-200 text-gray-400' :
+                        getRank(entry.member.id) === 1 ? 'bg-yellow-500 text-white' :
+                        getRank(entry.member.id) === 2 ? 'bg-gray-400 text-white' :
+                        getRank(entry.member.id) === 3 ? 'bg-orange-600 text-white' :
+                        'bg-gray-300 text-gray-700'
+                      }`}>
+                        {entry.score === 0 ? '-' : getRank(entry.member.id)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="font-bold text-lg text-gray-900">{entry.member.name}</div>
+                          {profile && profile.label && (
+                            <span className="bg-gradient-to-r from-blue-400 to-purple-400 text-white text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap">
+                              {profile.label}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
+                        </div>
+                        {/* {maxPossibleScore > 0 && (
+                          <div className="mt-1">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                                <div
+                                  className="bg-gradient-to-r from-blue-400 to-purple-500 h-full transition-all"
+                                  style={{ width: `${efficiency}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-semibold text-gray-600 w-12">
+                                {efficiency}%
+                              </span>
+                            </div>
+                          </div>
+                        )} */}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-3xl font-black text-blue-600">
+                          {entry.score}
+                        </div>
+                        {maxPossibleScore > 0 && (
+                          <div className="text-xs text-gray-500">
+                            of {maxPossibleScore}
+                          </div>
                         )}
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
-                      </div>
-                      {maxPossibleScore > 0 && (
-                        <div className="mt-1">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-                              <div
-                                className="bg-gradient-to-r from-blue-400 to-purple-500 h-full transition-all"
-                                style={{ width: `${efficiency}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-semibold text-gray-600 w-12">
-                              {efficiency}%
-                            </span>
-                          </div>
-                        </div>
-                      )}
                     </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-black text-blue-600">
-                        {entry.score}
-                      </div>
-                      {maxPossibleScore > 0 && (
-                        <div className="text-xs text-gray-500">
-                          of {maxPossibleScore}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

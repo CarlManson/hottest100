@@ -150,6 +150,10 @@
   }
 }
 
+:root {
+  --commentary-quip-bg: var(--color-yellow-400);
+}
+
 .commentary-quip {
   position: relative;
   margin-top: 1.5rem;
@@ -161,12 +165,12 @@
   left: calc(50% - 0.75rem);
   width: 1.5rem;
   height: 1.5rem;
-  background: var(--color-yellow-400);
+  background: var(--commentary-quip-bg);
   transform: rotate(45deg);
 }
 .commentary-quip__bubble {
   position: relative;
-  background: var(--color-yellow-400);
+  background: var(--commentary-quip-bg);
   border-radius: 1rem;
   padding: 1rem 1.25rem;
 }
@@ -237,17 +241,52 @@
   animation: slideInFromTop 0.3s ease-out;
 }
 
+:root {
+  /* 1. Control this value (1 to 200) */
+  --hotness: 1;
+}
+
+.ranked-song {
+  /* 2. Base Red: hsl(0, 100%, 50%) */
+  --h-base: 0deg;
+  --s-base: 100%;
+  --l-base: 50%;
+  /* 3. The Interpolation Logic */
+  /* Hue: From 1deg to 180deg */
+  --h-shift: calc(1deg + (var(--hotness) - 1) * (179deg / 199));
+  /* Saturation: From +20% (clamped) to -60% */
+  --s-shift: calc(20% + (var(--hotness) - 1) * (-80% / 199));
+  /* Lightness: From 0% to +20% */
+  --l-shift: calc(0% + (var(--hotness) - 1) * (20% / 199));
+  /* 4. The Final Dynamic Color */
+  --heat-color: hsl(
+    calc(var(--h-base) + var(--h-shift)),
+    calc(var(--s-base) + var(--s-shift)),
+    calc(var(--l-base) + var(--l-shift))
+  );
+  background-color: color-mix(in srgb, var(--heat-color) 15%, white);
+  border-left: 2px solid var(--heat-color);
+  transition: background-color 0.3s ease;
+}
+.ranked-song .points {
+  font-weight: bold;
+  color: color-mix(in srgb, var(--heat-color) 75%, black);
+}
+
+[data-display-mode=tv] #tv-mode-container {
+  background: url("../assets/banner-bg-blur.jpg") no-repeat center center;
+}
 [data-display-mode=tv] .home-link {
   position: fixed;
   color: var(--color-white);
-  top: 1rem;
-  right: 1rem;
+  top: 0.5rem;
+  right: 0.5rem;
   z-index: 8;
   opacity: 0.5;
   border: 1px solid currentColor;
   display: block;
   border-radius: 3px;
-  padding: 0.15em 0.667em;
+  padding: 0.05em 0.667em;
 }
 [data-display-mode=tv] .home-link:hover, [data-display-mode=tv] .home-link:focus {
   opacity: 1;
@@ -266,12 +305,32 @@
   max-width: 27rem;
   margin-left: auto;
   margin-right: auto;
+  border-radius: 1.5rem;
+  overflow: hidden;
+}
+[data-display-mode=tv] #song.song-rank-1 {
+  box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.5);
+  border: 3px solid color-mix(in oklab, var(--color-white) 60%, transparent);
 }
 [data-display-mode=tv] .commentary-quip__icon {
   display: none;
 }
+[data-display-mode=tv] .left-column {
+  backdrop-filter: blur(30px) brightness(0.8);
+}
 [data-display-mode=tv] .right-column {
-  background: linear-gradient(to bottom right, color-mix(in srgb, var(--color-black) 80%, var(--color-blue-600)) 40%, var(--color-blue-600), var(--color-blue-400), var(--color-purple-400));
+  display: flex;
+  flex-direction: column;
+  row-gap: 2rem;
+}
+[data-display-mode=tv] .right-column > div {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+[data-display-mode=tv] .right-column [class*=-wrapper] > :last-child {
+  flex-grow: 1;
+  overflow-y: auto;
 }
 [data-display-mode=tv] .header-group {
   display: flex;
@@ -285,11 +344,76 @@
 }
 [data-display-mode=tv] .list-table {
   max-height: 30vh;
+  flex-grow: 1;
 }
 [data-display-mode=tv] .list-table.leaderboard {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   column-gap: 0.5rem;
+}
+[data-display-mode=tv] #podium {
+  position: relative;
+}
+[data-display-mode=tv] #podium .medal {
+  display: none;
+}
+[data-display-mode=tv] #podium .name {
+  color: var(--color-white);
+}
+[data-display-mode=tv] #podium:after {
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: calc(100% + 1rem);
+  border-bottom: 2px solid var(--color-white);
+  translate: -50%;
+  opacity: 0.5;
+}
+[data-display-mode=tv] {
+  --commentary-quip-bg: color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+[data-display-mode=tv] .commentary-quip {
+  backdrop-filter: blur(10px);
+  font-size: 1.25rem;
+}
+[data-display-mode=tv] .commentary-quip__tail {
+  display: none;
+}
+[data-display-mode=tv] .commentary-quip__bubble {
+  background: var(--commentary-quip-bg);
+  color: var(--color-white);
+  font-style: italic;
+}
+[data-display-mode=tv] .commentary-quip .commentary-quip__text {
+  color: inherit;
+  font-size: inherit;
+}
+[data-display-mode=tv] .countdown-progress-wrapper {
+  backdrop-filter: brightness(0.8);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+[data-display-mode=tv] .countdown-progress-wrapper .song-info {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+[data-display-mode=tv] .countdown-progress-wrapper .song-info .song-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+[data-display-mode=tv] .countdown-progress-wrapper .song-info .song-artist {
+  font-size: 1.25rem;
+  color: var(--color-gray-600);
+}
+[data-display-mode=tv] .countdown-progress-wrapper .position {
+  font-size: 2rem;
+}
+[data-display-mode=tv] .leaderboard-wrapper {
+  backdrop-filter: brightness(0.8);
+  border-color: rgba(0, 0, 0, 0.3);
 }
 
 /*# sourceMappingURL=compiled.css.map */

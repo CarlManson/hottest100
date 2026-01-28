@@ -2,17 +2,21 @@
 
 [data-display-mode=tv] {
 
+    #tv-mode-container {
+        background: url('../assets/banner-bg-blur.jpg') no-repeat center center;
+    }
+
     .home-link {
         position: fixed;
         color: var(--color-white);
-        top: 1rem;
-        right: 1rem;
+        top: 0.5rem;
+        right: 0.5rem;
         z-index: 8;
         opacity: 0.5;
         border: 1px solid currentColor;
         display: block;
         border-radius: 3px;
-        padding: 0.15em 0.667em;
+        padding: 0.05em 0.667em;
 
         &:hover, &:focus { 
             opacity: 1;
@@ -34,12 +38,38 @@
         max-width: 27rem;
         margin-left: auto;
         margin-right: auto;
+        border-radius: 1.5rem;
+        overflow: hidden;
+
+        &.song-rank-1 {
+            box-shadow: 0 0 20px 5px rgba(255,255,255,0.5);
+            border: 3px solid color-mix(in oklab, var(--color-white) 60%, transparent);
+        }
     }
 
     .commentary-quip__icon { display: none; }
 
+    .left-column {
+        backdrop-filter: blur(30px) brightness(0.8);
+    }
+
     .right-column {
-        background: linear-gradient(to bottom right, color-mix(in srgb,var(--color-black) 80%, var(--color-blue-600)) 40%, var(--color-blue-600), var(--color-blue-400), var(--color-purple-400));
+        display: flex;
+        flex-direction: column;
+        row-gap: 2rem;
+
+        > div { 
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        [class*=-wrapper] {
+            > :last-child {
+                flex-grow: 1;
+                overflow-y: auto;
+            }
+        }
     }
 
     .header-group {
@@ -55,6 +85,7 @@
     }
 
     .list-table { max-height: 30vh;
+        flex-grow: 1;
     
         &.leaderboard {
             display: grid;
@@ -62,4 +93,73 @@
             column-gap: 0.5rem;
         }
     }
+
+
+    #podium {
+        position: relative;
+
+        .medal { display: none; }
+
+        .name { color: var(--color-white); }
+
+        &:after {
+            content: "";
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: calc(100% + 1rem);
+            border-bottom: 2px solid var(--color-white);
+            translate: -50%;
+            opacity: 0.5;
+        }
+    }
+
+    // Commentary Quips
+    --commentary-quip-bg: color-mix(in oklab, var(--color-white) 10%, transparent);
+    
+    .commentary-quip {
+        backdrop-filter: blur(10px);
+        font-size: 1.25rem;
+        &__tail { display: none; }
+        &__bubble {
+            background: var(--commentary-quip-bg);
+            color: var(--color-white);
+            font-style: italic;
+        }
+
+        .commentary-quip__text { 
+            color: inherit;
+            font-size: inherit;
+        }
+    }
+
+    // Countdown Progress 
+    .countdown-progress-wrapper {
+        backdrop-filter: brightness(0.8);
+        border-color: rgba(0, 0, 0, 0.3);
+
+        .song-info { 
+            display: flex;
+            flex-direction: row;
+            align-items: flex-end;
+
+            gap: 0.75rem;
+
+            .song-title { 
+                font-size: 1.5rem; font-weight: 600;
+            
+            }
+            .song-artist { font-size: 1.25rem; color: var(--color-gray-600); }
+        }
+
+        .position { font-size: 2rem; }
+    }
+
+    // Leaderboard
+    .leaderboard-wrapper {
+        backdrop-filter: brightness(0.8);
+        border-color: rgba(0, 0, 0, 0.3);
+    }
+
 }

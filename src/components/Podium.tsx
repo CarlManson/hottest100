@@ -79,7 +79,7 @@ export const Podium: React.FC<PodiumProps> = ({ entries, isComplete: _isComplete
   ];
 
   return (
-    <div className="flex items-end justify-center gap-4 sm:gap-8 lg:gap-12">
+    <div className="flex items-end justify-center gap-4 sm:gap-8 lg:gap-12" id="podium">
       {displayOrder.map((position, idx) => {
         // Don't show anything for empty positions or zero scores
         if (!position || position.entries[0].score === 0) {
@@ -92,12 +92,12 @@ export const Podium: React.FC<PodiumProps> = ({ entries, isComplete: _isComplete
         return (
           <div key={position.rank} className={`flex flex-col items-center ${config.containerWidth}`}>
             {/* Medal */}
-            <div className={`${config.medalSize} mb-2`}>
+            <div className={`${config.medalSize} mb-2 medal`}>
               {config.medal}
             </div>
 
             {/* Name(s) */}
-            <div className={`font-bold ${config.nameSize} text-gray-800 text-center w-full mb-2`}>
+            <div className={`font-bold ${config.nameSize} text-gray-800 text-center w-full mb-2 name`}>
               {isTied ? (
                 <div className="flex flex-col items-center gap-0.5">
                   {position.entries.slice(0, 3).map((entry, i) => (

@@ -168,7 +168,7 @@ export const DetailedBreakdownTable: React.FC = () => {
                           key={vote.songId}
                           className={`px-2 sm:px-3 py-2 sm:py-3 ${
                             isInCountdown
-                              ? 'bg-green-100 border-l-2 border-r-2 border-green-400'
+                              ? 'ranked-song'
                               : ''
                           }`}
                           style={hotness != null ? { '--hotness': hotness } as React.CSSProperties : undefined}
@@ -182,7 +182,7 @@ export const DetailedBreakdownTable: React.FC = () => {
                                 {song.artist}
                               </div>
                               {isInCountdown && (
-                                <div className="mt-1 font-bold text-green-700 text-xs sm:text-sm">
+                                <div className="mt-1 text-xs sm:text-sm points">
                                   +{score} pts
                                 </div>
                               )}

@@ -1,0 +1,47 @@
+@use 'sass:color';
+
+$hottness-start: red;
+$h-base: color.hue($hottness-start);
+$s-base: color.saturation($hottness-start);
+$l-base: color.lightness($hottness-start);
+
+:root {
+  /* 1. Control this value (1 to 200) */
+  --hotness: 1;
+
+  
+}
+
+.ranked-song {
+    /* 2. Base Red: hsl(0, 100%, 50%) */
+  --h-base: #{$h-base};
+  --s-base: #{$s-base};
+  --l-base: #{$l-base};
+
+  /* 3. The Interpolation Logic */
+  /* Hue: From 1deg to 180deg */
+  --h-shift: calc(1deg + (var(--hotness) - 1) * (179deg / 199));
+  
+  /* Saturation: From +20% (clamped) to -60% */
+  --s-shift: calc(20% + (var(--hotness) - 1) * (-80% / 199));
+  
+  /* Lightness: From 0% to +20% */
+  --l-shift: calc(0% + (var(--hotness) - 1) * (20% / 199));
+
+  /* 4. The Final Dynamic Color */
+  --heat-color: hsl(
+    calc(var(--h-base) + var(--h-shift)),
+    calc(var(--s-base) + var(--s-shift)),
+    calc(var(--l-base) + var(--l-shift))
+  );
+
+
+  background-color: color-mix(in srgb, var(--heat-color) 15%, white);
+  border-left: 2px solid var(--heat-color);
+  transition: background-color 0.3s ease;
+
+  .points {
+    font-weight: bold;
+    color: color-mix(in srgb, var(--heat-color) 75%, black);
+  }
+}
