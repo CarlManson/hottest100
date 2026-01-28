@@ -1,11 +1,9 @@
 import React, { useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
+import { getLeaderboard, calculateMaxPossibleScore } from '../utils/scoring';
 import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 import { CountdownQuip } from './CountdownQuip';
-import banner from '../assets/banner-bg.jpg';
-import logo from '../assets/fairest-100-logo.png';
 
 // TV Mode - Simplified view for large screens
 export const TVMode: React.FC = () => {
@@ -323,7 +321,6 @@ export const TVMode: React.FC = () => {
                   const matchCount = entry.member.votes.filter(vote =>
                     [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
                   ).length;
-                  const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
                   const profile = getProfileForMember(entry.member.id);
 
                   return (
