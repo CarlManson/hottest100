@@ -4,6 +4,7 @@ import { getLeaderboard, calculateMaxPossibleScore } from '../utils/scoring';
 import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 import { CountdownQuip } from './CountdownQuip';
+import { CurrentSongCard } from './CurrentSongCard';
 
 // TV Mode - Simplified view for large screens
 export const TVMode: React.FC = () => {
@@ -143,41 +144,26 @@ export const TVMode: React.FC = () => {
             {/* Current Song Card - Large Display */}
             {(numberOneSong && numberOneSongData && !hasHottest200Started) || (currentHighestResult && currentHighestSong) ? (
               <div>
-                <div id="song" className={`flex justify-center song-rank-${currentHighestResult?.position ?? numberOneSong?.position}`}>
-                  <div
-                    className="relative w-full max-w-md lg:max-w-lg aspect-square rounded-2xl shadow-2xl overflow-hidden song-card-background"
-                    style={{
-                      backgroundImage: (numberOneSongData || currentHighestSong)?.thumbnail
-                        ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${(numberOneSongData || currentHighestSong)!.thumbnail})`
-                        : 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                    }}
-                  >
-                    {/* Position Badge */}
-                    <div className="absolute top-4 left-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black text-4xl sm:text-5xl w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-xl border-4 border-white">
-                      {numberOneSong ? '👑' : currentHighestResult?.position}
-                    </div>
-
-                    {/* Song Info */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 sm:p-8">
-                      <div className="text-white">
-                        <div className="text-xs sm:text-sm font-bold text-yellow-400 mb-2 uppercase tracking-wider">
-                          {numberOneSong ? '#1 Song of 2025' : 'Current Highest Song'}
-                        </div>
-                        <h3 className="text-2xl sm:text-3xl font-black mb-2 leading-tight">
-                          {(numberOneSongData || currentHighestSong)?.title}
-                        </h3>
-                        <p className="text-lg sm:text-xl font-semibold text-gray-200 flex items-center gap-2">
-                          {(numberOneSongData || currentHighestSong)?.artist}
-                          {(numberOneSongData || currentHighestSong)?.isAustralian && (
-                            <span className="text-sm bg-orange-500 px-2 py-0.5 rounded-full">🦘</span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent"></div>
-                  </div>
-                </div>
+                {numberOneSong && numberOneSongData && !hasHottest200Started ? (
+                  <CurrentSongCard
+                    song={numberOneSongData}
+                    position={1}
+                    isNumberOne
+                    variant="tv"
+                    size="lg"
+                    id="song"
+                    cardClassName={`song-rank-${numberOneSong.position}`}
+                  />
+                ) : currentHighestResult && currentHighestSong ? (
+                  <CurrentSongCard
+                    song={currentHighestSong}
+                    position={currentHighestResult.position}
+                    variant="tv"
+                    size="lg"
+                    id="song"
+                    cardClassName={`song-rank-${currentHighestResult.position}`}
+                  />
+                ) : null}
 
                 {/* Song Commentary Quip */}
                 {countdownQuip && (

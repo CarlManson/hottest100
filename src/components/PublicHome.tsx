@@ -9,6 +9,7 @@ import { CountdownQuip } from './CountdownQuip';
 import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 import { DetailedBreakdownTable } from './DetailedBreakdownTable';
+import { CurrentSongCard } from './CurrentSongCard';
 
 // Hottest 100 starts Jan 24, 2026 at 9:00 AM AWST (UTC+8)
 // AWST is UTC+8, so 9:00 AM AWST = 1:00 AM UTC on Jan 24
@@ -279,47 +280,14 @@ export const PublicHome: React.FC = () => {
 
             {/* #1 Song Card - Only when available and Hottest 200 NOT started */}
             {numberOneSong && numberOneSongData && !hasHottest200Started && (
-              <div className="flex justify-center xl:justify-end">
-                <div
-                  className="relative w-full max-w-md xl:max-w-lg aspect-square rounded-2xl shadow-2xl overflow-hidden transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
-                  style={{
-                    backgroundImage: numberOneSongData.thumbnail
-                      ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${numberOneSongData.thumbnail})`
-                      : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-                  }}
-                >
-                  {/* Crown Badge - Top Left */}
-                  <div className="absolute top-4 left-4 text-5xl sm:text-6xl drop-shadow-xl">
-                    👑
-                  </div>
-
-                  {/* #1 Badge - Top Right */}
-                  <div className="absolute top-4 right-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black text-4xl sm:text-5xl w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-xl border-4 border-white">
-                    1
-                  </div>
-
-                  {/* Song Info - Bottom Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 sm:p-8">
-                    <div className="text-white">
-                      <div className="text-xs sm:text-sm font-bold text-yellow-400 mb-2 uppercase tracking-wider">
-                        #1 Song of 2025
-                      </div>
-                      <h3 className="text-2xl sm:text-3xl font-black mb-2 leading-tight">
-                        {numberOneSongData.title}
-                      </h3>
-                      <p className="text-lg sm:text-xl font-semibold text-gray-200 flex items-center gap-2">
-                        {numberOneSongData.artist}
-                        {numberOneSongData.isAustralian && (
-                          <span className="text-sm bg-orange-500 px-2 py-0.5 rounded-full">🦘</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Decorative corner accent */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent"></div>
-                </div>
-              </div>
+              <CurrentSongCard
+                song={numberOneSongData}
+                position={1}
+                isNumberOne
+                variant="home"
+                size="lg"
+                className="xl:justify-end"
+              />
             )}
           </div>
         </div>
@@ -330,42 +298,13 @@ export const PublicHome: React.FC = () => {
         {currentHighestResult && currentHighestSong && totalResults > 0 && (
           <div className="mb-12 grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
             {/* Current Highest Song Card */}
-            <div className="flex justify-center xl:justify-start">
-              <div
-                className="relative w-full max-w-md aspect-square rounded-2xl shadow-2xl overflow-hidden group transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
-                style={{
-                  backgroundImage: currentHighestSong.thumbnail
-                    ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${currentHighestSong.thumbnail})`
-                    : 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
-                }}
-              >
-                {/* Rank Badge - Top Left */}
-                <div className="absolute top-4 left-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black text-4xl sm:text-5xl w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-xl border-4 border-white">
-                  {currentHighestResult.position}
-                </div>
-
-                {/* Song Info - Bottom Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 sm:p-8">
-                  <div className="text-white">
-                    <div className="text-xs sm:text-sm font-bold text-orange-400 mb-2 uppercase tracking-wider">
-                      Current Highest Song
-                    </div>
-                    <h3 className="text-2xl sm:text-3xl font-black mb-2 leading-tight">
-                      {currentHighestSong.title}
-                    </h3>
-                    <p className="text-lg sm:text-xl font-semibold text-gray-200 flex items-center gap-2">
-                      {currentHighestSong.artist}
-                      {currentHighestSong.isAustralian && (
-                        <span className="text-sm bg-orange-500 px-2 py-0.5 rounded-full">🦘</span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Decorative corner accent */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent"></div>
-              </div>
-            </div>
+            <CurrentSongCard
+              song={currentHighestSong}
+              position={currentHighestResult.position}
+              variant="home"
+              size="md"
+              className="xl:justify-start"
+            />
 
             {/* Countdown Progress Widget */}
             <div className="xl:col-span-2">
@@ -450,41 +389,13 @@ export const PublicHome: React.FC = () => {
 
         {/* Current Highest Song Card - Solo display when no countdown results yet */}
         {currentHighestResult && currentHighestSong && totalResults === 0 && (
-          <div className="mb-12 flex justify-center">
-            <div
-              className="relative w-full max-w-md xl:max-w-2xl aspect-square rounded-2xl shadow-2xl overflow-hidden group transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
-              style={{
-                backgroundImage: currentHighestSong.thumbnail
-                  ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${currentHighestSong.thumbnail})`
-                  : 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
-              }}
-            >
-              {/* Rank Badge - Top Left */}
-              <div className="absolute top-4 left-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black text-4xl sm:text-5xl w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-xl border-4 border-white">
-                {currentHighestResult.position}
-              </div>
-
-              {/* Song Info - Bottom Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 sm:p-8">
-                <div className="text-white">
-                  <div className="text-xs sm:text-sm font-bold text-orange-400 mb-2 uppercase tracking-wider">
-                    Current Highest Song
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-black mb-2 leading-tight">
-                    {currentHighestSong.title}
-                  </h3>
-                  <p className="text-lg sm:text-xl font-semibold text-gray-200 flex items-center gap-2">
-                    {currentHighestSong.artist}
-                    {currentHighestSong.isAustralian && (
-                      <span className="text-sm bg-orange-500 px-2 py-0.5 rounded-full">🦘</span>
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {/* Decorative corner accent */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent"></div>
-            </div>
+          <div className="mb-12">
+            <CurrentSongCard
+              song={currentHighestSong}
+              position={currentHighestResult.position}
+              variant="home"
+              size="2xl"
+            />
           </div>
         )}
 
