@@ -108,6 +108,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
   }, []);
 
+  // Update --hotness CSS variable on body when countdown results change
+  useEffect(() => {
+    let currentPosition: number | null = null;
+
+    // Check hottest 200 first (if started, it takes priority)
+    if (state.hottest200Results.length > 0) {
+      const lowestPosition = Math.min(...state.hottest200Results.map(r => r.position));
+      currentPosition = lowestPosition;
+    } else if (state.countdownResults.length > 0) {
+      // Use hottest 100 results
+      const lowestPosition = Math.min(...state.countdownResults.map(r => r.position));
+      currentPosition = lowestPosition;
+    }
+
+    if (currentPosition !== null) {
+      document.body.style.setProperty('--hotness', String(currentPosition));
+    } else {
+      document.body.style.removeProperty('--hotness');
+    }
+  }, [state.countdownResults, state.hottest200Results]);
+
   const loadAllData = async () => {
     setLoading(true);
     await Promise.all([
