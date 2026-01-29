@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Song } from '../types';
+import { getPositionAdjective } from '../data/positionAdjectives';
 
 export interface CurrentSongCardProps {
   /** The song to display */
@@ -60,8 +61,8 @@ export const CurrentSongCard: React.FC<CurrentSongCardProps> = ({
     '2xl': 'max-w-md xl:max-w-2xl',
   };
 
-  // Default label if not provided
-  const displayLabel = label ?? (isNumberOne ? '#1 Song of 2025' : 'Current Highest Song');
+  // Default label if not provided - uses position-based adjective
+  const displayLabel = label ?? (isNumberOne ? '#1 Song of 2025' : getPositionAdjective(position));
 
   return (
     <div id={id} className={`flex justify-center ${className}`}>
