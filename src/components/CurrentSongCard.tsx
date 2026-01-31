@@ -47,13 +47,6 @@ export const CurrentSongCard: React.FC<CurrentSongCardProps> = ({
       ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'
       : 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)';
 
-  // Determine label color based on variant and type
-  const labelColor = variant === 'tv'
-    ? 'text-yellow-400'
-    : isNumberOne
-      ? 'text-yellow-400'
-      : 'text-orange-400';
-
   // Size classes
   const sizeClasses = {
     md: 'max-w-md',

@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { getLeaderboard, calculateMaxPossibleScore } from '../utils/scoring';
+import { getLeaderboard } from '../utils/scoring';
 import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 import { CountdownQuip } from './CountdownQuip';
@@ -9,7 +9,7 @@ import logo from '../assets/fairest-100-logo.png';
 
 // TV Mode - Simplified view for large screens
 export const TVMode: React.FC = () => {
-  const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
+  const { familyMembers, countdownResults, hottest200Results, songs } = useApp();
 
   // Add data-display-mode attribute to body when TV mode is active
   useEffect(() => {
@@ -21,7 +21,6 @@ export const TVMode: React.FC = () => {
   }, []);
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
-  const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
 
   // Calculate ranks with tie handling
@@ -306,7 +305,6 @@ export const TVMode: React.FC = () => {
                   const matchCount = entry.member.votes.filter(vote =>
                     [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
                   ).length;
-                  const profile = getProfileForMember(entry.member.id);
 
                   return (
                     <div
