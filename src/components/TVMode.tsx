@@ -5,6 +5,7 @@ import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 import { CountdownQuip } from './CountdownQuip';
 import { CurrentSongCard } from './CurrentSongCard';
+import logo from '../assets/fairest-100-logo.png';
 
 // TV Mode - Simplified view for large screens
 export const TVMode: React.FC = () => {
@@ -140,7 +141,8 @@ export const TVMode: React.FC = () => {
           className="relative w-full lg:w-1/3 left-column"
         >
           <div className="relative h-full flex flex-col p-6 sm:p-8 lg:p-10">
-            <div className="space-y-8">
+            {/* Logo */}
+              <img src={logo} alt="Fairest 100 Logo" className="logo" />
             {/* Current Song Card - Large Display */}
             {(numberOneSong && numberOneSongData && !hasHottest200Started) || (currentHighestResult && currentHighestSong) ? (
               <div>
@@ -209,16 +211,12 @@ export const TVMode: React.FC = () => {
                 )}
               </div>
             )}
-            </div>
           </div>
         </div>
 
         {/* Right Side: Countdown Progress and Full Leaderboard - 2/3 width */}
         <div className="right-column w-full lg:w-2/3 p-6 sm:p-8 lg:p-10">
-            {/* Logo */}
-            {/* <div className="flex justify-center">
-              <img src={logo} alt="Fairest 100 Logo" className="logo" />
-            </div> */}
+            
 
             {/* Countdown Progress */}
             <div className="countdown-progress-wrapper rounded-xl shadow-lg p-6">
@@ -229,7 +227,7 @@ export const TVMode: React.FC = () => {
 
               <div className="">
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-semibold text-orange-500">
+                  <span className="font-semibold text-accent">
                     {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
                   </span>
                   <span className="text-gray-400">
@@ -239,9 +237,9 @@ export const TVMode: React.FC = () => {
                     }
                   </span>
                 </div>
-                <div className="w-full bg-transparent rounded-full h-3">
+                <div className="progress-bar w-full bg-transparent rounded-full h-3">
                   <div
-                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all"
+                    className="progress-bar-marker h-3 rounded-full transition-all"
                     style={{
                       width: hasHottest200Started
                         ? `${(totalResults / 200) * 100}%`
@@ -266,6 +264,7 @@ export const TVMode: React.FC = () => {
                       <div
                         key={result.position}
                         className="list-item-song flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                        style={{ '--current-song': result.position } as React.CSSProperties}
                       >
                         {song.thumbnail && (
                           <img
@@ -276,16 +275,16 @@ export const TVMode: React.FC = () => {
                         )}
                         <div className="flex-1 min-w-0 song-info">
                           <div className="font-semibold truncate song-title">{song.title}</div>
-                          <div className="text-gray-600 flex items-center gap-1 song-artist">
+                          <div className="text-gray-600 flex items-center gap-2 song-artist">
                             <span className="truncate">{song.artist}</span>
                             {song.isAustralian && (
-                              <span className="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0">
+                              <span className="aus-badge">
                                 AUS
                               </span>
                             )}
                           </div>
                         </div>
-                        <div className="font-bold text-orange-600 text-lg flex-shrink-0 position">
+                        <div className="font-bold flex-shrink-0 position">
                           #{result.position}
                         </div>
                       </div>
@@ -312,7 +311,7 @@ export const TVMode: React.FC = () => {
                   return (
                     <div
                       key={entry.member.id}
-                      className={`flex items-center gap-4 p-4 rounded-lg transition ${
+                      className={`member flex items-center gap-4 p-4 rounded-lg transition ${
                         getRank(entry.member.id) <= 3 && entry.score > 0
                           ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
                           : 'bg-gray-50'
@@ -328,42 +327,20 @@ export const TVMode: React.FC = () => {
                         {entry.score === 0 ? '-' : getRank(entry.member.id)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <div className="font-bold text-lg text-gray-900">{entry.member.name}</div>
-                          {profile && profile.label && (
-                            <span className="bg-gradient-to-r from-blue-400 to-purple-400 text-white text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap">
-                              {profile.label}
-                            </span>
-                          )}
+                        <div className="member-details flex items-center gap-2 flex-wrap">
+                          <div className="member-name">{entry.member.name}</div>
+                          <div className="picks">
+                          {matchCount} of {entry.member.votes.length} pick{matchCount !== 1 ? 's' : ''}
                         </div>
-                        <div className="text-sm text-gray-600">
-                          {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
                         </div>
-                        {/* {maxPossibleScore > 0 && (
-                          <div className="mt-1">
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-                                <div
-                                  className="bg-gradient-to-r from-blue-400 to-purple-500 h-full transition-all"
-                                  style={{ width: `${efficiency}%` }}
-                                />
-                              </div>
-                              <span className="text-xs font-semibold text-gray-600 w-12">
-                                {efficiency}%
-                              </span>
-                            </div>
-                          </div>
-                        )} */}
+                        
+        
                       </div>
                       <div className="text-right">
                         <div className="text-3xl font-black text-blue-600">
                           {entry.score}
                         </div>
-                        {maxPossibleScore > 0 && (
-                          <div className="text-xs text-gray-500">
-                            of {maxPossibleScore}
-                          </div>
-                        )}
+                        
                       </div>
                     </div>
                   );

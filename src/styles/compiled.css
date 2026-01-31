@@ -1,3 +1,65 @@
+body {
+  --hotness: calc((201 - var(--current-song)) / 2);
+}
+
+/* --- CONFIGURATION --- */
+/* Define Start/End Colors (Hex or Name is fine!) */
+/* We will force Saturation/Lightness later to keep UI consistent */
+/* Blue at 1 */
+/* Red at 200 */
+/* Tuning */
+/* Unified Saturation */
+/* Base Lightness */
+/* Light Variant */
+/* Dark Variant */
+/* Hue shift amount (Unitless for Calc) */
+/* Rotation Amplitude */
+[style*="--current-song"] {
+  --hotness: calc((201 - var(--current-song)) / 2);
+  /* 1. CALCULATE MIX PERCENTAGE */
+  /* color-mix needs a percentage, so we convert our 0-1 fraction */
+  --progress: calc((var(--hotness) - 1) / 99);
+  --mix-pct: calc(var(--progress) * 100%);
+  /* 2. CREATE THE BASE COLOR (The Source of Truth) */
+  /* 'in hsl' interpolates around the color wheel */
+  /* Use 'shorter hue' (default) or 'longer hue' to control direction */
+  --c-source: color-mix(in hsl, #6ea4bc, #ff9d00 var(--mix-pct));
+  /* 3. GENERATE THE 9 VARIABLES USING RELATIVE COLOR SYNTAX */
+  /* We extract 'h' from the source, but FORCE 's' and 'l' to our constants */
+  /* GROUP A: Main Accent */
+  --accent-col-base: hsl(from var(--c-source) h 85% 50%);
+  --accent-col-light: hsl(from var(--c-source) h 85% 75%);
+  --accent-col-dark: hsl(from var(--c-source) h 85% 38%);
+  /* GROUP B: Pre-Accent (Shift Hue Backward) */
+  --pre-accent-col-base: hsl(from var(--c-source) calc(h - 45) 85% 50%);
+  --pre-accent-col-light: hsl(from var(--c-source) calc(h - 45) 85% 75%);
+  --pre-accent-col-dark: hsl(from var(--c-source) calc(h - 45) 85% 38%);
+  /* GROUP C: Post-Accent (Shift Hue Forward) */
+  --post-accent-col-base: hsl(from var(--c-source) calc(h + 45) 85% 50%);
+  --post-accent-col-light: hsl(from var(--c-source) calc(h + 45) 85% 75%);
+  --post-accent-col-dark: hsl(from var(--c-source) calc(h + 45) 85% 38%);
+}
+
+.text-accent {
+  color: var(--accent-col-base);
+}
+.text-accent-dark {
+  color: var(--accent-col-dark);
+}
+.text-accent-light {
+  color: var(--accent-col-light);
+}
+
+.bg-accent {
+  background-color: var(--accent-col-base);
+}
+.bg-accent-dark {
+  background-color: var(--accent-col-dark);
+}
+.bg-accent-light {
+  background-color: var(--accent-col-light);
+}
+
 #main-menu {
   background-color: rgb(41.226993865, 46.036809816, 70.773006135);
 }
@@ -82,10 +144,76 @@
   height: 90px;
 }
 
+#song {
+  --hotness-mod-1: calc(var(--hotness) * 0.01);
+  --hottness-mod-2: calc(var(--hotness) * 0.005 + 0.5);
+  --hotness-mod-3: calc(10px + (1px * var(--hotness) * 0.75));
+  --hottness-mod-4: calc(1 + var(--hotness) * 0.0003);
+}
+[data-display-mode=tv] #song {
+  /* The CSS variable to listen to */
+  /* Value where rotation is 0 */
+  /* Value where rotation ends at 0 */
+  /* Calculate the range for normalization */
+  /* 1. Normalize progress (0 to 1) */
+  --progress: calc((var(--hotness) - 0.5) / 99.5);
+  /* 2. Map to 360deg cycle */
+  --theta: calc(var(--progress) * 360deg);
+  /* 3. Apply Rotation */
+  /* Multiplied by -1 to ensure it dips negative first, as requested */
+  transform: rotate(calc(-1 * 3.5deg * sin(var(--theta))));
+  /* Smooth out rapid value changes */
+  transition: transform 0.3s ease-out;
+}
+#song {
+  scale: var(--hottness-mod-4);
+  container-type: inline-size;
+}
+[data-display-mode=tv] #song {
+  outline: 3px solid hsl(from var(--accent-col-light) h s l/var(--hotness-mod-1));
+  box-shadow: 0 0 var(--hotness-mod-3) hsl(from var(--accent-col-base) h s l/var(--hottness-mod-2));
+}
+#song .song-details {
+  color: var(--color-white);
+  font-size: 6cqw;
+  font-weight: 600;
+}
+#song .song-details .rank-label {
+  color: var(--accent-col-base);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7em;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.3em;
+}
+#song .song-details .song-name {
+  font-size: 1.5em;
+  font-weight: 600;
+  line-height: 1;
+}
+#song .song-details .artist-name {
+  color: hsl(from currentColor H S L/0.7);
+}
+
+.aus-badge {
+  background-color: var(--accent-col-base);
+  text-shadow: 1px 1px 3px var(--accent-col-dark);
+  font-size: 0.7em;
+  color: var(--color-white);
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  line-height: 1.5em;
+  border-radius: 0.5em;
+}
+
 .song-card-background {
   background-size: cover;
   background-position: center;
 }
+.song-card-number {
+  background: var(--accent-col-base);
+}
+
 .full-banner-background {
   background-image: var(--banner-image);
   background-size: cover;
@@ -148,6 +276,45 @@
   .countdown-ticker:nth-child(4n) {
     display: none;
   }
+}
+
+.countdown-progress-wrapper {
+  backdrop-filter: brightness(0.8);
+  outline: 1px solid hsl(from var(--accent-col-light) h s l/0.6);
+  box-shadow: 0.5rem 0.5rem 1rem rgba(0, 0, 0, 0.5);
+}
+
+.list-table {
+  container-type: inline-size;
+}
+.list-table .list-item-song {
+  --hotness: calc((201 - var(--current-song)) / 2);
+  font-size: max(2.1cqw, 1rem);
+  line-height: 1;
+}
+.list-table .list-item-song .song-info {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  font-weight: 600;
+  gap: 0.75rem;
+}
+.list-table .list-item-song .song-info .song-title {
+  font-size: 1.4em;
+}
+.list-table .list-item-song .song-info .song-artist {
+  color: var(--color-gray-600);
+}
+.list-table .list-item-song .song-info .aus-badge {
+  background-color: var(--accent-col-dark);
+}
+.list-table .list-item-song .position {
+  font-size: 1.5em;
+  color: var(--accent-col-dark);
+}
+
+.progress-bar-marker {
+  background: linear-gradient(90deg, var(--pre-accent-col-base), var(--accent-col-base), var(--post-accent-col-base));
 }
 
 :root {
@@ -241,36 +408,42 @@
   animation: slideInFromTop 0.3s ease-out;
 }
 
-:root {
-  /* 1. Control this value (1 to 200) */
-  --hotness: 1;
-}
-
 .ranked-song {
-  /* 2. Base Red: hsl(0, 100%, 50%) */
-  --h-base: 0deg;
-  --s-base: 100%;
-  --l-base: 50%;
-  /* 3. The Interpolation Logic */
-  /* Hue: From 1deg to 180deg */
-  --h-shift: calc(1deg + (var(--hotness) - 1) * (179deg / 199));
-  /* Saturation: From +20% (clamped) to -60% */
-  --s-shift: calc(20% + (var(--hotness) - 1) * (-80% / 199));
-  /* Lightness: From 0% to +20% */
-  --l-shift: calc(0% + (var(--hotness) - 1) * (20% / 199));
-  /* 4. The Final Dynamic Color */
-  --heat-color: hsl(
-    calc(var(--h-base) + var(--h-shift)),
-    calc(var(--s-base) + var(--s-shift)),
-    calc(var(--l-base) + var(--l-shift))
-  );
-  background-color: color-mix(in srgb, var(--heat-color) 15%, white);
-  border-left: 2px solid var(--heat-color);
+  background-color: color-mix(in srgb, var(--accent-col-base) 10%, white);
+  border-left: 2px solid var(--accent-col-base);
   transition: background-color 0.3s ease;
+  position: relative;
 }
 .ranked-song .points {
   font-weight: bold;
-  color: color-mix(in srgb, var(--heat-color) 75%, black);
+  color: color-mix(in srgb, var(--accent-col-dark) 75%, black);
+}
+.ranked-song .position-marker {
+  position: absolute;
+  bottom: 0.5em;
+  right: 0.5em;
+  background-color: var(--accent-col-base);
+  color: var(--color-white);
+  font-weight: bold;
+  padding: 0.2em 0.5em;
+  border-radius: 0.3em;
+  font-size: 0.8em;
+  text-shadow: 1px 1px 2px var(--accent-col-dark);
+}
+
+.leaderboard {
+  container-type: inline-size;
+}
+.leaderboard .member {
+  font-size: 2cqw;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.leaderboard .member-name {
+  font-size: 1.5em;
+}
+.leaderboard .member .picks {
+  color: var(--color-gray-600);
 }
 
 [data-display-mode=tv] #tv-mode-container {
@@ -317,6 +490,28 @@
 }
 [data-display-mode=tv] .left-column {
   backdrop-filter: blur(30px) brightness(0.8);
+  border-right: 1px solid hsl(from var(--accent-col-base) h s l/0.5);
+}
+[data-display-mode=tv] .left-column .logo {
+  position: absolute;
+  top: 3rem;
+  right: 2rem;
+  width: 60%;
+  z-index: 1;
+  rotate: 5deg;
+  filter: drop-shadow(2px 2px 10px rgba(0, 0, 50, 0.7));
+}
+[data-display-mode=tv] .left-column > div {
+  gap: 2rem;
+  justify-content: space-around;
+}
+[data-display-mode=tv] .left-column:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--accent-col-base) -10%, var(--accent-col-dark), transparent 25%, transparent 75%, var(--accent-col-dark) 120%);
+  z-index: -1;
+  opacity: 0.3;
 }
 [data-display-mode=tv] .right-column {
   display: flex;
@@ -390,30 +585,10 @@
   color: inherit;
   font-size: inherit;
 }
-[data-display-mode=tv] .countdown-progress-wrapper {
+[data-display-mode=tv] .countdown-progress-wrapper, [data-display-mode=tv] .leaderboard-wrapper {
   backdrop-filter: brightness(0.8);
-  border-color: rgba(0, 0, 0, 0.3);
-}
-[data-display-mode=tv] .countdown-progress-wrapper .song-info {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-end;
-  gap: 0.75rem;
-}
-[data-display-mode=tv] .countdown-progress-wrapper .song-info .song-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-[data-display-mode=tv] .countdown-progress-wrapper .song-info .song-artist {
-  font-size: 1.25rem;
-  color: var(--color-gray-600);
-}
-[data-display-mode=tv] .countdown-progress-wrapper .position {
-  font-size: 2rem;
-}
-[data-display-mode=tv] .leaderboard-wrapper {
-  backdrop-filter: brightness(0.8);
-  border-color: rgba(0, 0, 0, 0.3);
+  outline: 1px solid hsl(from var(--accent-col-light) h s l/0.6);
+  box-shadow: 0.5rem 0.5rem 1rem rgba(0, 0, 0, 0.5);
 }
 
 /*# sourceMappingURL=compiled.css.map */

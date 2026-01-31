@@ -325,9 +325,9 @@ export const PublicHome: React.FC = () => {
                       }
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="progress-bar rounded-full h-3">
                     <div
-                      className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
+                      className="progress-bar-marker h-3 rounded-full transition-all"
                       style={{
                         width: hasHottest200Started
                           ? `${(totalResults / 200) * 100}%`
@@ -351,6 +351,7 @@ export const PublicHome: React.FC = () => {
                           <div
                             key={result.position}
                             className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
+                            style={{ '--current-song': result.position } as React.CSSProperties}
                           >
                             {song.thumbnail && (
                               <img
@@ -364,13 +365,13 @@ export const PublicHome: React.FC = () => {
                               <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                                 <span className="truncate">{song.artist}</span>
                                 {song.isAustralian && (
-                                  <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                  <span className="bg-accent-dark text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                                     AUS
                                   </span>
                                 )}
                               </div>
                             </div>
-                            <div className="font-bold text-orange-600 text-sm sm:text-lg flex-shrink-0">
+                            <div className="font-bold text-accent text-sm sm:text-lg flex-shrink-0">
                               #{result.position}
                             </div>
                           </div>

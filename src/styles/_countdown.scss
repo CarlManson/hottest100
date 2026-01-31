@@ -50,3 +50,52 @@
         }
     }
 }
+
+// Countdown Progress 
+.countdown-progress-wrapper {
+    backdrop-filter: brightness(0.8);
+    outline: 1px solid hsl(from var(--accent-col-light) h s l / 0.6);
+    box-shadow: 0.5rem 0.5rem 1rem rgb(0 0 0 / 0.5);
+}
+
+.list-table {
+    container-type: inline-size;
+
+    .list-item-song {
+        --hotness: calc((201 - var(--current-song)) / 2);
+
+        font-size: max(2.1cqw, 1rem);
+        line-height: 1;
+
+        .song-info { 
+            display: flex;
+            flex-direction: row;
+            align-items: flex-end;
+            
+            font-weight: 600;
+            gap: 0.75rem;
+
+            .song-title { 
+                font-size: 1.4em;
+            
+            }
+            .song-artist { 
+                color: var(--color-gray-600); 
+            }
+
+            .aus-badge { background-color: var(--accent-col-dark); }
+        }
+
+        .position { 
+            font-size: 1.5em;
+            color: var(--accent-col-dark); 
+        }
+    } 
+}
+
+.progress-bar {
+
+    &-marker {
+        background: linear-gradient(90deg, var(--pre-accent-col-base), var(--accent-col-base), var(--post-accent-col-base));
+    }
+}

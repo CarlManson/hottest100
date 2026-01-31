@@ -37,7 +37,7 @@ export const CurrentSongCard: React.FC<CurrentSongCardProps> = ({
   variant = 'home',
   size = 'md',
   className = '',
-  id,
+  id = 'song',
   cardClassName = '',
 }) => {
   // Determine fallback gradient based on variant
@@ -82,23 +82,23 @@ export const CurrentSongCard: React.FC<CurrentSongCardProps> = ({
         )}
 
         {/* Position Badge */}
-        <div className={`absolute top-4 ${isNumberOne && variant === 'home' ? 'right-4' : 'left-4'} bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black text-4xl sm:text-5xl w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-xl border-4 border-white`}>
+        <div className={`song-card-number absolute top-4 ${isNumberOne && variant === 'home' ? 'right-4' : 'left-4'} text-white font-black text-4xl sm:text-5xl w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-xl border-4 border-white`}>
           {isNumberOne && variant === 'tv' ? '👑' : isNumberOne ? position : position}
         </div>
 
         {/* Song Info - Bottom Overlay */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 sm:p-8">
-          <div className="text-white">
-            <div className={`text-xs sm:text-sm font-bold ${labelColor} mb-2 uppercase tracking-wider`}>
+          <div className="song-details">
+            <div className={`rank-label`}>
               {displayLabel}
             </div>
-            <h3 className="text-2xl sm:text-3xl font-black mb-2 leading-tight">
+            <h3 className="song-name mb-2">
               {song.title}
             </h3>
-            <p className="text-lg sm:text-xl font-semibold text-gray-200 flex items-center gap-2">
+            <p className="artist-name flex items-center gap-2">
               {song.artist}
               {song.isAustralian && (
-                <span className="text-sm bg-orange-500 px-2 py-0.5 rounded-full">🦘</span>
+                <span className="aus-badge">AUS</span>
               )}
             </p>
           </div>

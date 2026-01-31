@@ -1,0 +1,69 @@
+@use 'variables' as *;
+
+body {
+    --hotness: calc((201 - var(--current-song)) / 2);
+}
+
+/* --- CONFIGURATION --- */
+$min: 1;
+$max: 100;
+$range: $max - $min;
+
+/* Define Start/End Colors (Hex or Name is fine!) */
+/* We will force Saturation/Lightness later to keep UI consistent */
+$c-start: #6ea4bc; /* Blue at 1 */ 
+$c-end:   #ff9d00; /* Red at 200 */ 
+
+/* Tuning */
+$sat: 85%;       /* Unified Saturation */
+$l-base: 50%;    /* Base Lightness */
+$l-light: 75%;   /* Light Variant */
+$l-dark: 38%;    /* Dark Variant */
+$shift: 45;      /* Hue shift amount (Unitless for Calc) */
+$rot-amp: 15deg; /* Rotation Amplitude */
+
+[style*=--current-song] {
+--hotness: calc((201 - var(--current-song)) / 2);
+
+  /* 1. CALCULATE MIX PERCENTAGE */
+  /* color-mix needs a percentage, so we convert our 0-1 fraction */
+  --progress: calc((var(--hotness) - #{$min}) / #{$range});
+  --mix-pct:  calc(var(--progress) * 100%);
+
+  /* 2. CREATE THE BASE COLOR (The Source of Truth) */
+  /* 'in hsl' interpolates around the color wheel */
+  /* Use 'shorter hue' (default) or 'longer hue' to control direction */
+  --c-source: color-mix(in hsl, #{$c-start}, #{$c-end} var(--mix-pct));
+
+  /* 3. GENERATE THE 9 VARIABLES USING RELATIVE COLOR SYNTAX */
+  /* We extract 'h' from the source, but FORCE 's' and 'l' to our constants */
+
+  /* GROUP A: Main Accent */
+  --accent-col-base:  hsl(from var(--c-source) h #{$sat} #{$l-base});
+  --accent-col-light: hsl(from var(--c-source) h #{$sat} #{$l-light});
+  --accent-col-dark:  hsl(from var(--c-source) h #{$sat} #{$l-dark});
+
+  /* GROUP B: Pre-Accent (Shift Hue Backward) */
+  --pre-accent-col-base:  hsl(from var(--c-source) calc(h - #{$shift}) #{$sat} #{$l-base});
+  --pre-accent-col-light: hsl(from var(--c-source) calc(h - #{$shift}) #{$sat} #{$l-light});
+  --pre-accent-col-dark:  hsl(from var(--c-source) calc(h - #{$shift}) #{$sat} #{$l-dark});
+
+  /* GROUP C: Post-Accent (Shift Hue Forward) */
+  --post-accent-col-base:  hsl(from var(--c-source) calc(h + #{$shift}) #{$sat} #{$l-base});
+  --post-accent-col-light: hsl(from var(--c-source) calc(h + #{$shift}) #{$sat} #{$l-light});
+  --post-accent-col-dark:  hsl(from var(--c-source) calc(h + #{$shift}) #{$sat} #{$l-dark});
+}
+
+.text-accent {
+  color: var(--accent-col-base);
+
+  &-dark { color: var(--accent-col-dark); }
+  &-light { color: var(--accent-col-light); }
+}
+
+.bg-accent {
+  background-color: var(--accent-col-base);
+
+  &-dark { background-color: var(--accent-col-dark); }
+  &-light { background-color: var(--accent-col-light); }
+}

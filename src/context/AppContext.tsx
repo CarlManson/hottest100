@@ -108,7 +108,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
   }, []);
 
-  // Update --hotness CSS variable on body when countdown results change
+  // Update --current-song CSS variable on body when countdown results change
   useEffect(() => {
     let currentPosition: number | null = null;
 
@@ -123,9 +123,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     if (currentPosition !== null) {
-      document.body.style.setProperty('--hotness', String(currentPosition));
+      document.body.style.setProperty('--current-song', String(currentPosition));
     } else {
-      document.body.style.removeProperty('--hotness');
+      document.body.style.removeProperty('--current-song');
     }
   }, [state.countdownResults, state.hottest200Results]);
 

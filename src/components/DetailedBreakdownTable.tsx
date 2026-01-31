@@ -160,7 +160,7 @@ export const DetailedBreakdownTable: React.FC = () => {
                         ? allResults.find(r => r.songId === vote.songId)?.position
                         : undefined;
                       const hotness = position != null
-                        ? Math.round(1 + ((position - 1) / 199) * 99)
+                        ? 100 * (200 - position) / 199
                         : undefined;
 
                       return (
@@ -171,7 +171,7 @@ export const DetailedBreakdownTable: React.FC = () => {
                               ? 'ranked-song'
                               : ''
                           }`}
-                          style={hotness != null ? { '--hotness': hotness } as React.CSSProperties : undefined}
+                          style={hotness != null ? { '--current-song': position } as React.CSSProperties : undefined}
                         >
                           {song ? (
                             <div className="text-center">
@@ -182,9 +182,12 @@ export const DetailedBreakdownTable: React.FC = () => {
                                 {song.artist}
                               </div>
                               {isInCountdown && (
-                                <div className="mt-1 text-xs sm:text-sm points">
-                                  +{score} pts
-                                </div>
+                                <>
+                                  <div className="mt-1 text-xs sm:text-sm points">
+                                    +{score} pts
+                                  </div>
+                                  <div className="position-marker bg-accent">{position}</div>
+                                </>
                               )}
                             </div>
                           ) : (
