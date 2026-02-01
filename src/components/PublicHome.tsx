@@ -142,10 +142,11 @@ export const PublicHome: React.FC = () => {
     return getPodiumQuip(currentPosition, leader, loser, margin);
   }, [countdownResults, hottest200Results, leaderboard]);
 
-  // Determine if the right column of the banner has content
-  const showCountdownTimer = countdown.isEnabled && !countdownStarted && !numberOneSong && songs.length === 0;
+  // Countdown timer visibility is controlled by CSS :has() based on marker elements
+  // This avoids React state sync issues that caused the "blink" bug
+  const showCountdownTimerBase = countdown.isEnabled && !countdownStarted && !numberOneSong;
   const showNumberOneSong = numberOneSong && numberOneSongData && !hasHottest200Started;
-  const hasBannerRightContent = showCountdownTimer || showNumberOneSong;
+  const hasBannerRightContent = (showCountdownTimerBase && songs.length === 0) || showNumberOneSong;
 
   return (
     <div className="min-h-screen">
@@ -205,8 +206,11 @@ export const PublicHome: React.FC = () => {
               </div>
             </div>
 
-            {/* Countdown Timer - shown before countdown starts (only if enabled and no songs added) */}
-            {showCountdownTimer && (
+            {/* Countdown Timer - visibility controlled by CSS :has() to avoid React state blink issues */}
+            {/* Hidden marker element for CSS :has() detection */}
+            {songs.length > 0 && <span data-has-songs hidden />}
+
+            {showCountdownTimerBase && (
               <div className="countdown">
                     <h3>Countdown Starts In</h3>
                     <div className="countdown-timer">
