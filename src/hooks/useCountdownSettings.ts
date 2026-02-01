@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 const COUNTDOWN_DATE_KEY = 'hottest100_countdown_date';
+const COUNTDOWN_CHANGE_EVENT = 'hottest100_countdown_change';
 
 export interface CountdownTime {
   days: number;
@@ -82,6 +83,8 @@ export const useCountdownSettings = (): CountdownSettings => {
   const setCountdownDate = useCallback((date: Date | null) => {
     writeCountdownDate(date);
     setCountdownDateState(date);
+    // Dispatch custom event for same-tab sync (storage event only fires cross-tab)
+    window.dispatchEvent(new CustomEvent(COUNTDOWN_CHANGE_EVENT));
   }, []);
 
   return {
@@ -94,13 +97,16 @@ export const useCountdownSettings = (): CountdownSettings => {
 /**
  * Hook to get countdown time values
  * Combines settings with timer logic
+ *
+ * Uses a ref to cache the countdown date to prevent race conditions
+ * when other state changes trigger re-renders
  */
 export const useCountdown = (): CountdownTime & { isEnabled: boolean } => {
-  // Read directly from localStorage for the most accurate value
-  const getCountdownDate = useCallback(() => readCountdownDate(), []);
+  // Cache the countdown date in a ref to prevent race conditions
+  // Only update this ref on mount, storage events, or focus events
+  const countdownDateRef = useRef<Date | null>(readCountdownDate());
 
-  const [state, setState] = useState<CountdownTime & { isEnabled: boolean }>(() => {
-    const date = getCountdownDate();
+  const calculateState = useCallback((date: Date | null): CountdownTime & { isEnabled: boolean } => {
     if (!date) {
       return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true, isEnabled: false };
     }
@@ -117,51 +123,42 @@ export const useCountdown = (): CountdownTime & { isEnabled: boolean } => {
       isStarted: false,
       isEnabled: true,
     };
-  });
+  }, []);
+
+  const [state, setState] = useState<CountdownTime & { isEnabled: boolean }>(() =>
+    calculateState(countdownDateRef.current)
+  );
 
   useEffect(() => {
+    // Update countdown based on cached date (doesn't re-read localStorage)
     const updateCountdown = () => {
-      const date = getCountdownDate();
+      setState(calculateState(countdownDateRef.current));
+    };
 
-      if (!date) {
-        setState({ days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true, isEnabled: false });
-        return;
-      }
-
-      const now = new Date();
-      const diff = date.getTime() - now.getTime();
-
-      if (diff <= 0) {
-        setState({ days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true, isEnabled: true });
-        return;
-      }
-
-      setState({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((diff % (1000 * 60)) / 1000),
-        isStarted: false,
-        isEnabled: true,
-      });
+    // Sync from localStorage - only called on storage/focus events
+    const syncFromStorage = () => {
+      countdownDateRef.current = readCountdownDate();
+      updateCountdown();
     };
 
     // Update immediately
     updateCountdown();
 
-    // Then update every second
+    // Then update every second (uses cached date)
     const timer = setInterval(updateCountdown, 1000);
 
-    // Also update when storage changes or window gets focus
-    window.addEventListener('storage', updateCountdown);
-    window.addEventListener('focus', updateCountdown);
+    // Only re-read localStorage on storage/focus/custom events
+    window.addEventListener('storage', syncFromStorage);
+    window.addEventListener('focus', syncFromStorage);
+    window.addEventListener(COUNTDOWN_CHANGE_EVENT, syncFromStorage);
 
     return () => {
       clearInterval(timer);
-      window.removeEventListener('storage', updateCountdown);
-      window.removeEventListener('focus', updateCountdown);
+      window.removeEventListener('storage', syncFromStorage);
+      window.removeEventListener('focus', syncFromStorage);
+      window.removeEventListener(COUNTDOWN_CHANGE_EVENT, syncFromStorage);
     };
-  }, [getCountdownDate]);
+  }, [calculateState]);
 
   return state;
 };
