@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 
 const COUNTDOWN_DATE_KEY = 'hottest100_countdown_date';
 
@@ -16,45 +16,37 @@ export interface CountdownSettings {
   isEnabled: boolean;
 }
 
-// Helper to read countdown date from localStorage
-const getStoredCountdownDate = (): Date | null => {
-  const stored = localStorage.getItem(COUNTDOWN_DATE_KEY);
-  if (stored) {
-    const date = new Date(stored);
-    if (!isNaN(date.getTime())) {
-      return date;
-    }
-  }
-  return null;
+// Subscribers for external store
+let listeners: Array<() => void> = [];
+
+const subscribe = (listener: () => void) => {
+  listeners = [...listeners, listener];
+  return () => {
+    listeners = listeners.filter(l => l !== listener);
+  };
+};
+
+const notifyListeners = () => {
+  listeners.forEach(listener => listener());
+};
+
+// Snapshot function for useSyncExternalStore
+const getSnapshot = (): string | null => {
+  return localStorage.getItem(COUNTDOWN_DATE_KEY);
 };
 
 /**
  * Hook to manage countdown date settings stored in localStorage
- * Syncs across components via custom events
+ * Uses useSyncExternalStore for reliable cross-component sync
  */
 export const useCountdownSettings = (): CountdownSettings => {
-  const [countdownDate, setCountdownDateState] = useState<Date | null>(getStoredCountdownDate);
+  // Subscribe to localStorage changes
+  const storedValue = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
-  // Listen for changes from other components
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setCountdownDateState(getStoredCountdownDate());
-    };
-
-    // Listen for custom event (same-tab updates)
-    window.addEventListener('countdown-date-changed', handleStorageChange);
-    // Listen for storage event (cross-tab updates)
-    window.addEventListener('storage', (e) => {
-      if (e.key === COUNTDOWN_DATE_KEY) {
-        handleStorageChange();
-      }
-    });
-
-    return () => {
-      window.removeEventListener('countdown-date-changed', handleStorageChange);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
+  const countdownDate = storedValue ? (() => {
+    const date = new Date(storedValue);
+    return isNaN(date.getTime()) ? null : date;
+  })() : null;
 
   const setCountdownDate = useCallback((date: Date | null) => {
     if (date) {
@@ -62,9 +54,8 @@ export const useCountdownSettings = (): CountdownSettings => {
     } else {
       localStorage.removeItem(COUNTDOWN_DATE_KEY);
     }
-    setCountdownDateState(date);
-    // Dispatch custom event to notify other components in the same tab
-    window.dispatchEvent(new Event('countdown-date-changed'));
+    // Notify all subscribers that the value changed
+    notifyListeners();
   }, []);
 
   return {
