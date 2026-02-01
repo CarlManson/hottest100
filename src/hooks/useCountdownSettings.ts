@@ -94,17 +94,29 @@ export const useCountdownSettings = (): CountdownSettings => {
   };
 };
 
+// Module-level cache to persist across component unmounts/remounts
+let cachedCountdownDate: Date | null = readCountdownDate();
+let cacheInitialized = false;
+
+// Initialize cache on module load
+const initCache = () => {
+  if (!cacheInitialized) {
+    cachedCountdownDate = readCountdownDate();
+    cacheInitialized = true;
+  }
+};
+
 /**
  * Hook to get countdown time values
  * Combines settings with timer logic
  *
- * Uses a ref to cache the countdown date to prevent race conditions
- * when other state changes trigger re-renders
+ * Uses a module-level cache to persist countdown date across component
+ * unmounts/remounts, preventing the "blink" issue when other state changes
+ * cause React to remount components.
  */
 export const useCountdown = (): CountdownTime & { isEnabled: boolean } => {
-  // Cache the countdown date in a ref to prevent race conditions
-  // Only update this ref on mount, storage events, or focus events
-  const countdownDateRef = useRef<Date | null>(readCountdownDate());
+  // Ensure cache is initialized
+  initCache();
 
   const calculateState = useCallback((date: Date | null): CountdownTime & { isEnabled: boolean } => {
     if (!date) {
@@ -126,28 +138,28 @@ export const useCountdown = (): CountdownTime & { isEnabled: boolean } => {
   }, []);
 
   const [state, setState] = useState<CountdownTime & { isEnabled: boolean }>(() =>
-    calculateState(countdownDateRef.current)
+    calculateState(cachedCountdownDate)
   );
 
   useEffect(() => {
-    // Update countdown based on cached date (doesn't re-read localStorage)
+    // Update countdown based on cached date
     const updateCountdown = () => {
-      setState(calculateState(countdownDateRef.current));
+      setState(calculateState(cachedCountdownDate));
     };
 
-    // Sync from localStorage - only called on storage/focus events
+    // Sync from localStorage - updates module-level cache
     const syncFromStorage = () => {
-      countdownDateRef.current = readCountdownDate();
+      cachedCountdownDate = readCountdownDate();
       updateCountdown();
     };
 
     // Update immediately
     updateCountdown();
 
-    // Then update every second (uses cached date)
+    // Then update every second
     const timer = setInterval(updateCountdown, 1000);
 
-    // Only re-read localStorage on storage/focus/custom events
+    // Listen for storage/focus/custom events
     window.addEventListener('storage', syncFromStorage);
     window.addEventListener('focus', syncFromStorage);
     window.addEventListener(COUNTDOWN_CHANGE_EVENT, syncFromStorage);
