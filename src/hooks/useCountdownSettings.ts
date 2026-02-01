@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const COUNTDOWN_DATE_KEY = 'hottest100_countdown_date';
 
@@ -16,37 +16,55 @@ export interface CountdownSettings {
   isEnabled: boolean;
 }
 
-// Subscribers for external store
-let listeners: Array<() => void> = [];
-
-const subscribe = (listener: () => void) => {
-  listeners = [...listeners, listener];
-  return () => {
-    listeners = listeners.filter(l => l !== listener);
-  };
-};
-
-const notifyListeners = () => {
-  listeners.forEach(listener => listener());
-};
-
-// Snapshot function for useSyncExternalStore
-const getSnapshot = (): string | null => {
-  return localStorage.getItem(COUNTDOWN_DATE_KEY);
+// Parse the stored date string
+const getCountdownDateFromStorage = (): Date | null => {
+  const stored = localStorage.getItem(COUNTDOWN_DATE_KEY);
+  if (!stored) return null;
+  const date = new Date(stored);
+  return isNaN(date.getTime()) ? null : date;
 };
 
 /**
  * Hook to manage countdown date settings stored in localStorage
- * Uses useSyncExternalStore for reliable cross-component sync
+ * Simple implementation that reads directly from localStorage
  */
 export const useCountdownSettings = (): CountdownSettings => {
-  // Subscribe to localStorage changes
-  const storedValue = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const [countdownDate, setCountdownDateState] = useState<Date | null>(getCountdownDateFromStorage);
 
-  const countdownDate = storedValue ? (() => {
-    const date = new Date(storedValue);
-    return isNaN(date.getTime()) ? null : date;
-  })() : null;
+  // Re-sync from localStorage periodically and on visibility change
+  useEffect(() => {
+    const syncFromStorage = () => {
+      const stored = getCountdownDateFromStorage();
+      setCountdownDateState(current => {
+        // Only update if actually different to avoid unnecessary re-renders
+        if (current?.getTime() !== stored?.getTime()) {
+          return stored;
+        }
+        return current;
+      });
+    };
+
+    // Sync when tab becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncFromStorage();
+      }
+    };
+
+    // Sync every second (piggyback on the countdown timer updates)
+    const interval = setInterval(syncFromStorage, 1000);
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('storage', syncFromStorage);
+    window.addEventListener('focus', syncFromStorage);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('storage', syncFromStorage);
+      window.removeEventListener('focus', syncFromStorage);
+    };
+  }, []);
 
   const setCountdownDate = useCallback((date: Date | null) => {
     if (date) {
@@ -54,8 +72,7 @@ export const useCountdownSettings = (): CountdownSettings => {
     } else {
       localStorage.removeItem(COUNTDOWN_DATE_KEY);
     }
-    // Notify all subscribers that the value changed
-    notifyListeners();
+    setCountdownDateState(date);
   }, []);
 
   return {
