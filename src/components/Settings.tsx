@@ -155,9 +155,20 @@ export const Settings: React.FC = () => {
   };
 
   const handleSetDefaultDate = () => {
-    // Default: Jan 25, 2026 at 12:00 PM local time (typical Hottest 100 start)
-    const defaultDate = new Date(2026, 0, 25, 12, 0, 0);
-    setCountdownDateInput(formatDateForInput(defaultDate));
+    // Default: Saturday of Australia Day weekend (around Jan 25) at 9:00 AM AWST
+    // AWST is UTC+8, so we create the date in UTC and convert to local
+    const now = new Date();
+    let year = now.getFullYear();
+
+    // If we're past January 25 this year, use next year
+    const thisYearDate = new Date(Date.UTC(year, 0, 25, 1, 0, 0)); // 9am AWST = 1am UTC
+    if (now > thisYearDate) {
+      year += 1;
+    }
+
+    // Create date as 9am AWST (1am UTC) on Jan 25
+    const defaultDateUTC = new Date(Date.UTC(year, 0, 25, 1, 0, 0));
+    setCountdownDateInput(formatDateForInput(defaultDateUTC));
   };
 
   // Songs handlers
@@ -418,11 +429,11 @@ export const Settings: React.FC = () => {
                     onClick={handleSetDefaultDate}
                     className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition text-sm"
                   >
-                    Use 2026 Default
+                    Use Default (Jan 25, 9am AWST)
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Typically the Saturday of the Australia Day long weekend at 12:00 PM AEDT
+                  Typically the Saturday of the Australia Day long weekend at 9:00 AM AWST
                 </p>
               </div>
 
@@ -506,8 +517,8 @@ export const Settings: React.FC = () => {
               <li>• The countdown timer appears in a blue banner on the Dashboard and Public Home page</li>
               <li>• Once the countdown reaches zero, the timer automatically hides</li>
               <li>• This setting is stored locally in your browser</li>
-              <li>• The Hottest 100 typically starts at 12:00 PM AEDT on the Saturday of Australia Day weekend</li>
-              <li>• For 2026, the expected date is Saturday, January 25th</li>
+              <li>• The Hottest 100 typically starts at 9:00 AM AWST on the Saturday of Australia Day weekend</li>
+              <li>• The default button sets January 25th of the next upcoming year</li>
             </ul>
           </div>
         </div>
