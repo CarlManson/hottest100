@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 const COUNTDOWN_DATE_KEY = 'hottest100_countdown_date';
+const COUNTDOWN_CHANGE_EVENT = 'hottest100_countdown_change';
 
 export interface CountdownTime {
   days: number;
@@ -16,63 +17,74 @@ export interface CountdownSettings {
   isEnabled: boolean;
 }
 
-// Parse the stored date string
-const getCountdownDateFromStorage = (): Date | null => {
-  const stored = localStorage.getItem(COUNTDOWN_DATE_KEY);
-  if (!stored) return null;
-  const date = new Date(stored);
-  return isNaN(date.getTime()) ? null : date;
+// Read countdown date from localStorage
+const readCountdownDate = (): Date | null => {
+  try {
+    const stored = localStorage.getItem(COUNTDOWN_DATE_KEY);
+    if (!stored) return null;
+    const date = new Date(stored);
+    return isNaN(date.getTime()) ? null : date;
+  } catch {
+    return null;
+  }
+};
+
+// Write countdown date to localStorage
+const writeCountdownDate = (date: Date | null): void => {
+  try {
+    if (date) {
+      localStorage.setItem(COUNTDOWN_DATE_KEY, date.toISOString());
+    } else {
+      localStorage.removeItem(COUNTDOWN_DATE_KEY);
+    }
+  } catch {
+    // Ignore localStorage errors
+  }
 };
 
 /**
- * Hook to manage countdown date settings stored in localStorage
- * Simple implementation that reads directly from localStorage
+ * Hook to manage countdown date settings
+ * Reads directly from localStorage to avoid sync issues
  */
 export const useCountdownSettings = (): CountdownSettings => {
-  const [countdownDate, setCountdownDateState] = useState<Date | null>(getCountdownDateFromStorage);
+  // Read initial value from localStorage
+  const [countdownDate, setCountdownDateState] = useState<Date | null>(() => readCountdownDate());
 
-  // Re-sync from localStorage periodically and on visibility change
+  // Keep a ref to track if we've mounted
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  // Sync with localStorage on mount and when storage changes
   useEffect(() => {
     const syncFromStorage = () => {
-      const stored = getCountdownDateFromStorage();
-      setCountdownDateState(current => {
-        // Only update if actually different to avoid unnecessary re-renders
-        if (current?.getTime() !== stored?.getTime()) {
-          return stored;
-        }
-        return current;
-      });
+      if (!isMounted.current) return;
+      const stored = readCountdownDate();
+      setCountdownDateState(stored);
     };
 
-    // Sync when tab becomes visible
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        syncFromStorage();
-      }
-    };
-
-    // Sync every second (piggyback on the countdown timer updates)
-    const interval = setInterval(syncFromStorage, 1000);
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Listen for storage events from other tabs
     window.addEventListener('storage', syncFromStorage);
+
+    // Also sync on focus in case another tab changed it
     window.addEventListener('focus', syncFromStorage);
 
     return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('storage', syncFromStorage);
       window.removeEventListener('focus', syncFromStorage);
     };
   }, []);
 
   const setCountdownDate = useCallback((date: Date | null) => {
-    if (date) {
-      localStorage.setItem(COUNTDOWN_DATE_KEY, date.toISOString());
-    } else {
-      localStorage.removeItem(COUNTDOWN_DATE_KEY);
-    }
+    writeCountdownDate(date);
     setCountdownDateState(date);
+    // Dispatch custom event for same-tab sync (storage event only fires cross-tab)
+    window.dispatchEvent(new CustomEvent(COUNTDOWN_CHANGE_EVENT));
   }, []);
 
   return {
@@ -83,57 +95,72 @@ export const useCountdownSettings = (): CountdownSettings => {
 };
 
 /**
- * Hook to calculate countdown time remaining
- * Uses the stored countdown date from localStorage
+ * Hook to get countdown time values
+ * Combines settings with timer logic
+ *
+ * Uses a ref to cache the countdown date to prevent race conditions
+ * when other state changes trigger re-renders
  */
 export const useCountdown = (): CountdownTime & { isEnabled: boolean } => {
-  const { countdownDate, isEnabled } = useCountdownSettings();
+  // Cache the countdown date in a ref to prevent race conditions
+  // Only update this ref on mount, storage events, or focus events
+  const countdownDateRef = useRef<Date | null>(readCountdownDate());
 
-  const calculateTimeLeft = useCallback((): CountdownTime => {
-    if (!countdownDate) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true };
+  const calculateState = useCallback((date: Date | null): CountdownTime & { isEnabled: boolean } => {
+    if (!date) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true, isEnabled: false };
     }
-
     const now = new Date();
-    const diff = countdownDate.getTime() - now.getTime();
-
+    const diff = date.getTime() - now.getTime();
     if (diff <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true };
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true, isEnabled: true };
     }
-
     return {
       days: Math.floor(diff / (1000 * 60 * 60 * 24)),
       hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
       minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
       seconds: Math.floor((diff % (1000 * 60)) / 1000),
       isStarted: false,
+      isEnabled: true,
     };
-  }, [countdownDate]);
+  }, []);
 
-  const [timeLeft, setTimeLeft] = useState<CountdownTime>(calculateTimeLeft);
+  const [state, setState] = useState<CountdownTime & { isEnabled: boolean }>(() =>
+    calculateState(countdownDateRef.current)
+  );
 
   useEffect(() => {
-    // Recalculate when countdown date changes
-    setTimeLeft(calculateTimeLeft());
+    // Update countdown based on cached date (doesn't re-read localStorage)
+    const updateCountdown = () => {
+      setState(calculateState(countdownDateRef.current));
+    };
 
-    if (!countdownDate) return;
+    // Sync from localStorage - only called on storage/focus events
+    const syncFromStorage = () => {
+      countdownDateRef.current = readCountdownDate();
+      updateCountdown();
+    };
 
-    const timer = setInterval(() => {
-      const newTimeLeft = calculateTimeLeft();
-      setTimeLeft(newTimeLeft);
+    // Update immediately
+    updateCountdown();
 
-      if (newTimeLeft.isStarted) {
-        clearInterval(timer);
-      }
-    }, 1000);
+    // Then update every second (uses cached date)
+    const timer = setInterval(updateCountdown, 1000);
 
-    return () => clearInterval(timer);
-  }, [countdownDate, calculateTimeLeft]);
+    // Only re-read localStorage on storage/focus/custom events
+    window.addEventListener('storage', syncFromStorage);
+    window.addEventListener('focus', syncFromStorage);
+    window.addEventListener(COUNTDOWN_CHANGE_EVENT, syncFromStorage);
 
-  return {
-    ...timeLeft,
-    isEnabled,
-  };
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('storage', syncFromStorage);
+      window.removeEventListener('focus', syncFromStorage);
+      window.removeEventListener(COUNTDOWN_CHANGE_EVENT, syncFromStorage);
+    };
+  }, [calculateState]);
+
+  return state;
 };
 
 /**
