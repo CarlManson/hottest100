@@ -5,11 +5,13 @@ import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 import { CountdownQuip } from './CountdownQuip';
 import { CurrentSongCard } from './CurrentSongCard';
+import { useCountdown } from '../hooks/useCountdownSettings';
 import logo from '../assets/fairest-100-logo.png';
 
 // TV Mode - Simplified view for large screens
 export const TVMode: React.FC = () => {
-  const { familyMembers, countdownResults, hottest200Results, songs } = useApp();
+  const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
+  const countdown = useCountdown();
 
   // Add data-display-mode attribute to body when TV mode is active
   useEffect(() => {
@@ -22,6 +24,9 @@ export const TVMode: React.FC = () => {
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
+
+  // Pre-countdown mode: countdown enabled, not started, and no results yet
+  const isPreCountdownMode = countdown.isEnabled && !countdown.isStarted && totalResults === 0;
 
   // Calculate ranks with tie handling
   const getRank = useMemo(() => {
@@ -122,6 +127,76 @@ export const TVMode: React.FC = () => {
     const margin = leaderboard.length > 1 ? leaderboard[0].score - leaderboard[1].score : leaderboard[0].score;
     return getPodiumQuip(currentPosition, leader, loser, margin);
   }, [countdownResults, hottest200Results, leaderboard]);
+
+  // Pre-countdown mode layout
+  if (isPreCountdownMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <a href="#home" className="home-link">← Back to Home</a>
+
+        <div className="min-h-screen flex flex-col items-center justify-center p-8" id="tv-mode-container">
+          <div className="pre-countdown-content text-center max-w-4xl mx-auto">
+            {/* Logo */}
+            <img src={logo} alt="Fairest 100 Logo" className="pre-countdown-logo mx-auto mb-8" />
+
+            {/* Countdown Timer */}
+            <div className="countdown mb-12">
+              <h3>Countdown Starts In</h3>
+              <div className="countdown-timer">
+                <div className="countdown-ticker">
+                  <div className="big-number">{String(countdown.days).padStart(2, '0')}</div>
+                  <div className="small-text">Days</div>
+                </div>
+                <div className="countdown-ticker">
+                  <div className="big-number">{String(countdown.hours).padStart(2, '0')}</div>
+                  <div className="small-text">Hours</div>
+                </div>
+                <div className="countdown-ticker">
+                  <div className="big-number">{String(countdown.minutes).padStart(2, '0')}</div>
+                  <div className="small-text">Minutes</div>
+                </div>
+                <div className="countdown-ticker">
+                  <div className="big-number">{String(countdown.seconds).padStart(2, '0')}</div>
+                  <div className="small-text">Seconds</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Participants List */}
+            {familyMembers.length > 0 && (
+              <div className="participants-section">
+                <h3 className="text-2xl font-bold text-white mb-6 drop-shadow-lg">
+                  Predictions Submitted
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {familyMembers.map((member) => {
+                    const profile = getProfileForMember(member.id);
+                    return (
+                      <div
+                        key={member.id}
+                        className="participant-card bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+                      >
+                        <div className="text-white font-bold text-lg">{member.name}</div>
+                        {profile?.label && (
+                          <div className="text-white/70 text-sm mt-1">{profile.label}</div>
+                        )}
+                        <div className="text-white/60 text-xs mt-2">
+                          {member.votes.length}/10 picks
+                        </div>
+                        {member.votes.length === 10 && (
+                          <div className="text-green-400 text-sm mt-1">✓ Ready</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
