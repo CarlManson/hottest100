@@ -167,6 +167,12 @@
         box-shadow: 0.5rem 0.5rem 1rem rgb(0 0 0 / 0.5);
     }
 
+    // Hide pre-countdown content when songs are added (for testing purposes)
+    // Uses CSS :has() to detect the marker element, avoiding React state sync issues
+    &:has([data-has-songs]) .pre-countdown-content {
+        display: none;
+    }
+
     // Pre-countdown mode styles
     .pre-countdown-content {
         .pre-countdown-logo {

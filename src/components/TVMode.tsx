@@ -25,8 +25,9 @@ export const TVMode: React.FC = () => {
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
 
-  // Pre-countdown mode: countdown enabled, not started, no results, and no songs added yet
-  const isPreCountdownMode = countdown.isEnabled && !countdown.isStarted && totalResults === 0 && songs.length === 0;
+  // Pre-countdown mode: countdown enabled, not started, no results
+  // The songs.length check is now handled by CSS :has() to avoid React state blink issues
+  const isPreCountdownModeBase = countdown.isEnabled && !countdown.isStarted && totalResults === 0;
 
   // Calculate ranks with tie handling
   const getRank = useMemo(() => {
@@ -128,11 +129,14 @@ export const TVMode: React.FC = () => {
     return getPodiumQuip(currentPosition, leader, loser, margin);
   }, [countdownResults, hottest200Results, leaderboard]);
 
-  // Pre-countdown mode layout
-  if (isPreCountdownMode) {
+  // Pre-countdown mode layout - visibility controlled by CSS :has() based on songs marker
+  if (isPreCountdownModeBase) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
         <a href="#home" className="home-link">← Back to Home</a>
+
+        {/* Hidden marker element for CSS :has() detection */}
+        {songs.length > 0 && <span data-has-songs hidden />}
 
         <div className="min-h-screen flex flex-col items-center justify-center p-8" id="tv-mode-container">
           <div className="pre-countdown-content text-center max-w-4xl mx-auto">
