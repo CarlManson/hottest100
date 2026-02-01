@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import type { Song } from '../types';
+import { useCountdownSettings, useCountdown, formatDateForInput, parseDateFromInput } from '../hooks/useCountdownSettings';
 
 const DEFAULT_LABEL_PROMPT = `You're a cheeky Aussie music critic analyzing someone's Hottest 100 picks. Be funny, playful, and engaging.
 
@@ -34,7 +35,7 @@ Be observant, funny, and engaging about their musical preferences. Keep it frien
 Return format:
 MUSIC_TASTE: [Your 3-4 sentence analysis here]`;
 
-type TabType = 'ai' | 'songs' | 'data';
+type TabType = 'event' | 'ai' | 'songs' | 'data';
 
 export const Settings: React.FC = () => {
   const {
@@ -52,7 +53,12 @@ export const Settings: React.FC = () => {
   } = useApp();
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<TabType>('ai');
+  const [activeTab, setActiveTab] = useState<TabType>('event');
+
+  // Countdown settings
+  const { countdownDate, setCountdownDate, isEnabled: isCountdownEnabled } = useCountdownSettings();
+  const countdown = useCountdown();
+  const [countdownDateInput, setCountdownDateInput] = useState<string>('');
 
   // AI Prompts state
   const [labelPrompt, setLabelPrompt] = useState(DEFAULT_LABEL_PROMPT);
@@ -84,6 +90,15 @@ export const Settings: React.FC = () => {
     if (savedLabelPrompt) setLabelPrompt(savedLabelPrompt);
     if (savedMusicTastePrompt) setMusicTastePrompt(savedMusicTastePrompt);
   }, []);
+
+  // Initialize countdown date input when countdown date changes
+  useEffect(() => {
+    if (countdownDate) {
+      setCountdownDateInput(formatDateForInput(countdownDate));
+    } else {
+      setCountdownDateInput('');
+    }
+  }, [countdownDate]);
 
   // Get unique artists for autocomplete
   const uniqueArtists = useMemo(() => {
@@ -117,6 +132,32 @@ export const Settings: React.FC = () => {
       setSaveMessage('Error resetting rate limit');
       setTimeout(() => setSaveMessage(''), 3000);
     }
+  };
+
+  // Event/Countdown handlers
+  const handleSetCountdownDate = () => {
+    const date = parseDateFromInput(countdownDateInput);
+    if (date) {
+      setCountdownDate(date);
+      setSaveMessage('Countdown date saved!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } else {
+      setSaveMessage('Please enter a valid date and time');
+      setTimeout(() => setSaveMessage(''), 3000);
+    }
+  };
+
+  const handleClearCountdownDate = () => {
+    setCountdownDate(null);
+    setCountdownDateInput('');
+    setSaveMessage('Countdown timer disabled');
+    setTimeout(() => setSaveMessage(''), 3000);
+  };
+
+  const handleSetDefaultDate = () => {
+    // Default: Jan 25, 2026 at 12:00 PM local time (typical Hottest 100 start)
+    const defaultDate = new Date(2026, 0, 25, 12, 0, 0);
+    setCountdownDateInput(formatDateForInput(defaultDate));
   };
 
   // Songs handlers
@@ -302,10 +343,20 @@ export const Settings: React.FC = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200">
+      <div className="flex gap-2 mb-6 border-b border-gray-200 overflow-x-auto">
+        <button
+          onClick={() => setActiveTab('event')}
+          className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
+            activeTab === 'event'
+              ? 'text-orange-600 border-b-2 border-orange-600'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          📅 Event
+        </button>
         <button
           onClick={() => setActiveTab('ai')}
-          className={`px-4 py-2 font-semibold transition ${
+          className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
             activeTab === 'ai'
               ? 'text-orange-600 border-b-2 border-orange-600'
               : 'text-gray-600 hover:text-gray-800'
@@ -315,7 +366,7 @@ export const Settings: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('songs')}
-          className={`px-4 py-2 font-semibold transition ${
+          className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
             activeTab === 'songs'
               ? 'text-orange-600 border-b-2 border-orange-600'
               : 'text-gray-600 hover:text-gray-800'
@@ -325,7 +376,7 @@ export const Settings: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('data')}
-          className={`px-4 py-2 font-semibold transition ${
+          className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
             activeTab === 'data'
               ? 'text-orange-600 border-b-2 border-orange-600'
               : 'text-gray-600 hover:text-gray-800'
@@ -338,6 +389,127 @@ export const Settings: React.FC = () => {
       {saveMessage && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
           {saveMessage}
+        </div>
+      )}
+
+      {/* Event Tab */}
+      {activeTab === 'event' && (
+        <div className="space-y-6">
+          {/* Countdown Date/Time Setting */}
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Countdown Timer</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Set the date and time when the Hottest 100 countdown begins. The countdown timer will appear in the blue banner on the dashboard and public home page.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Countdown Start Date & Time
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="datetime-local"
+                    value={countdownDateInput}
+                    onChange={(e) => setCountdownDateInput(e.target.value)}
+                    className="flex-1 p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none"
+                  />
+                  <button
+                    onClick={handleSetDefaultDate}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition text-sm"
+                  >
+                    Use 2026 Default
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Typically the Saturday of the Australia Day long weekend at 12:00 PM AEDT
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleSetCountdownDate}
+                  disabled={!countdownDateInput}
+                  className="px-6 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold rounded-lg hover:from-orange-600 hover:to-pink-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  💾 Save Countdown Date
+                </button>
+                {isCountdownEnabled && (
+                  <button
+                    onClick={handleClearCountdownDate}
+                    className="px-6 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition"
+                  >
+                    🗑️ Disable Countdown
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Current Status */}
+          <div className={`rounded-lg shadow-md p-4 sm:p-6 ${isCountdownEnabled ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800' : 'bg-gray-100'}`}>
+            <h2 className={`text-lg sm:text-xl font-bold mb-4 ${isCountdownEnabled ? 'text-white' : 'text-gray-800'}`}>
+              {isCountdownEnabled ? '⏰ Countdown Status' : '⏰ Countdown Disabled'}
+            </h2>
+
+            {isCountdownEnabled && countdownDate ? (
+              countdown.isStarted ? (
+                <div className="text-center py-4">
+                  <div className="text-2xl sm:text-3xl font-black text-white mb-2">
+                    The Countdown Has Started!
+                  </div>
+                  <p className="text-white/80">
+                    The countdown timer is no longer visible as the event has begun.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <div className="text-white/80 text-xs sm:text-sm font-semibold mb-2 uppercase tracking-wide text-center">
+                    Countdown Starts In
+                  </div>
+                  <div className="flex justify-center gap-2 sm:gap-4">
+                    <div className="bg-white rounded-lg px-3 sm:px-6 py-2 sm:py-4 min-w-[60px] sm:min-w-[80px] text-center">
+                      <div className="text-2xl sm:text-4xl font-black text-gray-800">{String(countdown.days).padStart(2, '0')}</div>
+                      <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase">Days</div>
+                    </div>
+                    <div className="bg-white rounded-lg px-3 sm:px-6 py-2 sm:py-4 min-w-[60px] sm:min-w-[80px] text-center">
+                      <div className="text-2xl sm:text-4xl font-black text-gray-800">{String(countdown.hours).padStart(2, '0')}</div>
+                      <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase">Hours</div>
+                    </div>
+                    <div className="bg-white rounded-lg px-3 sm:px-6 py-2 sm:py-4 min-w-[60px] sm:min-w-[80px] text-center">
+                      <div className="text-2xl sm:text-4xl font-black text-gray-800">{String(countdown.minutes).padStart(2, '0')}</div>
+                      <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase">Minutes</div>
+                    </div>
+                    <div className="bg-white rounded-lg px-3 sm:px-6 py-2 sm:py-4 min-w-[60px] sm:min-w-[80px] text-center">
+                      <div className="text-2xl sm:text-4xl font-black text-gray-800">{String(countdown.seconds).padStart(2, '0')}</div>
+                      <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase">Seconds</div>
+                    </div>
+                  </div>
+                  <p className="text-white/80 text-center text-sm mt-4">
+                    Counting down to: {countdownDate.toLocaleString()}
+                  </p>
+                </div>
+              )
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-gray-600">
+                  No countdown date is set. Set a date above to enable the countdown timer on the dashboard.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Info Section */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="font-bold text-blue-900 mb-2 text-sm sm:text-base">ℹ️ About the Countdown Timer</h3>
+            <ul className="text-xs sm:text-sm text-blue-800 space-y-1">
+              <li>• The countdown timer appears in a blue banner on the Dashboard and Public Home page</li>
+              <li>• Once the countdown reaches zero, the timer automatically hides</li>
+              <li>• This setting is stored locally in your browser</li>
+              <li>• The Hottest 100 typically starts at 12:00 PM AEDT on the Saturday of Australia Day weekend</li>
+              <li>• For 2026, the expected date is Saturday, January 25th</li>
+            </ul>
+          </div>
         </div>
       )}
 
