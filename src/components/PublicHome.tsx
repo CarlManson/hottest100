@@ -142,6 +142,11 @@ export const PublicHome: React.FC = () => {
     return getPodiumQuip(currentPosition, leader, loser, margin);
   }, [countdownResults, hottest200Results, leaderboard]);
 
+  // Determine if the right column of the banner has content
+  const showCountdownTimer = countdown.isEnabled && !countdownStarted && !numberOneSong && songs.length === 0;
+  const showNumberOneSong = numberOneSong && numberOneSongData && !hasHottest200Started;
+  const hasBannerRightContent = showCountdownTimer || showNumberOneSong;
+
   return (
     <div className="min-h-screen">
       {/* Hero Section with Banner Background */}
@@ -151,9 +156,9 @@ export const PublicHome: React.FC = () => {
       >
         <div className="absolute inset-0 bg-black/30"></div>
         <div className="relative max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div className={`grid grid-cols-1 ${hasBannerRightContent ? 'xl:grid-cols-2' : ''} gap-8 lg:gap-12 items-center`}>
             {/* Title and Progress */}
-            <div className="text-center xl:text-left text-white">
+            <div className={`text-white ${hasBannerRightContent ? 'text-center xl:text-left' : 'text-center'}`}>
               <h1 className="text-3xl sm:text-5xl lg:text-6xl 2xl:text-7xl font-black mb-4 drop-shadow-lg">
                 {hasHottest200Started ? 'Triple J Hottest 200 Tracker' : 'Triple J Hottest 100 Tracker'}
               </h1>
@@ -200,8 +205,8 @@ export const PublicHome: React.FC = () => {
               </div>
             </div>
 
-            {/* Countdown Timer - shown before countdown starts (only if enabled in settings) */}
-            {countdown.isEnabled && !countdownStarted && !numberOneSong && (
+            {/* Countdown Timer - shown before countdown starts (only if enabled and no songs added) */}
+            {showCountdownTimer && (
               <div className="countdown">
                     <h3>Countdown Starts In</h3>
                     <div className="countdown-timer">
@@ -226,7 +231,7 @@ export const PublicHome: React.FC = () => {
             )}
 
             {/* #1 Song Card - Only when available and Hottest 200 NOT started */}
-            {numberOneSong && numberOneSongData && !hasHottest200Started && (
+            {showNumberOneSong && (
               <CurrentSongCard
                 song={numberOneSongData}
                 position={1}
