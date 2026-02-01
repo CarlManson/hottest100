@@ -25,8 +25,8 @@ export const TVMode: React.FC = () => {
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
 
-  // Pre-countdown mode: countdown enabled, not started, and no results yet
-  const isPreCountdownMode = countdown.isEnabled && !countdown.isStarted && totalResults === 0;
+  // Pre-countdown mode: countdown enabled, not started, no results, and no songs added yet
+  const isPreCountdownMode = countdown.isEnabled && !countdown.isStarted && totalResults === 0 && songs.length === 0;
 
   // Calculate ranks with tie handling
   const getRank = useMemo(() => {
