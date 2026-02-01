@@ -1,67 +1,15 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import type { MemberProfile } from '../types';
 import { LazyImage } from './LazyImage';
-
-// Hottest 100 starts Jan 24, 2026 at 9:00 AM AWST (UTC+8)
-// AWST is UTC+8, so 9:00 AM AWST = 1:00 AM UTC on Jan 24
-const COUNTDOWN_START = new Date(Date.UTC(2026, 0, 24, 1, 0, 0));
-
-interface CountdownTime {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  isStarted: boolean;
-}
-
-const useCountdown = (): CountdownTime => {
-  const [timeLeft, setTimeLeft] = useState<CountdownTime>(() => {
-    const now = new Date();
-    const diff = COUNTDOWN_START.getTime() - now.getTime();
-    if (diff <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true };
-    }
-    return {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-      seconds: Math.floor((diff % (1000 * 60)) / 1000),
-      isStarted: false,
-    };
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      const diff = COUNTDOWN_START.getTime() - now.getTime();
-
-      if (diff <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true });
-        clearInterval(timer);
-        return;
-      }
-
-      setTimeLeft({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((diff % (1000 * 60)) / 1000),
-        isStarted: false,
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  return timeLeft;
-};
+import { useCountdown } from '../hooks/useCountdownSettings';
 
 const CountdownTimer: React.FC = () => {
-  const { days, hours, minutes, seconds, isStarted } = useCountdown();
+  const { days, hours, minutes, seconds, isStarted, isEnabled } = useCountdown();
 
-  if (isStarted) return null;
+  // Don't show if countdown is not enabled or has already started
+  if (!isEnabled || isStarted) return null;
 
   return (
     <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-blue-400">

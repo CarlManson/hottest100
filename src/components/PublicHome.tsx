@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import { calculateAwards } from '../utils/awards';
@@ -10,60 +10,7 @@ import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 import { DetailedBreakdownTable } from './DetailedBreakdownTable';
 import { CurrentSongCard } from './CurrentSongCard';
-
-// Hottest 100 starts Jan 24, 2026 at 9:00 AM AWST (UTC+8)
-// AWST is UTC+8, so 9:00 AM AWST = 1:00 AM UTC on Jan 24
-const COUNTDOWN_START = new Date(Date.UTC(2026, 0, 24, 1, 0, 0));
-
-interface CountdownTime {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  isStarted: boolean;
-}
-
-const useCountdown = (): CountdownTime => {
-  const [timeLeft, setTimeLeft] = useState<CountdownTime>(() => {
-    const now = new Date();
-    const diff = COUNTDOWN_START.getTime() - now.getTime();
-    if (diff <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true };
-    }
-    return {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-      seconds: Math.floor((diff % (1000 * 60)) / 1000),
-      isStarted: false,
-    };
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      const diff = COUNTDOWN_START.getTime() - now.getTime();
-
-      if (diff <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true });
-        clearInterval(timer);
-        return;
-      }
-
-      setTimeLeft({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((diff % (1000 * 60)) / 1000),
-        isStarted: false,
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  return timeLeft;
-};
+import { useCountdown } from '../hooks/useCountdownSettings';
 
 export const PublicHome: React.FC = () => {
   const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
@@ -253,8 +200,8 @@ export const PublicHome: React.FC = () => {
               </div>
             </div>
 
-            {/* Countdown Timer - shown before countdown starts */}
-            {!countdownStarted && !numberOneSong && (
+            {/* Countdown Timer - shown before countdown starts (only if enabled in settings) */}
+            {countdown.isEnabled && !countdownStarted && !numberOneSong && (
               <div className="countdown">
                     <h3>Countdown Starts In</h3>
                     <div className="countdown-timer">
