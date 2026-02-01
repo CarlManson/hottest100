@@ -16,21 +16,45 @@ export interface CountdownSettings {
   isEnabled: boolean;
 }
 
+// Helper to read countdown date from localStorage
+const getStoredCountdownDate = (): Date | null => {
+  const stored = localStorage.getItem(COUNTDOWN_DATE_KEY);
+  if (stored) {
+    const date = new Date(stored);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+  return null;
+};
+
 /**
  * Hook to manage countdown date settings stored in localStorage
+ * Syncs across components via custom events
  */
 export const useCountdownSettings = (): CountdownSettings => {
-  const [countdownDate, setCountdownDateState] = useState<Date | null>(() => {
-    const stored = localStorage.getItem(COUNTDOWN_DATE_KEY);
-    if (stored) {
-      const date = new Date(stored);
-      // Validate the date is valid
-      if (!isNaN(date.getTime())) {
-        return date;
+  const [countdownDate, setCountdownDateState] = useState<Date | null>(getStoredCountdownDate);
+
+  // Listen for changes from other components
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setCountdownDateState(getStoredCountdownDate());
+    };
+
+    // Listen for custom event (same-tab updates)
+    window.addEventListener('countdown-date-changed', handleStorageChange);
+    // Listen for storage event (cross-tab updates)
+    window.addEventListener('storage', (e) => {
+      if (e.key === COUNTDOWN_DATE_KEY) {
+        handleStorageChange();
       }
-    }
-    return null;
-  });
+    });
+
+    return () => {
+      window.removeEventListener('countdown-date-changed', handleStorageChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const setCountdownDate = useCallback((date: Date | null) => {
     if (date) {
@@ -39,6 +63,8 @@ export const useCountdownSettings = (): CountdownSettings => {
       localStorage.removeItem(COUNTDOWN_DATE_KEY);
     }
     setCountdownDateState(date);
+    // Dispatch custom event to notify other components in the same tab
+    window.dispatchEvent(new Event('countdown-date-changed'));
   }, []);
 
   return {
