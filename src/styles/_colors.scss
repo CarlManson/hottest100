@@ -67,3 +67,10 @@ $rot-amp: 15deg; /* Rotation Amplitude */
   &-dark { background-color: var(--accent-col-dark); }
   &-light { background-color: var(--accent-col-light); }
 }
+
+.border-accent {
+  border-color: var(--accent-col-base);
+
+  &-dark { border-color: var(--accent-col-dark); }
+  &-light { border-color: var(--accent-col-light); }
+}

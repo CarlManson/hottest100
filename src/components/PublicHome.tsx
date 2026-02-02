@@ -264,7 +264,7 @@ export const PublicHome: React.FC = () => {
 
             {/* Countdown Progress Widget */}
             <div className="xl:col-span-2">
-              <div className="bg-white rounded-xl shadow-lg p-2 sm:p-6 border-2 border-orange-200 h-fit">
+              <div className="bg-white rounded-xl shadow-lg p-2 sm:p-6 border-2 border-accent-light h-fit">
                 <h3 className="hidden md:block text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
                   📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
                 </h3>
@@ -281,7 +281,7 @@ export const PublicHome: React.FC = () => {
                       }
                     </span>
                   </div>
-                  <div className="progress-bar rounded-full h-3">
+                  <div className="progress-bar bg-gray-100 rounded-full h-3">
                     <div
                       className="progress-bar-marker h-3 rounded-full transition-all"
                       style={{
@@ -379,7 +379,7 @@ export const PublicHome: React.FC = () => {
                 </div>
 
                 {/* Full Leaderboard */}
-                <div className="xl:col-span-2 bg-white rounded-xl shadow-xl p-2 sm:p-6 border-2 border-orange-200">
+                <div className="xl:col-span-2 bg-white rounded-xl shadow-xl p-2 sm:p-6 border-2 border-accent-light">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
                       <span className="hidden md:block">Full</span> Leaderboard
@@ -481,7 +481,7 @@ export const PublicHome: React.FC = () => {
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
                 {/* Countdown Progress Widget - spans first column on the left */}
                 <div>
-                  <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200 h-fit">
+                  <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-accent-light h-fit">
                     <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
                       📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
                     </h3>
@@ -561,7 +561,7 @@ export const PublicHome: React.FC = () => {
                 {/* Full Leaderboard */}
                 <div className="xl:col-span-2 bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-800 no-wrap">
                       Full Leaderboard
                     </h3>
                     {totalResults > 0 && (

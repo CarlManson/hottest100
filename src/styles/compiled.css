@@ -60,6 +60,16 @@ body {
   background-color: var(--accent-col-light);
 }
 
+.border-accent {
+  border-color: var(--accent-col-base);
+}
+.border-accent-dark {
+  border-color: var(--accent-col-dark);
+}
+.border-accent-light {
+  border-color: var(--accent-col-light);
+}
+
 #main-menu {
   background-color: rgb(41.226993865, 46.036809816, 70.773006135);
 }
@@ -321,8 +331,8 @@ body {
   display: none;
 }
 
-:root {
-  --commentary-quip-bg: var(--color-yellow-400);
+main {
+  --commentary-quip-bg: hsl(from var(--accent-col-base) H S 85%);
 }
 
 .commentary-quip {

@@ -1,9 +1,9 @@
 // Commentary Speech Bubble Styles
 // Customize colors, sizes, shadows, and animations here
 
-$commentary-bg: var(--color-yellow-400);
+$commentary-bg: var(--accent-col-base);
 
-:root {--commentary-quip-bg: #{$commentary-bg};}
+main {--commentary-quip-bg: hsl(from #{$commentary-bg} H S 85%);}
 
 
 .commentary-quip {
