@@ -152,7 +152,7 @@ export const PublicHome: React.FC = () => {
     <div className="min-h-screen">
       {/* Hero Section with Banner Background */}
       <div
-        className="relative bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 py-12 sm:py-20 mb-8 full-banner-background"
+        className="relative bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 py-6 sm:py-20 mb-8 full-banner-background"
         style={{ '--banner-image': `url(${banner})` } as React.CSSProperties}
       >
         <div className="absolute inset-0 bg-black/30"></div>
@@ -160,10 +160,10 @@ export const PublicHome: React.FC = () => {
           <div className={`grid grid-cols-1 ${hasBannerRightContent ? 'xl:grid-cols-2' : ''} gap-8 lg:gap-12 items-center`}>
             {/* Title and Progress */}
             <div className={`text-white ${hasBannerRightContent ? 'text-center xl:text-left' : 'text-center'}`}>
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl 2xl:text-7xl font-black mb-4 drop-shadow-lg">
+              <h1 className="text-2xl sm:text-5xl lg:text-6xl 2xl:text-7xl font-black mb-4 drop-shadow-lg">
                 {hasHottest200Started ? 'Triple J Hottest 200 Tracker' : 'Triple J Hottest 100 Tracker'}
               </h1>
-              <p className="text-lg sm:text-2xl 2xl:text-3xl font-semibold mb-8 drop-shadow-md">
+              <p className="hidden md:block text-lg sm:text-2xl 2xl:text-3xl font-semibold mb-8 drop-shadow-md">
                 {totalResults === 0
                   ? 'Predictions are in! Let the countdown begin...'
                   : hasHottest200Started
@@ -188,7 +188,7 @@ export const PublicHome: React.FC = () => {
                         : countdownResults.length > 10 && `${countdownResults.length}/100`}
                     </div>
                   </div>
-                  <p className="text-white/90 text-sm mt-2 font-semibold">
+                  <p className="hidden md:block text-white/90 text-sm mt-2 font-semibold">
                     Hottest 100: {countdownResults.length}/100 revealed
                     {hottest200Results.length > 0 && ` • Hottest 200: ${hottest200Results.length}/100`}
                   </p>
@@ -264,12 +264,12 @@ export const PublicHome: React.FC = () => {
 
             {/* Countdown Progress Widget */}
             <div className="xl:col-span-2">
-              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200 h-fit">
-                <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+              <div className="bg-white rounded-xl shadow-lg p-2 sm:p-6 border-2 border-orange-200 h-fit">
+                <h3 className="hidden md:block text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
                   📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
                 </h3>
 
-                <div className="mb-4">
+                <div className="hidden md:block mb-4">
                   <div className="flex justify-between text-sm mb-1">
                     <span className="font-semibold text-gray-700">
                       {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
@@ -295,7 +295,7 @@ export const PublicHome: React.FC = () => {
 
                 {recentResults.length > 0 && (
                   <div>
-                    <div className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                    <div className="hidden md:block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
                       {hasHottest200Started ? 'Latest Entries (Hottest 200)' : 'Latest Entries'}
                     </div>
                     <div className="max-h-80 overflow-y-auto space-y-1.5 sm:space-y-2 pr-2">
@@ -366,9 +366,9 @@ export const PublicHome: React.FC = () => {
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
                 {/* Podium Visualization (Top 3) + Commentary */}
                 <div>
-                  <h2 className="text-center text-3xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                  <h2 className="text-center text-2xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
                 {hottest200Results.length === 100 ? "Winners Podium" : "Current Standings"}</h2>
-                <p className="text-center text-gray-600 text-sm sm:text-base mb-5">Who's leading the pack?</p>
+                <p className="hidden md:block text-center text-gray-600 text-sm sm:text-base mb-5">Who's leading the pack?</p>
                   <Podium
                     entries={leaderboard}
                     isComplete={hottest200Results.length === 100}
@@ -379,10 +379,10 @@ export const PublicHome: React.FC = () => {
                 </div>
 
                 {/* Full Leaderboard */}
-                <div className="xl:col-span-2 bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
+                <div className="xl:col-span-2 bg-white rounded-xl shadow-xl p-2 sm:p-6 border-2 border-orange-200">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
-                      Full Leaderboard
+                      <span className="hidden md:block">Full</span> Leaderboard
                     </h3>
                     {totalResults > 0 && (
                       <button

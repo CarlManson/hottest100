@@ -317,6 +317,10 @@ body {
   background: linear-gradient(90deg, var(--pre-accent-col-base), var(--accent-col-base), var(--post-accent-col-base));
 }
 
+:has([data-has-songs]) .countdown {
+  display: none;
+}
+
 :root {
   --commentary-quip-bg: var(--color-yellow-400);
 }
@@ -589,6 +593,41 @@ body {
   backdrop-filter: brightness(0.8);
   outline: 1px solid hsl(from var(--accent-col-light) h s l/0.6);
   box-shadow: 0.5rem 0.5rem 1rem rgba(0, 0, 0, 0.5);
+}
+[data-display-mode=tv]:has([data-has-songs]) .pre-countdown-content {
+  display: none;
+}
+[data-display-mode=tv] .pre-countdown-content .pre-countdown-logo {
+  width: 100%;
+  max-width: 400px;
+  filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.3));
+}
+[data-display-mode=tv] .pre-countdown-content .countdown h3 {
+  color: var(--color-white);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+[data-display-mode=tv] .pre-countdown-content .countdown-ticker {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  min-width: 100px;
+  padding: 1.5rem;
+}
+[data-display-mode=tv] .pre-countdown-content .countdown-ticker .big-number {
+  font-size: 4rem;
+}
+[data-display-mode=tv] .pre-countdown-content .countdown-ticker .small-text {
+  font-size: 1rem;
+}
+[data-display-mode=tv] .pre-countdown-content .participants-section {
+  max-width: 800px;
+  margin: 0 auto;
+}
+[data-display-mode=tv] .pre-countdown-content .participant-card {
+  transition: transform 0.2s, background 0.2s;
+}
+[data-display-mode=tv] .pre-countdown-content .participant-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /*# sourceMappingURL=compiled.css.map */
