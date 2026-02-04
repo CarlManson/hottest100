@@ -3,7 +3,10 @@
 
 $commentary-bg: var(--accent-col-base);
 
-main {--commentary-quip-bg: hsl(from #{$commentary-bg} H S 85%);}
+main {
+  --commentary-quip-bg: hsl(from #{$commentary-bg} H S 85%);
+  [data-display-mode="tv"] & { --commentary-quip-bg: hsl(from #{$commentary-bg} H S L / 20%) }
+}
 
 
 .commentary-quip {

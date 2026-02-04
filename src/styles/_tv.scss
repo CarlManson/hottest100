@@ -30,7 +30,7 @@
 
     .logo {
         width: 100%;
-        max-width: 28rem;
+        max-width: 20rem;
         margin-right: auto;
     }
 
@@ -83,6 +83,7 @@
         display: flex;
         flex-direction: column;
         row-gap: 2rem;
+        height: 100vh;
 
         > div { 
             flex-grow: 1;
@@ -116,7 +117,9 @@
         &.leaderboard {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            column-gap: 0.5rem;
+            gap: 0.5rem;
+
+            .member { margin-bottom: 0; }
         }
     }
 
@@ -145,7 +148,7 @@
     --commentary-quip-bg: color-mix(in oklab, var(--color-white) 10%, transparent);
     
     .commentary-quip {
-        backdrop-filter: blur(10px);
+        // backdrop-filter: blur(10px);
         font-size: 1.25rem;
         &__tail { display: none; }
         &__bubble {
@@ -216,6 +219,10 @@
                 background: rgba(255, 255, 255, 0.2);
             }
         }
+    }
+
+    .leaderboard-wrapper {
+        // max-height: fit-content;
     }
 
 }

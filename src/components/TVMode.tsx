@@ -204,13 +204,7 @@ export const TVMode: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Subtle link back to homepage */}
-      <a
-        href="#home"
-        className="home-link"
-      >
-        ← Back to Home
-      </a>
+      
 
       {/* Main Layout: Banner (1/3) | Content (2/3) */}
       <div className="flex min-h-screen" id="tv-mode-container">
@@ -219,8 +213,7 @@ export const TVMode: React.FC = () => {
           className="relative w-full lg:w-1/3 left-column"
         >
           <div className="relative h-full flex flex-col p-6 sm:p-8 lg:p-10">
-            {/* Logo */}
-              <img src={logo} alt="Fairest 100 Logo" className="logo" />
+           
             {/* Current Song Card - Large Display */}
             {(numberOneSong && numberOneSongData && !hasHottest200Started) || (currentHighestResult && currentHighestSong) ? (
               <div>
@@ -299,9 +292,7 @@ export const TVMode: React.FC = () => {
             {/* Countdown Progress */}
             <div className="countdown-progress-wrapper rounded-xl shadow-lg p-6">
             <div className="header-group mb-4">
-              <h3 className="text-2xl font-bold text-white">
-                📊 {hasHottest200Started ? "The Hottest 200 of 2025" : "Countdown Progress"}
-              </h3>
+              <a href="#home"><img src={logo} alt="Fairest 100 Logo" className="logo" /></a>
 
               <div className="">
                 <div className="flex justify-between text-sm mb-1">

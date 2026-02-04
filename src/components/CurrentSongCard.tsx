@@ -97,8 +97,6 @@ export const CurrentSongCard: React.FC<CurrentSongCardProps> = ({
           </div>
         </div>
 
-        {/* Decorative corner accent */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent"></div>
       </div>
     </div>
   );
