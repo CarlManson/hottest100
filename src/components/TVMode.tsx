@@ -7,6 +7,7 @@ import { CountdownQuip } from './CountdownQuip';
 import { CurrentSongCard } from './CurrentSongCard';
 import { useCountdown } from '../hooks/useCountdownSettings';
 import { brand } from '../config/brand';
+import { useGroupView } from '../hooks/useGroupView';
 import { useTvRehearsal } from '../hooks/useTvRehearsal';
 import { useNewArrivals } from '../hooks/useNewArrivals';
 import { useScoreBumps } from '../hooks/useScoreBumps';
@@ -16,7 +17,7 @@ import { TvAtmosphere, RehearsalControls } from './TvEffects';
 // TV Mode - Simplified view for large screens
 export const TVMode: React.FC = () => {
   const live = useApp();
-  const { familyMembers, getProfileForMember } = live;
+  const { getProfileForMember } = live;
   const rehearsal = useTvRehearsal(live.songs);
   const { songs, countdownResults, hottest200Results } = rehearsal.active ? rehearsal.data : live;
   const countdown = useCountdown();
@@ -30,7 +31,8 @@ export const TVMode: React.FC = () => {
     };
   }, []);
 
-  const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
+  const { visibleMembers, selectedGroup } = useGroupView();
+  const leaderboard = getLeaderboard(visibleMembers, countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
   const { bumps, bumpId } = useScoreBumps(leaderboard);
 
@@ -198,13 +200,13 @@ export const TVMode: React.FC = () => {
             </div>
 
             {/* Participants List */}
-            {familyMembers.length > 0 && (
+            {visibleMembers.length > 0 && (
               <div className="participants-section">
                 <h3 className="text-2xl font-bold text-white mb-6 drop-shadow-lg">
                   Predictions Submitted
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {familyMembers.map((member) => {
+                  {visibleMembers.map((member) => {
                     const profile = getProfileForMember(member.id);
                     return (
                       <div
@@ -415,7 +417,7 @@ export const TVMode: React.FC = () => {
             {/* Full Leaderboard */}
             <div className="leaderboard-wrapper rounded-xl shadow-lg p-6">
             <h3 className="text-2xl font-bold mb-4 text-white">
-              Full Leaderboard
+              {selectedGroup ? <>{selectedGroup.emoji && <span className="mr-2">{selectedGroup.emoji}</span>}{selectedGroup.name}</> : 'Full Leaderboard'}
             </h3>
             <div>
               <div className="leaderboard list-table space-y-2">

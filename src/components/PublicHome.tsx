@@ -14,8 +14,9 @@ import { useCountdown } from '../hooks/useCountdownSettings';
 import { CountdownProgressWidget } from './CountdownProgressWidget';
 import { MostPickedSongs } from './MostPickedSongs';
 import { LiveStreamPlayer } from './LiveStreamPlayer';
-import { useResultNotifications } from '../utils/useResultNotifications';
 import { useScoreBumps } from '../hooks/useScoreBumps';
+import { useGroupView } from '../hooks/useGroupView';
+import { GroupSwitcher } from './GroupSwitcher';
 
 export const PublicHome: React.FC = () => {
   const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
@@ -24,7 +25,8 @@ export const PublicHome: React.FC = () => {
   const countdownStarted = countdown.isStarted;
   const [showDetailedBreakdown, setShowDetailedBreakdown] = useState(false);
 
-  const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
+  const { visibleMembers, selectedGroup } = useGroupView();
+  const leaderboard = getLeaderboard(visibleMembers, countdownResults, hottest200Results);
   const { bumps, bumpId } = useScoreBumps(leaderboard);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
@@ -55,10 +57,9 @@ export const PublicHome: React.FC = () => {
   }, [leaderboard]);
 
   // Calculate awards when Hottest 100 is complete
-  const awards = calculateAwards(familyMembers, songs, countdownResults, hottest200Results);
+  const awards = calculateAwards(visibleMembers, songs, countdownResults, hottest200Results);
   const isHottest100Complete = countdownResults.length === 100;
   const isHottest200Complete = hottest200Results.length === 100;
-  const notifications = useResultNotifications(songs, countdownResults, hottest200Results);
 
   // Get the #1 song if available
   const numberOneSong = countdownResults.find(r => r.position === 1);
@@ -175,8 +176,8 @@ export const PublicHome: React.FC = () => {
                 {totalResults === 0
                   ? 'Predictions are in! Let the countdown begin...'
                   : hasHottest200Started
-                  ? `${hottest200Results.length} songs revealed • ${familyMembers.length} competitors`
-                  : `${countdownResults.length} songs revealed • ${familyMembers.length} competitors`}
+                  ? `${hottest200Results.length} songs revealed • ${visibleMembers.length} competitors`
+                  : `${countdownResults.length} songs revealed • ${visibleMembers.length} competitors`}
               </p>
 
               {/* Progress Bar */}
@@ -212,15 +213,6 @@ export const PublicHome: React.FC = () => {
                   📺 TV Mode
                 </a>
                 <LiveStreamPlayer />
-                {notifications.supported && (
-                  <button
-                    onClick={notifications.toggle}
-                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
-                    title="Get a browser notification when a new song is revealed while this tab is in the background"
-                  >
-                    {notifications.enabled ? '🔔 Alerts on' : '🔕 Song alerts'}
-                  </button>
-                )}
               </div>
             </div>
 
@@ -313,6 +305,8 @@ export const PublicHome: React.FC = () => {
             />
           </div>
         )}
+
+        <GroupSwitcher className="mb-6" />
 
         {/* Leader Podium - Visual representation of top 3 */}
         {leaderboard.length > 0 && (
@@ -622,7 +616,7 @@ export const PublicHome: React.FC = () => {
                 </div>
               </div>
 
-              <MostPickedSongs songs={songs} familyMembers={familyMembers} />
+              <MostPickedSongs songs={songs} familyMembers={visibleMembers} />
               </>
             )}
           </div>
@@ -673,7 +667,12 @@ export const PublicHome: React.FC = () => {
         )}
 
         {/* Empty State */}
-        {leaderboard.length === 0 && (
+        {leaderboard.length === 0 && selectedGroup && (
+          <div className="empty-state text-center py-16 text-gray-600">
+            No one is in {selectedGroup.name} yet.
+          </div>
+        )}
+        {leaderboard.length === 0 && !selectedGroup && (
           <div className="empty-state text-center py-20">
             <div className="empty-state-icon text-6xl mb-4">🎵</div>
             <h2 className="empty-state-title text-2xl sm:text-3xl font-bold text-gray-800 mb-2">

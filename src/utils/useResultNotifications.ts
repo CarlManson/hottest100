@@ -30,6 +30,7 @@ export function useResultNotifications(
   const [enabled, setEnabled] = useState(
     () => supported && Notification.permission === 'granted' && readStored()
   );
+  const [blocked, setBlocked] = useState(() => supported && Notification.permission === 'denied');
   const seen = useRef<Set<string> | null>(null);
 
   useEffect(() => {
@@ -70,10 +71,10 @@ export function useResultNotifications(
     if (permission === 'granted') {
       setEnabled(true);
       writeStored(true);
-    } else {
-      alert('Notifications are blocked for this site. Enable them in your browser settings to get song alerts.');
+    } else if (permission === 'denied') {
+      setBlocked(true);
     }
   }, [supported, enabled]);
 
-  return { supported, enabled, toggle };
+  return { supported, enabled, blocked, toggle };
 }

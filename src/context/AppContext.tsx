@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type { AppState, Song, FamilyMember, CountdownResult, MemberProfile, Archive } from '../types';
+import type { AppState, Song, FamilyMember, CountdownResult, MemberProfile, Archive, Group } from '../types';
 import { supabase } from '../lib/supabase';
 import { generateMusicTasteProfileAPI } from '../utils/profileGenerator';
 import { getRandomQuip } from '../data/songQuips';
@@ -10,6 +10,11 @@ interface AppContextType extends AppState {
   isGeneratingProfiles: boolean;
   profileError: string;
   archives: Archive[];
+  groups: Group[];
+  /** False until supabase-add-groups.sql has been run */
+  groupsAvailable: boolean;
+  saveGroup: (group: Omit<Group, 'id'> & { id?: string }) => Promise<void>;
+  removeGroup: (groupId: string) => Promise<void>;
   addSong: (song: Omit<Song, 'id'>) => Promise<void>;
   addSongs: (songs: Omit<Song, 'id'>[]) => Promise<void>;
   removeSong: (songId: string) => Promise<void>;
@@ -44,6 +49,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     profiles: [],
   });
   const [archives, setArchives] = useState<Archive[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [groupsAvailable, setGroupsAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isGeneratingProfiles, setIsGeneratingProfiles] = useState(false);
   const [profileError, setProfileError] = useState<string>('');
@@ -99,7 +106,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       })
       .subscribe();
 
+    // Subscribe to groups and their memberships
+    const groupsSubscription = supabase
+      .channel('groups-channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'groups' }, () => {
+        loadGroups();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_members' }, () => {
+        loadGroups();
+      })
+      .subscribe();
+
     return () => {
+      groupsSubscription.unsubscribe();
       songsSubscription.unsubscribe();
       membersSubscription.unsubscribe();
       votesSubscription.unsubscribe();
@@ -137,6 +156,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       loadCountdownResults(),
       loadProfiles(),
       loadArchives(),
+      loadGroups(),
     ]);
     setLoading(false);
   };
@@ -284,6 +304,60 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
 
     setArchives(archives);
+  };
+
+  const loadGroups = async () => {
+    const [groupsRes, membersRes] = await Promise.all([
+      (supabase.from('groups' as never) as any).select('*').order('name', { ascending: true }),
+      (supabase.from('group_members' as never) as any).select('*'),
+    ]);
+
+    // Tables not created yet: hide group features rather than erroring
+    if (groupsRes.error || membersRes.error) {
+      setGroupsAvailable(false);
+      setGroups([]);
+      return;
+    }
+
+    setGroupsAvailable(true);
+    setGroups((groupsRes.data || []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      emoji: row.emoji || undefined,
+      memberIds: (membersRes.data || [])
+        .filter((m: any) => m.group_id === row.id)
+        .map((m: any) => m.family_member_id),
+    })));
+  };
+
+  const saveGroup = async (group: Omit<Group, 'id'> & { id?: string }) => {
+    const fields = { name: group.name.trim(), emoji: group.emoji?.trim() || null };
+    let groupId = group.id;
+
+    if (groupId) {
+      const { error } = await (supabase.from('groups' as never) as any).update(fields).eq('id', groupId);
+      if (error) throw error;
+      const { error: clearError } = await (supabase.from('group_members' as never) as any).delete().eq('group_id', groupId);
+      if (clearError) throw clearError;
+    } else {
+      const { data, error } = await (supabase.from('groups' as never) as any).insert([fields]).select('id').single();
+      if (error) throw error;
+      groupId = data.id;
+    }
+
+    if (group.memberIds.length > 0) {
+      const { error } = await (supabase.from('group_members' as never) as any)
+        .insert(group.memberIds.map(memberId => ({ group_id: groupId, family_member_id: memberId })));
+      if (error) throw error;
+    }
+
+    await loadGroups();
+  };
+
+  const removeGroup = async (groupId: string) => {
+    const { error } = await (supabase.from('groups' as never) as any).delete().eq('id', groupId);
+    if (error) throw error;
+    await loadGroups();
   };
 
   const addSong = async (song: Omit<Song, 'id'>) => {
@@ -830,6 +904,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         isGeneratingProfiles,
         profileError,
         archives,
+        groups,
+        groupsAvailable,
+        saveGroup,
+        removeGroup,
         addSong,
         addSongs,
         removeSong,

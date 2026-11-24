@@ -139,3 +139,23 @@ CREATE TABLE app_settings (
 ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all operations on app_settings" ON app_settings FOR ALL USING (true) WITH CHECK (true);
 ALTER PUBLICATION supabase_realtime ADD TABLE app_settings;
+
+-- Member groups for filtered leaderboards
+CREATE TABLE groups (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL UNIQUE,
+  emoji TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE TABLE group_members (
+  group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+  family_member_id UUID NOT NULL REFERENCES family_members(id) ON DELETE CASCADE,
+  PRIMARY KEY (group_id, family_member_id)
+);
+CREATE INDEX idx_group_members_member ON group_members(family_member_id);
+ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all operations on groups" ON groups FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all operations on group_members" ON group_members FOR ALL USING (true) WITH CHECK (true);
+ALTER PUBLICATION supabase_realtime ADD TABLE groups;
+ALTER PUBLICATION supabase_realtime ADD TABLE group_members;
