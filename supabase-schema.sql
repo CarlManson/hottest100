@@ -14,6 +14,10 @@ CREATE TABLE songs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Case/whitespace-insensitive duplicate protection
+CREATE UNIQUE INDEX idx_songs_artist_title_unique
+  ON songs (lower(trim(artist)), lower(trim(title)));
+
 -- Family members table
 CREATE TABLE family_members (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

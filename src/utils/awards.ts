@@ -183,26 +183,28 @@ export function calculateAwards(
     }
   }
 
-  // 😢 So Close - Picks that made 101-200 but missed the Hottest 100
+  // 😢 So Close - Picks that only just missed the Hottest 100 (positions 101-120)
   if (hasHottest200) {
     const closeCallScores = familyMembers.map(member => {
-      // Count votes that made 101-200 but not the Hottest 100
-      const closeMatches = getHottest200Matches(member);
-      return { member, count: closeMatches.length };
+      const nearMisses = getHottest200Matches(member).filter(vote => {
+        const position = getResult(vote.songId)?.position ?? 0;
+        return position >= 101 && position <= 120;
+      });
+      return { member, count: nearMisses.length };
     }).filter(s => s.count > 0);
 
     if (closeCallScores.length > 0) {
       const mostClose = Math.max(...closeCallScores.map(s => s.count));
       const soClose = closeCallScores.find(s => s.count === mostClose);
-      if (soClose && soClose.count >= 2) {
+      if (soClose) {
         awards.push({
           id: 'so-close',
           emoji: '😢',
           title: 'So Close',
-          description: 'Most picks just outside the 100',
+          description: 'Most picks that just missed the 100',
           winnerId: soClose.member.id,
           winnerName: soClose.member.name,
-          details: `${soClose.count} ${soClose.count === 1 ? 'pick' : 'picks'} landed 101-200`
+          details: `${soClose.count} ${soClose.count === 1 ? 'pick' : 'picks'} landed between #101 and #120`
         });
       }
     }

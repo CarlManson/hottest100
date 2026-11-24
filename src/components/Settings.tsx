@@ -69,6 +69,7 @@ export const Settings: React.FC = () => {
   const [error, setError] = useState('');
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState('');
+  const [playlistMessage, setPlaylistMessage] = useState('');
 
   // Data state
   const [showConfirm, setShowConfirm] = useState(false);
@@ -132,12 +133,15 @@ export const Settings: React.FC = () => {
   // Filter out duplicates and return unique songs with count info
   const filterDuplicates = <T extends { artist: string; title: string }>(newSongs: T[]) => {
     const unique: T[] = [];
+    const seen = new Set<string>();
     let duplicateCount = 0;
     for (const song of newSongs) {
-      if (!isDuplicate(song.artist, song.title)) {
-        unique.push(song);
-      } else {
+      const key = `${normalize(song.artist)}\u0000${normalize(song.title)}`;
+      if (isDuplicate(song.artist, song.title) || seen.has(key)) {
         duplicateCount++;
+      } else {
+        seen.add(key);
+        unique.push(song);
       }
     }
     return { unique, duplicateCount };
@@ -309,6 +313,39 @@ export const Settings: React.FC = () => {
     const a = document.createElement('a');
     a.href = url;
     a.download = `hottest100-data-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getPlaylistRows = () =>
+    [...countdownResults, ...hottest200Results]
+      .sort((a, b) => a.position - b.position)
+      .map(r => ({ position: r.position, song: songs.find(s => s.id === r.songId) }))
+      .filter((r): r is { position: number; song: Song } => !!r.song);
+
+  const handleCopyPlaylist = async () => {
+    const text = getPlaylistRows()
+      .map(({ position, song }) => `${position}. ${song.artist} - ${song.title}`)
+      .join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      setPlaylistMessage('✅ Copied! Paste into a playlist import tool to build it in Spotify/Apple Music.');
+    } catch {
+      setPlaylistMessage('Could not access the clipboard — use the CSV download instead.');
+    }
+    setTimeout(() => setPlaylistMessage(''), 5000);
+  };
+
+  const handleDownloadPlaylistCsv = () => {
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const csv = ['Position,Artist,Title', ...getPlaylistRows().map(({ position, song }) =>
+      `${position},${escape(song.artist)},${escape(song.title)}`
+    )].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hottest-${hottest200Results.length > 0 ? 200 : 100}-playlist.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -711,6 +748,31 @@ export const Settings: React.FC = () => {
               📦 Export All Data
             </button>
           </div>
+
+          {/* Playlist Export */}
+          {countdownResults.length + hottest200Results.length > 0 && (
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Export Countdown Playlist</h2>
+              <p className="text-gray-600 mb-4 text-sm sm:text-base">
+                The countdown results in order (#1 first), ready to paste into a playlist import tool.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleCopyPlaylist}
+                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-bold"
+                >
+                  🎧 Copy as text
+                </button>
+                <button
+                  onClick={handleDownloadPlaylistCsv}
+                  className="bg-gray-700 text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition font-bold"
+                >
+                  ⬇️ Download CSV
+                </button>
+              </div>
+              {playlistMessage && <p className="text-sm text-gray-700 mt-3">{playlistMessage}</p>}
+            </div>
+          )}
 
           {/* Clear All Data */}
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 border-2 border-red-200">

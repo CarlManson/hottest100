@@ -10,6 +10,9 @@ import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 import { DetailedBreakdownTable } from './DetailedBreakdownTable';
 import { CountdownProgressWidget } from './CountdownProgressWidget';
+import { MostPickedSongs } from './MostPickedSongs';
+import { LiveStreamPlayer } from './LiveStreamPlayer';
+import { useResultNotifications } from '../utils/useResultNotifications';
 import { COUNTDOWN_START, COUNTDOWN_YEAR } from '../config/countdown';
 
 interface CountdownTime {
@@ -101,6 +104,8 @@ export const PublicHome: React.FC = () => {
   // Calculate awards when Hottest 100 is complete
   const awards = calculateAwards(familyMembers, songs, countdownResults, hottest200Results);
   const isHottest100Complete = countdownResults.length === 100;
+  const isHottest200Complete = hottest200Results.length === 100;
+  const notifications = useResultNotifications(songs, countdownResults, hottest200Results);
 
   // Get the #1 song if available
   const numberOneSong = countdownResults.find(r => r.position === 1);
@@ -239,14 +244,24 @@ export const PublicHome: React.FC = () => {
                 </div>
               )}
 
-              {/* TV Mode Button - large screens only */}
-              <div className="mt-6 hidden lg:block">
+              <div className="mt-6 flex flex-wrap gap-3 justify-center xl:justify-start">
+                {/* TV Mode Button - large screens only */}
                 <a
                   href="#tv"
-                  className="inline-block bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
+                  className="hidden lg:inline-block bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
                 >
                   📺 TV Mode
                 </a>
+                <LiveStreamPlayer />
+                {notifications.supported && (
+                  <button
+                    onClick={notifications.toggle}
+                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
+                    title="Get a browser notification when a new song is revealed while this tab is in the background"
+                  >
+                    {notifications.enabled ? '🔔 Alerts on' : '🔕 Song alerts'}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -721,17 +736,19 @@ export const PublicHome: React.FC = () => {
                   })}
                 </div>
               </div>
+
+              <MostPickedSongs songs={songs} familyMembers={familyMembers} />
               </>
             )}
           </div>
         )}
 
-        {/* Awards Section - Only show when Hottest 100 complete and Hottest 200 NOT started */}
-        {isHottest100Complete && awards.length > 0 && !hasHottest200Started && (
+        {/* Awards Section - when Hottest 100 is complete, hidden while Hottest 200 is in progress */}
+        {isHottest100Complete && awards.length > 0 && (!hasHottest200Started || isHottest200Complete) && (
           <div className="mb-12">
             <div className="text-center mb-6">
               <h2 className="text-2xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-yellow-600 via-orange-600 to-pink-600 bg-clip-text text-transparent">
-                🏆 Hottest 100 Awards 🏆
+                🏆 {isHottest200Complete ? 'Hottest 200' : 'Hottest 100'} Awards 🏆
               </h2>
               <p className="text-gray-600 text-xs sm:text-sm">Celebrating our champions!</p>
             </div>

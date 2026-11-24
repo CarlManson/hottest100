@@ -122,6 +122,7 @@ export const CountdownEntry: React.FC = () => {
       setIsUpdating(true);
       try {
         await updateResults([]);
+        setLastAction(null);
       } catch (error) {
         console.error('Error clearing countdown:', error);
         alert('Failed to clear countdown. Please try again.');
@@ -164,6 +165,7 @@ export const CountdownEntry: React.FC = () => {
       }));
 
       await updateResults(updatedResults);
+      setLastAction(null);
     } catch (error) {
       console.error('Error reordering countdown:', error);
       alert('Failed to reorder. Please try again.');
@@ -342,6 +344,9 @@ export const CountdownEntry: React.FC = () => {
                   onChange={(e) => setResultsSearchTerm(e.target.value)}
                   disabled={isUpdating}
                 />
+                {resultsSearchTerm && (
+                  <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Clear the filter to drag and reorder</p>
+                )}
               </div>
             )}
             {currentResults.length === 0 ? (
@@ -364,16 +369,20 @@ export const CountdownEntry: React.FC = () => {
                   .map((result, index) => {
                     const song = songs.find((s) => s.id === result.songId);
                     if (!song) return null;
+                    // Drag indexes refer to the full list, so reordering is disabled while filtering
+                    const canDrag = !isUpdating && !resultsSearchTerm;
                     return (
                       <div
                         key={result.songId}
-                        draggable={!isUpdating}
-                        onDragStart={() => !isUpdating && handleDragStart(index)}
+                        draggable={canDrag}
+                        onDragStart={() => canDrag && handleDragStart(index)}
                         onDragOver={handleDragOver}
-                        onDrop={() => handleDrop(index)}
+                        onDrop={() => canDrag && handleDrop(index)}
                         className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-800 rounded-lg transition ${
                           isUpdating
                             ? 'cursor-not-allowed opacity-50'
+                            : !canDrag
+                            ? 'hover:bg-gray-700'
                             : draggedIndex === index
                             ? 'opacity-50 cursor-move'
                             : 'cursor-move hover:bg-gray-700'

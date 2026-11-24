@@ -1,12 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import type { FamilyMember } from '../types';
 import { LazyImage } from './LazyImage';
+import { COUNTDOWN_START } from '../config/countdown';
 
 export const VotingInterface: React.FC = () => {
   const {
     songs,
     familyMembers,
+    countdownResults,
+    hottest200Results,
     addFamilyMember,
     updateFamilyMember,
     removeFamilyMember,
@@ -23,6 +26,23 @@ export const VotingInterface: React.FC = () => {
   const [expandedMember, setExpandedMember] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [lockOverridden, setLockOverridden] = useState(false);
+
+  const [broadcastStarted, setBroadcastStarted] = useState(() => Date.now() >= COUNTDOWN_START.getTime());
+
+  useEffect(() => {
+    if (broadcastStarted) return;
+    const timer = setInterval(() => {
+      if (Date.now() >= COUNTDOWN_START.getTime()) setBroadcastStarted(true);
+    }, 30_000);
+    return () => clearInterval(timer);
+  }, [broadcastStarted]);
+
+  const countdownUnderway =
+    broadcastStarted ||
+    countdownResults.length > 0 ||
+    hottest200Results.length > 0;
+  const votesLocked = countdownUnderway && !lockOverridden;
 
   // Ref for scrolling to voting panel
   const votingPanelRef = useRef<HTMLDivElement>(null);
@@ -116,7 +136,7 @@ export const VotingInterface: React.FC = () => {
   };
 
   const handleToggleSong = (songId: string) => {
-    if (!selectedMember) return;
+    if (!selectedMember || votesLocked) return;
 
     const existingVote = selectedMember.votes.find((v) => v.songId === songId);
 
@@ -160,6 +180,26 @@ export const VotingInterface: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6">
       <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 hidden sm:block">Voting</h2>
+
+      {countdownUnderway && (
+        <div className={`rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-2 ${
+          votesLocked ? 'bg-yellow-50 border-yellow-300' : 'bg-red-50 border-red-300'
+        }`}>
+          <p className="text-sm font-semibold text-gray-800">
+            {votesLocked
+              ? '🔒 Votes are locked — the countdown has started.'
+              : '⚠️ Votes unlocked for corrections. Changes affect live scores.'}
+          </p>
+          <button
+            onClick={() => setLockOverridden(!lockOverridden)}
+            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-white transition ${
+              votesLocked ? 'bg-gray-600 hover:bg-gray-700' : 'bg-red-500 hover:bg-red-600'
+            }`}
+          >
+            {votesLocked ? 'Unlock for corrections' : 'Re-lock votes'}
+          </button>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-orange-200">
         <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">Mates</h3>
@@ -230,9 +270,13 @@ export const VotingInterface: React.FC = () => {
                   <div
                     key={song.id}
                     onClick={() => handleToggleSong(song.id)}
-                    className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg cursor-pointer transition ${
+                    className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition ${
+                      votesLocked ? 'cursor-not-allowed' : 'cursor-pointer'
+                    } ${
                       isSelected
                         ? 'bg-green-50 border-2 border-green-500'
+                        : votesLocked
+                        ? 'bg-gray-50 opacity-60'
                         : 'bg-gray-50 hover:bg-gray-100'
                     }`}
                   >
@@ -297,12 +341,14 @@ export const VotingInterface: React.FC = () => {
                           )}
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleToggleSong(vote.songId)}
-                        className="text-red-400 hover:text-red-300 px-1 sm:px-2 text-lg sm:text-xl"
-                      >
-                        ✕
-                      </button>
+                      {!votesLocked && (
+                        <button
+                          onClick={() => handleToggleSong(vote.songId)}
+                          className="text-red-400 hover:text-red-300 px-1 sm:px-2 text-lg sm:text-xl"
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
                   );
                 })}
