@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { LazyImage } from './LazyImage';
+import type { CountdownResult } from '../types';
+
+interface UndoAction {
+  type: 'add' | 'remove';
+  tab: 'hottest100' | 'hottest200';
+  result: CountdownResult;
+}
 
 export const CountdownEntry: React.FC = () => {
   const { songs, countdownResults, updateCountdownResults, hottest200Results, updateHottest200Results } = useApp();
@@ -11,6 +18,7 @@ export const CountdownEntry: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [lastAction, setLastAction] = useState<UndoAction | null>(null);
 
   const currentResults = activeTab === 'hottest100' ? countdownResults : hottest200Results;
   const updateResults = activeTab === 'hottest100' ? updateCountdownResults : updateHottest200Results;
@@ -41,11 +49,12 @@ export const CountdownEntry: React.FC = () => {
 
     setIsUpdating(true);
     try {
-      const newResults = [...currentResults];
-      newResults.push({ songId, position: nextPos });
+      const newResult = { songId, position: nextPos };
+      const newResults = [...currentResults, newResult];
       newResults.sort((a, b) => a.position - b.position);
 
       await updateResults(newResults);
+      setLastAction({ type: 'add', tab: activeTab, result: newResult });
       setSearchTerm('');
     } catch (error) {
       console.error('Error adding countdown result:', error);
@@ -58,10 +67,14 @@ export const CountdownEntry: React.FC = () => {
   const handleRemoveResult = async (position: number) => {
     if (isUpdating) return; // Prevent multiple simultaneous updates
 
+    const removedResult = currentResults.find((r) => r.position === position);
+    if (!removedResult) return;
+
     setIsUpdating(true);
     try {
       const newResults = currentResults.filter((r) => r.position !== position);
       await updateResults(newResults);
+      setLastAction({ type: 'remove', tab: activeTab, result: removedResult });
     } catch (error) {
       console.error('Error removing countdown result:', error);
       alert('Failed to remove song. Please try again.');
@@ -69,6 +82,33 @@ export const CountdownEntry: React.FC = () => {
       setIsUpdating(false);
     }
   };
+
+  const handleUndo = useCallback(async () => {
+    if (!lastAction || isUpdating) return;
+
+    setIsUpdating(true);
+    try {
+      const targetResults = lastAction.tab === 'hottest100' ? countdownResults : hottest200Results;
+      const targetUpdate = lastAction.tab === 'hottest100' ? updateCountdownResults : updateHottest200Results;
+
+      if (lastAction.type === 'add') {
+        // Undo add = remove the song
+        const newResults = targetResults.filter((r) => r.position !== lastAction.result.position);
+        await targetUpdate(newResults);
+      } else {
+        // Undo remove = add the song back
+        const newResults = [...targetResults, lastAction.result];
+        newResults.sort((a, b) => a.position - b.position);
+        await targetUpdate(newResults);
+      }
+      setLastAction(null);
+    } catch (error) {
+      console.error('Error undoing action:', error);
+      alert('Failed to undo. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [lastAction, isUpdating, countdownResults, hottest200Results, updateCountdownResults, updateHottest200Results]);
 
   const handleClearAll = async () => {
     if (isUpdating) return; // Prevent multiple simultaneous updates
@@ -258,19 +298,35 @@ export const CountdownEntry: React.FC = () => {
               <h3 className="text-lg sm:text-xl font-semibold text-white">
                 Current Results ({currentResults.length}/{maxPosition - minPosition + 1})
               </h3>
-              {currentResults.length > 0 && (
-                <button
-                  onClick={handleClearAll}
-                  disabled={isUpdating}
-                  className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition text-xs sm:text-sm font-semibold ${
-                    isUpdating
-                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                      : 'bg-red-500 text-white hover:bg-red-600'
-                  }`}
-                >
-                  {isUpdating ? 'Updating...' : 'Clear All'}
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {lastAction && (
+                  <button
+                    onClick={handleUndo}
+                    disabled={isUpdating}
+                    className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition text-xs sm:text-sm font-semibold ${
+                      isUpdating
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : 'bg-yellow-500 text-white hover:bg-yellow-600'
+                    }`}
+                    title={`Undo ${lastAction.type === 'add' ? 'add' : 'remove'}`}
+                  >
+                    ↩ Undo
+                  </button>
+                )}
+                {currentResults.length > 0 && (
+                  <button
+                    onClick={handleClearAll}
+                    disabled={isUpdating}
+                    className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition text-xs sm:text-sm font-semibold ${
+                      isUpdating
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : 'bg-red-500 text-white hover:bg-red-600'
+                    }`}
+                  >
+                    {isUpdating ? 'Updating...' : 'Clear All'}
+                  </button>
+                )}
+              </div>
             </div>
             <p className="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">
               Drag and drop to reorder the countdown

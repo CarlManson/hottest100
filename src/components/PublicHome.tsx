@@ -98,7 +98,7 @@ export const PublicHome: React.FC = () => {
   }, [leaderboard]);
 
   // Calculate awards when Hottest 100 is complete
-  const awards = calculateAwards(familyMembers, songs, countdownResults);
+  const awards = calculateAwards(familyMembers, songs, countdownResults, hottest200Results);
   const isHottest100Complete = countdownResults.length === 100;
 
   // Get the #1 song if available

@@ -12,6 +12,16 @@
   - CSV import: filters out songs already in library
   - Manual entry: blocks adding duplicate songs
   - Shows count of skipped duplicates in success message
+- Undo button in Countdown Entry page
+  - Tracks last add/remove action
+  - Yellow "↩ Undo" button appears after any action
+  - Works across both Hottest 100 and 200 tabs
+- Awards system now supports Hottest 200
+  - All existing awards now consider both countdowns
+  - New "So Close" award: picks that landed 101-200
+  - New "Deep Diver" award: most picks in 101-200 range
+  - New "Total Domination" award: most matches across full 200
+  - Perfect 10 details show breakdown of Hottest 100 vs 200
 
 ### Changed
 - Dynamic year display across all components (no more hardcoded "2025"/"2026")
