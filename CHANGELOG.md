@@ -29,7 +29,7 @@
 - Merged latest `main` (hotness styling, CurrentSongCard, Settings-based countdown date); the hardcoded countdown date was removed in favour of the Settings one
 
 ### Added
-- Shared countdown configuration (`src/config/countdown.ts`) - single source of truth for countdown year, start date and stream URL
+- Single config for the countdown year and stream URL (now part of `src/config/brand.ts`)
 - Duplicate song prevention
   - Client-side: JSON/CSV import and manual entry skip songs already in the library *and* repeats within the same import, with a skipped count
   - Database: case/whitespace-insensitive unique index on artist + title
