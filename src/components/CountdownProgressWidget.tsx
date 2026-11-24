@@ -11,6 +11,8 @@ interface CountdownProgressWidgetProps {
   numberOneSong: CountdownResult | undefined;
   /** Hide headings and progress on small screens (hero placement) */
   compact?: boolean;
+  /** Hide the progress bar when the page already shows one */
+  showProgress?: boolean;
 }
 
 export const CountdownProgressWidget: React.FC<CountdownProgressWidgetProps> = ({
@@ -20,6 +22,7 @@ export const CountdownProgressWidget: React.FC<CountdownProgressWidgetProps> = (
   recentResults,
   numberOneSong,
   compact = false,
+  showProgress = true,
 }) => {
   const isNew = useNewArrivals(recentResults);
   const hasHottest200Started = hottest200Results.length > 0;
@@ -30,18 +33,19 @@ export const CountdownProgressWidget: React.FC<CountdownProgressWidgetProps> = (
     ? `The Hottest 200 of ${COUNTDOWN_YEAR}`
     : numberOneSong
     ? `The Hottest 100 of ${COUNTDOWN_YEAR}`
-    : 'Countdown Progress';
+    : showProgress ? 'Countdown Progress' : 'Latest Entries';
 
   const progressPercent = hasHottest200Started
     ? (totalResults / 200) * 100
     : (countdownResults.length / 100) * 100;
 
   return (
-    <div className={`countdown-widget bg-white rounded-xl shadow-lg ${compact ? 'p-2' : 'p-4'} sm:p-6 border-2 border-accent-light h-fit`}>
+    <div className={`countdown-widget bg-white rounded-2xl shadow-lg ${compact ? 'p-2' : 'p-4'} sm:p-6 border-2 border-accent-light h-fit`}>
       <h3 className={`countdown-widget-title ${desktopOnly} text-xl sm:text-2xl font-bold mb-4 text-gray-800`}>
         {title}
       </h3>
 
+      {showProgress && (
       <div className={`${desktopOnly} mb-4`}>
         <div className="flex justify-between text-sm mb-1">
           <span className="font-semibold text-gray-700">
@@ -55,10 +59,11 @@ export const CountdownProgressWidget: React.FC<CountdownProgressWidgetProps> = (
           <div className="progress-bar-marker h-3 rounded-full transition-all" style={{ width: `${progressPercent}%` }} />
         </div>
       </div>
+      )}
 
       {recentResults.length > 0 && (
         <div className="latest-entries">
-          <div className={`latest-entries-title ${desktopOnly} text-xs sm:text-sm font-semibold text-gray-700 mb-2`}>
+          <div className={`latest-entries-title ${showProgress ? desktopOnly : 'hidden'} text-xs sm:text-sm font-semibold text-gray-700 mb-2`}>
             {hasHottest200Started ? 'Latest Entries (Hottest 200)' : 'Latest Entries'}
           </div>
           <div className="latest-entries-list max-h-80 overflow-y-auto space-y-1.5 sm:space-y-2 pr-2">

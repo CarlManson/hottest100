@@ -15,6 +15,7 @@ import { CountdownProgressWidget } from './CountdownProgressWidget';
 import { MostPickedSongs } from './MostPickedSongs';
 import { LiveStreamPlayer } from './LiveStreamPlayer';
 import { useResultNotifications } from '../utils/useResultNotifications';
+import { useScoreBumps } from '../hooks/useScoreBumps';
 
 export const PublicHome: React.FC = () => {
   const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
@@ -24,6 +25,7 @@ export const PublicHome: React.FC = () => {
   const [showDetailedBreakdown, setShowDetailedBreakdown] = useState(false);
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
+  const { bumps, bumpId } = useScoreBumps(leaderboard);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
 
@@ -253,12 +255,14 @@ export const PublicHome: React.FC = () => {
             {/* #1 Song Card - Only when available and Hottest 200 NOT started */}
             {showNumberOneSong && (
               <CurrentSongCard
+                key={numberOneSongData.id}
                 song={numberOneSongData}
                 position={1}
                 isNumberOne
                 variant="home"
                 size="lg"
                 className="xl:justify-end"
+                cardClassName="song-reveal"
               />
             )}
           </div>
@@ -271,11 +275,13 @@ export const PublicHome: React.FC = () => {
           <div className="current-song-and-progress mb-12 grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
             {/* Current Highest Song Card */}
             <CurrentSongCard
+              key={currentHighestSong.id}
               song={currentHighestSong}
               position={currentHighestResult.position}
               variant="home"
               size="md"
               className="xl:justify-start"
+              cardClassName="song-reveal"
             />
 
             {/* Countdown Progress Widget */}
@@ -287,6 +293,7 @@ export const PublicHome: React.FC = () => {
                 recentResults={recentResults}
                 numberOneSong={numberOneSong}
                 compact
+                showProgress={false}
               />
 
               {/* Commentator Quip */}
@@ -317,7 +324,7 @@ export const PublicHome: React.FC = () => {
               <div className="podium-leaderboard-layout grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
                 {/* Podium Visualization (Top 3) + Commentary */}
                 <div className="podium-section">
-                  <h2 className="podium-title text-center text-2xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                  <h2 className="podium-title text-center text-2xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
                 {hottest200Results.length === 100 ? "Winners Podium" : "Current Standings"}</h2>
                 <p className="podium-subtitle hidden md:block text-center text-gray-600 text-sm sm:text-base mb-5">Who's leading the pack?</p>
                   <Podium
@@ -330,10 +337,10 @@ export const PublicHome: React.FC = () => {
                 </div>
 
                 {/* Full Leaderboard */}
-                <div className="full-leaderboard xl:col-span-2 bg-white rounded-xl shadow-xl p-2 sm:p-6 border-2 border-accent-light">
+                <div className="full-leaderboard xl:col-span-2 bg-white rounded-2xl shadow-lg p-2 sm:p-6 border-2 border-accent-light">
                   <div className="leaderboard-header flex items-center justify-between mb-4">
                     <h3 className="leaderboard-title text-xl sm:text-2xl font-bold text-gray-800">
-                      <span className="hidden md:block">Full</span> Leaderboard
+                      <span className="hidden md:inline">Full</span> Leaderboard
                     </h3>
                     {totalResults > 0 && (
                       <button
@@ -356,9 +363,9 @@ export const PublicHome: React.FC = () => {
                         <div
                           key={entry.member.id}
                           onClick={() => profile && setSelectedProfile(profile)}
-                          className={`leaderboard-entry flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
+                          className={`leaderboard-entry relative flex items-center ${bumps.has(entry.member.id) ? 'score-bump' : ''} gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
                             getRank(entry.member.id) <= 3 && entry.score > 0
-                              ? 'bg-gradient-to-r from-yellow-50 to-primary-50 border-2 border-yellow-300'
+                              ? 'bg-gradient-to-r from-yellow-50 to-primary-50 border border-yellow-300'
                               : 'bg-gray-50'
                           } ${profile ? 'cursor-pointer hover:shadow-md' : ''}`}
                         >
@@ -407,6 +414,9 @@ export const PublicHome: React.FC = () => {
                               <div className="score-max text-xs text-gray-500">
                                 of {maxPossibleScore}
                               </div>
+                            )}
+                            {bumps.has(entry.member.id) && (
+                              <div key={bumpId} className="score-delta">+{bumps.get(entry.member.id)}</div>
                             )}
                           </div>
                         </div>
@@ -438,6 +448,7 @@ export const PublicHome: React.FC = () => {
                     hottest200Results={hottest200Results}
                     recentResults={recentResults}
                     numberOneSong={numberOneSong}
+                    showProgress={false}
                   />
 
                   {/* Commentator Quip */}
@@ -445,7 +456,7 @@ export const PublicHome: React.FC = () => {
                 </div>
 
                 {/* Full Leaderboard */}
-                <div className="full-leaderboard xl:col-span-2 bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-primary-200">
+                <div className="full-leaderboard xl:col-span-2 bg-white rounded-2xl shadow-lg p-4 sm:p-6 border-2 border-primary-200">
                   <div className="leaderboard-header flex items-center justify-between mb-4">
                     <h3 className="leaderboard-title text-xl sm:text-2xl font-bold text-gray-800 no-wrap">
                       Full Leaderboard
@@ -471,9 +482,9 @@ export const PublicHome: React.FC = () => {
                         <div
                           key={entry.member.id}
                           onClick={() => profile && setSelectedProfile(profile)}
-                          className={`leaderboard-entry flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
+                          className={`leaderboard-entry relative flex items-center ${bumps.has(entry.member.id) ? 'score-bump' : ''} gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
                             getRank(entry.member.id) <= 3 && entry.score > 0
-                              ? 'bg-gradient-to-r from-yellow-50 to-primary-50 border-2 border-yellow-300'
+                              ? 'bg-gradient-to-r from-yellow-50 to-primary-50 border border-yellow-300'
                               : 'bg-gray-50'
                           } ${profile ? 'cursor-pointer hover:shadow-md' : ''}`}
                         >
@@ -522,6 +533,9 @@ export const PublicHome: React.FC = () => {
                               <div className="score-max text-xs text-gray-500">
                                 of {maxPossibleScore}
                               </div>
+                            )}
+                            {bumps.has(entry.member.id) && (
+                              <div key={bumpId} className="score-delta">+{bumps.get(entry.member.id)}</div>
                             )}
                           </div>
                         </div>
@@ -573,7 +587,7 @@ export const PublicHome: React.FC = () => {
                   </div>
                 )}
 
-                <div className="predictions-submitted bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-primary-200">
+                <div className="predictions-submitted bg-white rounded-2xl shadow-lg p-4 sm:p-6 border-2 border-primary-200">
                   <h3 className="predictions-submitted-title text-xl sm:text-2xl font-bold mb-4 text-gray-800">
                     Predictions Submitted
                   </h3>

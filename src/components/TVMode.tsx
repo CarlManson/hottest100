@@ -7,10 +7,18 @@ import { CountdownQuip } from './CountdownQuip';
 import { CurrentSongCard } from './CurrentSongCard';
 import { useCountdown } from '../hooks/useCountdownSettings';
 import { brand } from '../config/brand';
+import { useTvRehearsal } from '../hooks/useTvRehearsal';
+import { useNewArrivals } from '../hooks/useNewArrivals';
+import { useScoreBumps } from '../hooks/useScoreBumps';
+import { getHeatStage, getTvIntensity } from '../utils/heat';
+import { TvAtmosphere, RehearsalControls } from './TvEffects';
 
 // TV Mode - Simplified view for large screens
 export const TVMode: React.FC = () => {
-  const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
+  const live = useApp();
+  const { familyMembers, getProfileForMember } = live;
+  const rehearsal = useTvRehearsal(live.songs);
+  const { songs, countdownResults, hottest200Results } = rehearsal.active ? rehearsal.data : live;
   const countdown = useCountdown();
 
   // Add data-display-mode attribute to body when TV mode is active
@@ -24,10 +32,32 @@ export const TVMode: React.FC = () => {
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
+  const { bumps, bumpId } = useScoreBumps(leaderboard);
+
+  // The lowest position revealed so far in the active broadcast drives TV intensity
+  const activeResults = hottest200Results.length > 0 ? hottest200Results : countdownResults;
+  const currentPosition = activeResults.length > 0 ? Math.min(...activeResults.map(r => r.position)) : null;
+  const heatStage = getHeatStage(currentPosition);
+  const revealKey = activeResults.find(r => r.position === currentPosition)?.songId ?? null;
+
+  useEffect(() => {
+    const body = document.body;
+    body.dataset.tvStage = heatStage;
+    body.style.setProperty('--tv-intensity', String(getTvIntensity(currentPosition)));
+    if (rehearsal.active) {
+      if (currentPosition != null) body.style.setProperty('--current-song', String(currentPosition));
+      else body.style.removeProperty('--current-song');
+    }
+  }, [heatStage, currentPosition, rehearsal.active]);
+
+  useEffect(() => () => {
+    delete document.body.dataset.tvStage;
+    document.body.style.removeProperty('--tv-intensity');
+  }, []);
 
   // Pre-countdown mode: countdown enabled, not started, no results
   // The songs.length check is now handled by CSS :has() to avoid React state blink issues
-  const isPreCountdownModeBase = countdown.isEnabled && !countdown.isStarted && totalResults === 0;
+  const isPreCountdownModeBase = !rehearsal.active && countdown.isEnabled && !countdown.isStarted && totalResults === 0;
 
   // Calculate ranks with tie handling
   const getRank = useMemo(() => {
@@ -73,6 +103,7 @@ export const TVMode: React.FC = () => {
   // For countdown progress widget
   const displayResults = hasHottest200Started ? hottest200Results : countdownResults;
   const recentResults = [...displayResults].sort((a, b) => a.position - b.position);
+  const isNewArrival = useNewArrivals(recentResults);
 
   // Get stored quip for most recent countdown entry (song commentary)
   const countdownQuip = useMemo(() => {
@@ -206,6 +237,21 @@ export const TVMode: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       
 
+      <TvAtmosphere stage={heatStage} revealKey={revealKey} />
+      {rehearsal.active && (
+        <RehearsalControls
+          step={rehearsal.step}
+          totalSteps={rehearsal.totalSteps}
+          setStep={rehearsal.setStep}
+          playing={rehearsal.playing}
+          setPlaying={rehearsal.setPlaying}
+          speedMs={rehearsal.speedMs}
+          setSpeedMs={rehearsal.setSpeedMs}
+          currentPosition={currentPosition}
+          stage={heatStage}
+        />
+      )}
+
       {/* Main Layout: Banner (1/3) | Content (2/3) */}
       <div className="flex min-h-screen" id="tv-mode-container">
         {/* Blue Banner - Vertical, 1/3 width */}
@@ -219,22 +265,24 @@ export const TVMode: React.FC = () => {
               <div>
                 {numberOneSong && numberOneSongData && !hasHottest200Started ? (
                   <CurrentSongCard
+                    key={numberOneSongData.id}
                     song={numberOneSongData}
                     position={1}
                     isNumberOne
                     variant="tv"
                     size="lg"
                     id="song"
-                    cardClassName={`song-rank-${numberOneSong.position}`}
+                    cardClassName={`song-rank-${numberOneSong.position} song-reveal`}
                   />
                 ) : currentHighestResult && currentHighestSong ? (
                   <CurrentSongCard
+                    key={currentHighestSong.id}
                     song={currentHighestSong}
                     position={currentHighestResult.position}
                     variant="tv"
                     size="lg"
                     id="song"
-                    cardClassName={`song-rank-${currentHighestResult.position}`}
+                    cardClassName={`song-rank-${currentHighestResult.position} song-reveal`}
                   />
                 ) : null}
 
@@ -331,8 +379,8 @@ export const TVMode: React.FC = () => {
 
                     return (
                       <div
-                        key={result.position}
-                        className="list-item-song flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                        key={result.songId}
+                        className={`list-item-song flex items-center gap-3 p-3 bg-gray-50 rounded-lg ${isNewArrival(result) ? 'song-arrival' : ''}`}
                         style={{ '--current-song': result.position } as React.CSSProperties}
                       >
                         {song.thumbnail && (
@@ -379,7 +427,7 @@ export const TVMode: React.FC = () => {
                   return (
                     <div
                       key={entry.member.id}
-                      className={`member flex items-center gap-4 p-4 rounded-lg transition ${
+                      className={`member relative flex items-center gap-4 p-4 rounded-lg transition ${bumps.has(entry.member.id) ? 'score-bump' : ''} ${
                         getRank(entry.member.id) <= 3 && entry.score > 0
                           ? 'bg-gradient-to-r from-yellow-50 to-primary-50 border-2 border-yellow-300'
                           : 'bg-gray-50'
@@ -408,6 +456,9 @@ export const TVMode: React.FC = () => {
                         <div className="text-3xl font-black text-blue-600">
                           {entry.score}
                         </div>
+                        {bumps.has(entry.member.id) && (
+                          <div key={bumpId} className="score-delta">+{bumps.get(entry.member.id)}</div>
+                        )}
                         
                       </div>
                     </div>

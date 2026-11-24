@@ -3,9 +3,25 @@
 ## [Unreleased] - 2026-11-24
 
 ### Action needed before the countdown
-- **Confirm the countdown date** in `src/config/countdown.ts` once Triple J announces it (placeholder: Sat 23 Jan 2027, 9:00 AM AWST)
+- **Set the countdown date** in Settings once Triple J announces it ("Use default" now picks the fourth Saturday of January)
+- **Drop in the new event branding** — see `src/assets/brand/README.md` and `src/config/brand.ts`
 - **Run `supabase-add-song-unique-index.sql`** in the Supabase SQL Editor (new projects get it from `supabase-schema.sql`)
 - Optional: set `VITE_STREAM_URL` to show the "Listen live" button
+
+### Added — branding, TV mode and motion
+- Brand layer: `src/config/brand.ts` + `src/assets/brand/` hold the event name, year, logo, mascot/badge, backgrounds, favicon and colours
+  - Colours become CSS variables at runtime and Tailwind `primary-*` / `secondary-*` / `tertiary-*` scales (all hardcoded orange/pink classes migrated)
+  - Hotness cold/hot endpoints are configurable too
+- TV mode escalates through the broadcast, built on `--hotness`:
+  - `--tv-intensity` (0→1 per broadcast) and `data-tv-stage` (build → heat → fever → finale) on `<body>`
+  - Ambient glow that brightens and speeds up, a reveal flash on every new song, heartbeat glow on the featured song from #50, embers from #10, confetti at #1 / #101
+- TV rehearsal mode: open `/?rehearsal#tv` to scrub or auto-play a simulated countdown with the real song list
+- Song arrival animations: featured song card "reveal", new entries slide in with an accent glow, leaderboard rows bump with a floating "+N"
+- All motion lives in `src/styles/_motion.scss` and is disabled under `prefers-reduced-motion`
+
+### Changed — polish
+- Home: removed the duplicated progress bar from the latest-entries card (the hero already shows it), fixed "Full Leaderboard" breaking onto two lines, smaller podium heading, lighter and consistent card borders
+- Merged latest `main` (hotness styling, CurrentSongCard, Settings-based countdown date); the hardcoded countdown date was removed in favour of the Settings one
 
 ### Added
 - Shared countdown configuration (`src/config/countdown.ts`) - single source of truth for countdown year, start date and stream URL
