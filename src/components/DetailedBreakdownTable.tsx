@@ -79,7 +79,7 @@ export const DetailedBreakdownTable: React.FC = () => {
               onClick={() => setActiveTab(key)}
               className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm transition ${
                 activeTab === key
-                  ? 'bg-orange-500 text-white shadow-md'
+                  ? 'bg-primary-500 text-white shadow-md'
                   : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
               }`}
             >
@@ -93,8 +93,8 @@ export const DetailedBreakdownTable: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-xs sm:text-sm">
             <thead>
-              <tr className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 text-white">
-                <th className="sticky left-0 bg-orange-500 px-2 sm:px-4 py-2 sm:py-3 text-left font-bold whitespace-nowrap z-10">
+              <tr className="bg-gradient-to-r from-primary-500 via-tertiary-500 to-secondary-500 text-white">
+                <th className="sticky left-0 bg-primary-500 px-2 sm:px-4 py-2 sm:py-3 text-left font-bold whitespace-nowrap z-10">
                   Name
                 </th>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rank) => (
@@ -105,7 +105,7 @@ export const DetailedBreakdownTable: React.FC = () => {
                     Pick #{rank}
                   </th>
                 ))}
-                <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-bold whitespace-nowrap bg-orange-600">
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-bold whitespace-nowrap bg-primary-600">
                   Total
                 </th>
               </tr>
@@ -126,14 +126,14 @@ export const DetailedBreakdownTable: React.FC = () => {
                     key={entry.member.id}
                     className={`border-b border-gray-200 ${
                       index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
-                    } hover:bg-orange-50 transition`}
+                    } hover:bg-primary-50 transition`}
                   >
                     {/* Name column - sticky */}
                     <td className={`sticky left-0 px-2 sm:px-4 py-2 sm:py-3 font-bold whitespace-nowrap z-10 ${
                       index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
                     }`}>
                       <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-orange-500 text-white text-[10px] sm:text-xs font-bold flex-shrink-0">
+                        <span className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-500 text-white text-[10px] sm:text-xs font-bold flex-shrink-0">
                           {index + 1}
                         </span>
                         <span className="text-xs sm:text-sm">{entry.member.name}</span>
@@ -198,7 +198,7 @@ export const DetailedBreakdownTable: React.FC = () => {
                     })}
 
                     {/* Total score column */}
-                    <td className="px-2 sm:px-4 py-2 sm:py-3 text-center font-black text-base sm:text-xl text-orange-600 bg-orange-50">
+                    <td className="px-2 sm:px-4 py-2 sm:py-3 text-center font-black text-base sm:text-xl text-primary-600 bg-primary-50">
                       {filteredScores.get(entry.member.id) || 0}
                     </td>
                   </tr>

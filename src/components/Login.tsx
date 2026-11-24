@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import banner from '../assets/banner-bg.jpg';
+import { brand } from '../config/brand';
 
 interface LoginProps {
   onLogin: () => void;
@@ -29,8 +29,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="min-h-screen flex items-center justify-center">
       {/* Background */}
       <div
-        className="absolute inset-0 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 full-banner-background"
-        style={{ '--banner-image': `url(${banner})` } as React.CSSProperties}
+        className="absolute inset-0 bg-gradient-to-r from-primary-500 via-tertiary-500 to-secondary-500 full-banner-background"
+        style={{ '--banner-image': `url(${brand.images.background})` } as React.CSSProperties}
       >
         <div className="absolute inset-0 bg-black/40"></div>
       </div>
@@ -39,7 +39,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="relative z-10 w-full max-w-md mx-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
               Triple J Hottest 100
             </h1>
             <p className="text-gray-600 text-sm sm:text-base">Prediction Tracker</p>
@@ -55,7 +55,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-500 focus:outline-none transition"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition"
                 placeholder="Enter username"
                 required
               />
@@ -70,7 +70,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-500 focus:outline-none transition"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition"
                 placeholder="Enter password"
                 required
               />
@@ -84,7 +84,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold py-3 px-6 rounded-lg hover:from-orange-600 hover:to-pink-600 transition shadow-lg"
+              className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold py-3 px-6 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition shadow-lg"
             >
               Login
             </button>

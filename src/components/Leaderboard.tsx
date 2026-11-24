@@ -93,7 +93,7 @@ export const Leaderboard: React.FC = () => {
                       entry.score === 0 ? 'bg-gray-200 text-gray-400' :
                       rank === 1 ? 'bg-yellow-500 text-white' :
                       rank === 2 ? 'bg-gray-400 text-white' :
-                      rank === 3 ? 'bg-orange-600 text-white' :
+                      rank === 3 ? 'bg-primary-600 text-white' :
                       'bg-gray-300 text-gray-700'
                     }`}>
                       {entry.score === 0 ? '-' : rank}
@@ -107,13 +107,13 @@ export const Leaderboard: React.FC = () => {
                               e.stopPropagation();
                               setSelectedProfile(profile);
                             }}
-                            className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-orange-500 hover:to-pink-500 transition whitespace-nowrap cursor-pointer"
+                            className="bg-gradient-to-r from-primary-400 to-secondary-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-primary-500 hover:to-secondary-500 transition whitespace-nowrap cursor-pointer"
                           >
                             {profile.label}
                           </button>
                         )}
                         {profile && profile.label && !profile.musicTasteDescription && (
-                          <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                          <span className="bg-gradient-to-r from-primary-400 to-secondary-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
                             {profile.label}
                           </span>
                         )}
@@ -291,7 +291,7 @@ export const Leaderboard: React.FC = () => {
                             <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                               <span className="truncate">{song.artist}</span>
                               {song.isAustralian && (
-                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                <span className="bg-primary-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                                   AUS
                                 </span>
                               )}

@@ -5,8 +5,7 @@ body {
 /* --- CONFIGURATION --- */
 /* Define Start/End Colors (Hex or Name is fine!) */
 /* We will force Saturation/Lightness later to keep UI consistent */
-/* Blue at 1 */
-/* Red at 200 */
+/* Cold/hot endpoints come from brand.colors.cold / .hot in src/config/brand.ts */
 /* Tuning */
 /* Unified Saturation */
 /* Base Lightness */
@@ -23,7 +22,7 @@ body {
   /* 2. CREATE THE BASE COLOR (The Source of Truth) */
   /* 'in hsl' interpolates around the color wheel */
   /* Use 'shorter hue' (default) or 'longer hue' to control direction */
-  --c-source: color-mix(in hsl, #6ea4bc, #ff9d00 var(--mix-pct));
+  --c-source: color-mix(in hsl, var(--hotness-cold, #6ea4bc), var(--hotness-hot, #ff9d00) var(--mix-pct));
   /* 3. GENERATE THE 9 VARIABLES USING RELATIVE COLOR SYNTAX */
   /* We extract 'h' from the source, but FORCE 's' and 'l' to our constants */
   /* GROUP A: Main Accent */
@@ -71,7 +70,7 @@ body {
 }
 
 #main-menu {
-  background-color: rgb(41.226993865, 46.036809816, 70.773006135);
+  background-color: var(--brand-surface);
 }
 #main-menu .desktop-menu .menu-link, #main-menu .mobile-menu .menu-link {
   color: #ffffff;
@@ -86,11 +85,11 @@ body {
 }
 #main-menu .desktop-menu .menu-link:hover, #main-menu .mobile-menu .menu-link:hover {
   color: #ffffff;
-  background-color: rgb(36.381595092, 41.6294478528, 64.418404908);
+  background-color: color-mix(in srgb, var(--brand-surface) 80%, #111827);
 }
 #main-menu .desktop-menu .menu-link.active, #main-menu .mobile-menu .menu-link.active {
   color: #ffffff;
-  background-color: #f97316;
+  background-color: var(--brand-primary);
 }
 #main-menu .desktop-menu {
   gap: 0;
@@ -249,7 +248,7 @@ body {
   font-weight: bold;
   letter-spacing: 0.02em;
   margin-bottom: 1rem;
-  color: #f97316;
+  color: var(--brand-primary);
 }
 .countdown-timer {
   display: flex;
@@ -372,7 +371,7 @@ main {
   flex-shrink: 0;
   width: 2.5rem;
   height: 2.5rem;
-  background: linear-gradient(to bottom right, #f97316, #ef4444);
+  background: linear-gradient(to bottom right, var(--brand-primary), var(--brand-tertiary));
   border-radius: 9999px;
   display: flex;
   align-items: center;
@@ -464,7 +463,7 @@ main {
 }
 
 [data-display-mode=tv] #tv-mode-container {
-  background: url("../assets/banner-bg-blur.jpg") no-repeat center center/cover;
+  background: var(--brand-background-tv) no-repeat center center/cover;
 }
 [data-display-mode=tv] .home-link {
   position: fixed;
@@ -645,5 +644,264 @@ main {
   transform: translateY(-2px);
   background: rgba(255, 255, 255, 0.2);
 }
+@keyframes song-arrival-in {
+  from {
+    opacity: 0;
+    translate: 0 -0.75rem;
+    scale: 0.96;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+@keyframes song-arrival-glow {
+  0% {
+    box-shadow: 0 0 0 3px var(--accent-col-base, var(--brand-primary)), 0 0 1.5rem var(--accent-col-light, var(--brand-primary));
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent, 0 0 0 transparent;
+  }
+}
+.song-arrival {
+  animation: song-arrival-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.25) both, song-arrival-glow 2.5s ease-out 0.2s both;
+}
 
-/*# sourceMappingURL=compiled.css.map */
+@keyframes score-bump {
+  0% {
+    scale: 1;
+  }
+  30% {
+    scale: 1.03;
+  }
+  100% {
+    scale: 1;
+  }
+}
+@keyframes score-delta-float {
+  0% {
+    opacity: 0;
+    translate: 0 0.5rem;
+    scale: 0.6;
+  }
+  20% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1.1;
+  }
+  80% {
+    opacity: 1;
+    translate: 0 -0.5rem;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -1rem;
+    scale: 1;
+  }
+}
+.score-bump {
+  animation: score-bump 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.25);
+}
+
+.score-delta {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.75rem;
+  font-weight: 900;
+  font-size: 0.875rem;
+  color: var(--accent-col-dark, var(--brand-primary));
+  pointer-events: none;
+  animation: score-delta-float 2.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes song-reveal {
+  0% {
+    opacity: 0;
+    scale: 0.7;
+    rotate: -6deg;
+    filter: blur(12px) brightness(2);
+  }
+  55% {
+    opacity: 1;
+    scale: 1.04;
+    rotate: 1deg;
+    filter: blur(0) brightness(1.25);
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+    rotate: 0deg;
+    filter: blur(0) brightness(1);
+  }
+}
+.song-reveal {
+  animation: song-reveal calc(0.7s + var(--tv-intensity, 0.3) * 0.9s) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+[data-display-mode=tv] {
+  --tv-i: var(--tv-intensity, 0);
+}
+
+.tv-atmosphere {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+  mix-blend-mode: screen;
+}
+.tv-atmosphere--front {
+  z-index: 5;
+  mix-blend-mode: normal;
+}
+
+.tv-atmosphere__glow {
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: calc(0.08 + var(--tv-i) * 0.42);
+  animation: tv-drift calc(30s - var(--tv-i) * 20s) ease-in-out infinite alternate;
+  transition: opacity 2s ease;
+}
+.tv-atmosphere__glow--a {
+  background: radial-gradient(circle, var(--accent-col-base, var(--brand-primary)), transparent 65%);
+  left: -20vmax;
+  bottom: -25vmax;
+}
+.tv-atmosphere__glow--b {
+  background: radial-gradient(circle, var(--post-accent-col-base, var(--brand-secondary)), transparent 65%);
+  right: -25vmax;
+  top: -30vmax;
+  animation-direction: alternate-reverse;
+}
+
+@keyframes tv-drift {
+  from {
+    translate: 0 0;
+    scale: 1;
+  }
+  to {
+    translate: 12vw -8vh;
+    scale: 1.15;
+  }
+}
+.tv-reveal-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 17% 40%, var(--accent-col-light, white), transparent 60%);
+  animation: tv-flash calc(1s + var(--tv-i) * 1.2s) ease-out both;
+}
+
+@keyframes tv-flash {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: calc(0.25 + var(--tv-i) * 0.6);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+[data-tv-stage=heat] #song > .song-card-background,
+[data-tv-stage=fever] #song > .song-card-background,
+[data-tv-stage=finale] #song > .song-card-background {
+  animation-name: song-reveal, tv-heartbeat;
+  animation-duration: calc(0.7s + var(--tv-intensity, 0.3) * 0.9s), calc(2.6s - var(--tv-intensity, 0) * 1.6s);
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1), ease-in-out;
+  animation-delay: 0s, 1.6s;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: both, none;
+}
+
+@keyframes tv-heartbeat {
+  0%, 100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 calc(1rem + var(--tv-intensity, 0) * 3rem) calc(var(--tv-intensity, 0) * 0.75rem) var(--accent-col-base, var(--brand-primary));
+  }
+}
+.tv-embers {
+  position: absolute;
+  inset: 0;
+}
+
+.tv-ember {
+  position: absolute;
+  left: var(--x);
+  bottom: -2rem;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: hsl(from var(--accent-col-light, #ffb347) calc(h + var(--hue-shift)) s l);
+  box-shadow: 0 0 calc(var(--size) * 2) var(--accent-col-base, #ff7a00);
+  animation: tv-ember-rise 6s linear var(--delay) infinite;
+}
+
+@keyframes tv-ember-rise {
+  0% {
+    opacity: 0;
+    translate: 0 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    translate: var(--drift) -110vh;
+  }
+}
+.tv-confetti {
+  position: absolute;
+  inset: 0;
+}
+
+.tv-confetti__piece {
+  position: absolute;
+  top: -2rem;
+  left: var(--x);
+  width: calc(var(--size) * 1.6);
+  height: calc(var(--size) * 0.7);
+  border-radius: 2px;
+  background: hsl(from var(--accent-col-base, var(--brand-primary)) calc(h + var(--hue-shift) * 3) s l);
+  animation: tv-confetti-fall 5s linear var(--delay) infinite;
+}
+
+@keyframes tv-confetti-fall {
+  from {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  to {
+    translate: var(--drift) 110vh;
+    rotate: var(--spin);
+  }
+}
+[data-display-mode=tv] #tv-mode-container {
+  position: relative;
+}
+[data-display-mode=tv] #tv-mode-container > * {
+  position: relative;
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .song-arrival,
+  .score-bump,
+  .score-delta,
+  .song-reveal,
+  .tv-atmosphere__glow,
+  .tv-reveal-flash,
+  [data-tv-stage] #song > .song-card-background {
+    animation: none !important;
+  }
+  .tv-embers,
+  .tv-confetti {
+    display: none;
+  }
+}

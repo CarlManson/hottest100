@@ -2,11 +2,14 @@ import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import type { FamilyMember } from '../types';
 import { LazyImage } from './LazyImage';
+import { useCountdown } from '../hooks/useCountdownSettings';
 
 export const VotingInterface: React.FC = () => {
   const {
     songs,
     familyMembers,
+    countdownResults,
+    hottest200Results,
     addFamilyMember,
     updateFamilyMember,
     removeFamilyMember,
@@ -23,6 +26,15 @@ export const VotingInterface: React.FC = () => {
   const [expandedMember, setExpandedMember] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [lockOverridden, setLockOverridden] = useState(false);
+
+  const countdown = useCountdown();
+
+  const countdownUnderway =
+    (countdown.isEnabled && countdown.isStarted) ||
+    countdownResults.length > 0 ||
+    hottest200Results.length > 0;
+  const votesLocked = countdownUnderway && !lockOverridden;
 
   // Ref for scrolling to voting panel
   const votingPanelRef = useRef<HTMLDivElement>(null);
@@ -116,7 +128,7 @@ export const VotingInterface: React.FC = () => {
   };
 
   const handleToggleSong = (songId: string) => {
-    if (!selectedMember) return;
+    if (!selectedMember || votesLocked) return;
 
     const existingVote = selectedMember.votes.find((v) => v.songId === songId);
 
@@ -161,20 +173,40 @@ export const VotingInterface: React.FC = () => {
     <div className="max-w-7xl mx-auto p-3 sm:p-6">
       <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 hidden sm:block">Voting</h2>
 
-      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-orange-200">
+      {countdownUnderway && (
+        <div className={`rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-2 ${
+          votesLocked ? 'bg-yellow-50 border-yellow-300' : 'bg-red-50 border-red-300'
+        }`}>
+          <p className="text-sm font-semibold text-gray-800">
+            {votesLocked
+              ? '🔒 Votes are locked — the countdown has started.'
+              : '⚠️ Votes unlocked for corrections. Changes affect live scores.'}
+          </p>
+          <button
+            onClick={() => setLockOverridden(!lockOverridden)}
+            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-white transition ${
+              votesLocked ? 'bg-gray-600 hover:bg-gray-700' : 'bg-red-500 hover:bg-red-600'
+            }`}
+          >
+            {votesLocked ? 'Unlock for corrections' : 'Re-lock votes'}
+          </button>
+        </div>
+      )}
+
+      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-primary-200">
         <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">Mates</h3>
         <div className="flex gap-2 mb-3 sm:mb-4">
           <input
             type="text"
             placeholder="Enter name"
-            className="flex-1 p-2 sm:p-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-sm sm:text-base"
+            className="flex-1 p-2 sm:p-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none text-sm sm:text-base"
             value={newMemberName}
             onChange={(e) => setNewMemberName(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAddMember()}
           />
           <button
             onClick={handleAddMember}
-            className="bg-orange-500 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-orange-600 transition font-bold text-sm sm:text-base whitespace-nowrap"
+            className="bg-primary-500 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-primary-600 transition font-bold text-sm sm:text-base whitespace-nowrap"
           >
             Add Member
           </button>
@@ -187,7 +219,7 @@ export const VotingInterface: React.FC = () => {
                 onClick={() => handleEditVotes(member)}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition font-bold text-sm sm:text-base ${
                   selectedMember?.id === member.id
-                    ? 'bg-orange-500 text-white shadow-md'
+                    ? 'bg-primary-500 text-white shadow-md'
                     : 'bg-gray-200 hover:bg-gray-300'
                 }`}
               >
@@ -230,9 +262,13 @@ export const VotingInterface: React.FC = () => {
                   <div
                     key={song.id}
                     onClick={() => handleToggleSong(song.id)}
-                    className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg cursor-pointer transition ${
+                    className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition ${
+                      votesLocked ? 'cursor-not-allowed' : 'cursor-pointer'
+                    } ${
                       isSelected
                         ? 'bg-green-50 border-2 border-green-500'
+                        : votesLocked
+                        ? 'bg-gray-50 opacity-60'
                         : 'bg-gray-50 hover:bg-gray-100'
                     }`}
                   >
@@ -248,7 +284,7 @@ export const VotingInterface: React.FC = () => {
                       <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                         <span className="truncate">{song.artist}</span>
                         {song.isAustralian && (
-                          <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                          <span className="bg-primary-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                             AUS
                           </span>
                         )}
@@ -291,18 +327,20 @@ export const VotingInterface: React.FC = () => {
                         <div className="text-[10px] sm:text-xs text-gray-400 flex items-center gap-1">
                           <span className="truncate">{song.artist}</span>
                           {song.isAustralian && (
-                            <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                            <span className="bg-primary-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                               AUS
                             </span>
                           )}
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleToggleSong(vote.songId)}
-                        className="text-red-400 hover:text-red-300 px-1 sm:px-2 text-lg sm:text-xl"
-                      >
-                        ✕
-                      </button>
+                      {!votesLocked && (
+                        <button
+                          onClick={() => handleToggleSong(vote.songId)}
+                          className="text-red-400 hover:text-red-300 px-1 sm:px-2 text-lg sm:text-xl"
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -322,7 +360,7 @@ export const VotingInterface: React.FC = () => {
             {familyMembers.map((member) => (
               <div
                 key={member.id}
-                className="bg-white rounded-xl shadow-lg border-2 border-orange-200 overflow-hidden"
+                className="bg-white rounded-xl shadow-lg border-2 border-primary-200 overflow-hidden"
               >
                 <button
                   onClick={() => setExpandedMember(expandedMember === member.id ? null : member.id)}
@@ -330,7 +368,7 @@ export const VotingInterface: React.FC = () => {
                 >
                   <h4 className="text-lg font-bold text-gray-800">{member.name}</h4>
                   <div className="flex items-center gap-2">
-                    <span className="bg-orange-500 text-white px-2.5 py-0.5 rounded-full font-bold text-xs">
+                    <span className="bg-primary-500 text-white px-2.5 py-0.5 rounded-full font-bold text-xs">
                       {member.votes.length}/10
                     </span>
                     <span className="text-gray-500 text-xl">
@@ -364,7 +402,7 @@ export const VotingInterface: React.FC = () => {
                                 <div className="text-[10px] text-gray-600 flex items-center gap-1">
                                   <span className="truncate">{song.artist}</span>
                                   {song.isAustralian && (
-                                    <span className="bg-orange-500 text-white text-[10px] font-bold px-1 py-0.5 rounded flex-shrink-0">
+                                    <span className="bg-primary-500 text-white text-[10px] font-bold px-1 py-0.5 rounded flex-shrink-0">
                                       AUS
                                     </span>
                                   )}
@@ -377,7 +415,7 @@ export const VotingInterface: React.FC = () => {
                     )}
                     <button
                       onClick={() => handleEditVotes(member)}
-                      className="w-full bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition font-semibold text-sm"
+                      className="w-full bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition font-semibold text-sm"
                     >
                       Edit Votes
                     </button>
@@ -392,11 +430,11 @@ export const VotingInterface: React.FC = () => {
             {familyMembers.map((member) => (
               <div
                 key={member.id}
-                className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200"
+                className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-primary-200"
               >
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <h4 className="text-lg sm:text-xl font-bold text-gray-800">{member.name}</h4>
-                  <span className="bg-orange-500 text-white px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full font-bold text-xs sm:text-sm">
+                  <span className="bg-primary-500 text-white px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full font-bold text-xs sm:text-sm">
                     {member.votes.length}/10
                   </span>
                 </div>
@@ -424,7 +462,7 @@ export const VotingInterface: React.FC = () => {
                             <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                               <span className="truncate">{song.artist}</span>
                               {song.isAustralian && (
-                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                <span className="bg-primary-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                                   AUS
                                 </span>
                               )}
@@ -437,7 +475,7 @@ export const VotingInterface: React.FC = () => {
                 )}
                 <button
                   onClick={() => handleEditVotes(member)}
-                  className="w-full mt-3 sm:mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition font-semibold text-sm sm:text-base"
+                  className="w-full mt-3 sm:mt-4 bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition font-semibold text-sm sm:text-base"
                 >
                   Edit Votes
                 </button>
@@ -483,7 +521,7 @@ export const VotingInterface: React.FC = () => {
                     if (e.key === 'Enter') handleSaveEdit();
                     if (e.key === 'Escape') handleCancelEdit();
                   }}
-                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-sm sm:text-base"
+                  className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none text-sm sm:text-base"
                   autoFocus
                 />
                 <div className="flex gap-2 mt-2">
@@ -508,7 +546,7 @@ export const VotingInterface: React.FC = () => {
                   <label className="block text-sm font-semibold mb-2 text-gray-700">Current Profile</label>
                   {profile.label && (
                     <div className="mb-2">
-                      <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-sm font-bold px-3 py-1 rounded-full">
+                      <span className="bg-gradient-to-r from-primary-400 to-secondary-400 text-white text-sm font-bold px-3 py-1 rounded-full">
                         {profile.label}
                       </span>
                     </div>
@@ -543,7 +581,7 @@ export const VotingInterface: React.FC = () => {
                     {!isGeneratingProfiles && canGenerateProfile && (
                       <button
                         onClick={handleGenerateProfile}
-                        className="w-full px-4 py-2 rounded-lg font-semibold text-sm transition bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600"
+                        className="w-full px-4 py-2 rounded-lg font-semibold text-sm transition bg-gradient-to-r from-purple-500 to-secondary-500 text-white hover:from-purple-600 hover:to-secondary-600"
                       >
                         ✨ Re/generate Profile
                       </button>

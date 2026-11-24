@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import { calculateAwards } from '../utils/awards';
 import type { MemberProfile } from '../types';
-import banner from '../assets/banner-bg.jpg';
+import { brand } from '../config/brand';
 import { LazyImage } from './LazyImage';
 import { CountdownQuip } from './CountdownQuip';
 import { Podium } from './Podium';
@@ -11,6 +11,11 @@ import { getPodiumQuip } from '../data/podiumQuips';
 import { DetailedBreakdownTable } from './DetailedBreakdownTable';
 import { CurrentSongCard } from './CurrentSongCard';
 import { useCountdown } from '../hooks/useCountdownSettings';
+import { CountdownProgressWidget } from './CountdownProgressWidget';
+import { MostPickedSongs } from './MostPickedSongs';
+import { LiveStreamPlayer } from './LiveStreamPlayer';
+import { useResultNotifications } from '../utils/useResultNotifications';
+import { useScoreBumps } from '../hooks/useScoreBumps';
 
 export const PublicHome: React.FC = () => {
   const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
@@ -20,6 +25,7 @@ export const PublicHome: React.FC = () => {
   const [showDetailedBreakdown, setShowDetailedBreakdown] = useState(false);
 
   const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
+  const { bumps, bumpId } = useScoreBumps(leaderboard);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
 
@@ -49,8 +55,10 @@ export const PublicHome: React.FC = () => {
   }, [leaderboard]);
 
   // Calculate awards when Hottest 100 is complete
-  const awards = calculateAwards(familyMembers, songs, countdownResults);
+  const awards = calculateAwards(familyMembers, songs, countdownResults, hottest200Results);
   const isHottest100Complete = countdownResults.length === 100;
+  const isHottest200Complete = hottest200Results.length === 100;
+  const notifications = useResultNotifications(songs, countdownResults, hottest200Results);
 
   // Get the #1 song if available
   const numberOneSong = countdownResults.find(r => r.position === 1);
@@ -152,8 +160,8 @@ export const PublicHome: React.FC = () => {
     <div className="public-home min-h-screen">
       {/* Hero Section with Banner Background */}
       <div
-        className="hero-banner relative bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 py-6 sm:py-20 mb-8 full-banner-background"
-        style={{ '--banner-image': `url(${banner})` } as React.CSSProperties}
+        className="hero-banner relative bg-gradient-to-r from-primary-500 via-tertiary-500 to-secondary-500 py-6 sm:py-20 mb-8 full-banner-background"
+        style={{ '--banner-image': `url(${brand.images.background})` } as React.CSSProperties}
       >
         <div className="hero-banner-overlay absolute inset-0 bg-black/30"></div>
         <div className="hero-banner-content relative max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -176,7 +184,7 @@ export const PublicHome: React.FC = () => {
                 <div className="hero-progress-container max-w-2xl lg:max-w-none">
                   <div className="hero-progress-bar bg-white/20 backdrop-blur-sm rounded-full h-8 overflow-hidden border-2 border-white/40">
                     <div
-                      className="hero-progress-fill bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 h-full flex items-center justify-center font-black text-white text-sm transition-all"
+                      className="hero-progress-fill bg-gradient-to-r from-yellow-400 via-primary-400 to-secondary-400 h-full flex items-center justify-center font-black text-white text-sm transition-all"
                       style={{
                         width: hasHottest200Started
                           ? `${(hottest200Results.length / 100) * 100}%`
@@ -195,14 +203,24 @@ export const PublicHome: React.FC = () => {
                 </div>
               )}
 
-              {/* TV Mode Button - large screens only */}
-              <div className="hero-tv-button-container mt-6 hidden lg:block">
+              <div className="hero-tv-button-container hero-actions mt-6 flex flex-wrap gap-3 justify-center xl:justify-start">
+                {/* TV Mode Button - large screens only */}
                 <a
                   href="#tv"
-                  className="hero-tv-button inline-block bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
+                  className="hero-tv-button hidden lg:inline-block bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
                 >
                   📺 TV Mode
                 </a>
+                <LiveStreamPlayer />
+                {notifications.supported && (
+                  <button
+                    onClick={notifications.toggle}
+                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
+                    title="Get a browser notification when a new song is revealed while this tab is in the background"
+                  >
+                    {notifications.enabled ? '🔔 Alerts on' : '🔕 Song alerts'}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -237,12 +255,14 @@ export const PublicHome: React.FC = () => {
             {/* #1 Song Card - Only when available and Hottest 200 NOT started */}
             {showNumberOneSong && (
               <CurrentSongCard
+                key={numberOneSongData.id}
                 song={numberOneSongData}
                 position={1}
                 isNumberOne
                 variant="home"
                 size="lg"
                 className="xl:justify-end"
+                cardClassName="song-reveal"
               />
             )}
           </div>
@@ -255,88 +275,26 @@ export const PublicHome: React.FC = () => {
           <div className="current-song-and-progress mb-12 grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
             {/* Current Highest Song Card */}
             <CurrentSongCard
+              key={currentHighestSong.id}
               song={currentHighestSong}
               position={currentHighestResult.position}
               variant="home"
               size="md"
               className="xl:justify-start"
+              cardClassName="song-reveal"
             />
 
             {/* Countdown Progress Widget */}
             <div className="countdown-widget-wrapper xl:col-span-2">
-              <div className="countdown-widget bg-white rounded-xl shadow-lg p-2 sm:p-6 border-2 border-accent-light h-fit">
-                <h3 className="countdown-widget-title hidden md:block text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                  📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
-                </h3>
-
-                <div className="hidden md:block mb-4">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-semibold text-gray-700">
-                      {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
-                    </span>
-                    <span className="text-gray-600">
-                      {hasHottest200Started
-                        ? `${totalResults}/200 songs`
-                        : `${countdownResults.length}/100 songs`
-                      }
-                    </span>
-                  </div>
-                  <div className="progress-bar bg-gray-100 rounded-full h-3">
-                    <div
-                      className="progress-bar-marker h-3 rounded-full transition-all"
-                      style={{
-                        width: hasHottest200Started
-                          ? `${(totalResults / 200) * 100}%`
-                          : `${(countdownResults.length / 100) * 100}%`
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {recentResults.length > 0 && (
-                  <div className="latest-entries">
-                    <div className="latest-entries-title hidden md:block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                      {hasHottest200Started ? 'Latest Entries (Hottest 200)' : 'Latest Entries'}
-                    </div>
-                    <div className="latest-entries-list max-h-80 overflow-y-auto space-y-1.5 sm:space-y-2 pr-2">
-                      {recentResults.map((result) => {
-                        const song = songs.find(s => s.id === result.songId);
-                        if (!song) return null;
-
-                        return (
-                          <div
-                            key={result.position}
-                            className="latest-entry-item flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
-                            style={{ '--current-song': result.position } as React.CSSProperties}
-                          >
-                            {song.thumbnail && (
-                              <img
-                                src={song.thumbnail}
-                                alt=""
-                                className="song-thumbnail w-8 h-8 sm:w-10 sm:h-10 rounded object-cover flex-shrink-0"
-                              />
-                            )}
-                            <div className="song-info flex-1 min-w-0">
-                              <div className="song-title font-semibold text-xs sm:text-sm truncate">{song.title}</div>
-                              <div className="song-artist-row text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
-                                <span className="song-artist truncate">{song.artist}</span>
-                                {song.isAustralian && (
-                                  <span className="australian-badge bg-accent-dark text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
-                                    AUS
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="song-position font-bold text-accent text-sm sm:text-lg flex-shrink-0">
-                              #{result.position}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <CountdownProgressWidget
+                songs={songs}
+                countdownResults={countdownResults}
+                hottest200Results={hottest200Results}
+                recentResults={recentResults}
+                numberOneSong={numberOneSong}
+                compact
+                showProgress={false}
+              />
 
               {/* Commentator Quip */}
               <CountdownQuip quip={countdownQuip} />
@@ -366,7 +324,7 @@ export const PublicHome: React.FC = () => {
               <div className="podium-leaderboard-layout grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
                 {/* Podium Visualization (Top 3) + Commentary */}
                 <div className="podium-section">
-                  <h2 className="podium-title text-center text-2xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                  <h2 className="podium-title text-center text-2xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
                 {hottest200Results.length === 100 ? "Winners Podium" : "Current Standings"}</h2>
                 <p className="podium-subtitle hidden md:block text-center text-gray-600 text-sm sm:text-base mb-5">Who's leading the pack?</p>
                   <Podium
@@ -379,15 +337,15 @@ export const PublicHome: React.FC = () => {
                 </div>
 
                 {/* Full Leaderboard */}
-                <div className="full-leaderboard xl:col-span-2 bg-white rounded-xl shadow-xl p-2 sm:p-6 border-2 border-accent-light">
+                <div className="full-leaderboard xl:col-span-2 bg-white rounded-2xl shadow-lg p-2 sm:p-6 border-2 border-accent-light">
                   <div className="leaderboard-header flex items-center justify-between mb-4">
                     <h3 className="leaderboard-title text-xl sm:text-2xl font-bold text-gray-800">
-                      <span className="hidden md:block">Full</span> Leaderboard
+                      <span className="hidden md:inline">Full</span> Leaderboard
                     </h3>
                     {totalResults > 0 && (
                       <button
                         onClick={() => setShowDetailedBreakdown(true)}
-                        className="detailed-breakdown-button bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
+                        className="detailed-breakdown-button bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
                       >
                         📊 Detailed Breakdown
                       </button>
@@ -405,9 +363,9 @@ export const PublicHome: React.FC = () => {
                         <div
                           key={entry.member.id}
                           onClick={() => profile && setSelectedProfile(profile)}
-                          className={`leaderboard-entry flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
+                          className={`leaderboard-entry relative flex items-center ${bumps.has(entry.member.id) ? 'score-bump' : ''} gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
                             getRank(entry.member.id) <= 3 && entry.score > 0
-                              ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
+                              ? 'bg-gradient-to-r from-yellow-50 to-primary-50 border border-yellow-300'
                               : 'bg-gray-50'
                           } ${profile ? 'cursor-pointer hover:shadow-md' : ''}`}
                         >
@@ -415,7 +373,7 @@ export const PublicHome: React.FC = () => {
                             entry.score === 0 ? 'bg-gray-200 text-gray-400' :
                             getRank(entry.member.id) === 1 ? 'bg-yellow-500 text-white' :
                             getRank(entry.member.id) === 2 ? 'bg-gray-400 text-white' :
-                            getRank(entry.member.id) === 3 ? 'bg-orange-600 text-white' :
+                            getRank(entry.member.id) === 3 ? 'bg-primary-600 text-white' :
                             'bg-gray-300 text-gray-700'
                           }`}>
                             {entry.score === 0 ? '-' : getRank(entry.member.id)}
@@ -424,7 +382,7 @@ export const PublicHome: React.FC = () => {
                             <div className="member-name-row flex items-center gap-2 flex-wrap">
                               <div className="member-name font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
                               {profile && profile.label && (
-                                <span className="member-label bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                <span className="member-label bg-gradient-to-r from-primary-400 to-secondary-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
                                   {profile.label}
                                 </span>
                               )}
@@ -449,13 +407,16 @@ export const PublicHome: React.FC = () => {
                             )}
                           </div>
                           <div className="member-score text-right">
-                            <div className="score-value text-2xl sm:text-3xl font-black text-orange-600">
+                            <div className="score-value text-2xl sm:text-3xl font-black text-primary-600">
                               {entry.score}
                             </div>
                             {maxPossibleScore > 0 && (
                               <div className="score-max text-xs text-gray-500">
                                 of {maxPossibleScore}
                               </div>
+                            )}
+                            {bumps.has(entry.member.id) && (
+                              <div key={bumpId} className="score-delta">+{bumps.get(entry.member.id)}</div>
                             )}
                           </div>
                         </div>
@@ -481,85 +442,21 @@ export const PublicHome: React.FC = () => {
                 <div className="countdown-leaderboard-layout grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
                 {/* Countdown Progress Widget - spans first column on the left */}
                 <div className="countdown-widget-wrapper">
-                  <div className="countdown-widget bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-accent-light h-fit">
-                    <h3 className="countdown-widget-title text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                      📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
-                    </h3>
-
-                    <div className="mb-4">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="font-semibold text-gray-700">
-                          {hasHottest200Started ? 'Overall Progress' : 'Hottest 100 Progress'}
-                        </span>
-                        <span className="text-gray-600">
-                          {hasHottest200Started
-                            ? `${totalResults}/200 songs`
-                            : `${countdownResults.length}/100 songs`
-                          }
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
-                          style={{
-                            width: hasHottest200Started
-                              ? `${(totalResults / 200) * 100}%`
-                              : `${(countdownResults.length / 100) * 100}%`
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {recentResults.length > 0 && (
-                      <div className="latest-entries">
-                        <div className="latest-entries-title text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                          {hasHottest200Started ? 'Latest Entries (Hottest 200)' : 'Latest Entries'}
-                        </div>
-                        <div className="latest-entries-list max-h-80 overflow-y-auto space-y-1.5 sm:space-y-2 pr-2">
-                          {recentResults.map((result) => {
-                            const song = songs.find(s => s.id === result.songId);
-                            if (!song) return null;
-
-                            return (
-                              <div
-                                key={result.position}
-                                className="latest-entry-item flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg"
-                              >
-                                {song.thumbnail && (
-                                  <img
-                                    src={song.thumbnail}
-                                    alt=""
-                                    className="song-thumbnail w-8 h-8 sm:w-10 sm:h-10 rounded object-cover flex-shrink-0"
-                                  />
-                                )}
-                                <div className="song-info flex-1 min-w-0">
-                                  <div className="song-title font-semibold text-xs sm:text-sm truncate">{song.title}</div>
-                                  <div className="song-artist-row text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
-                                    <span className="song-artist truncate">{song.artist}</span>
-                                    {song.isAustralian && (
-                                      <span className="australian-badge bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
-                                        AUS
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="song-position font-bold text-orange-600 text-sm sm:text-lg flex-shrink-0">
-                                  #{result.position}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <CountdownProgressWidget
+                    songs={songs}
+                    countdownResults={countdownResults}
+                    hottest200Results={hottest200Results}
+                    recentResults={recentResults}
+                    numberOneSong={numberOneSong}
+                    showProgress={false}
+                  />
 
                   {/* Commentator Quip */}
                   <CountdownQuip quip={countdownQuip} />
                 </div>
 
                 {/* Full Leaderboard */}
-                <div className="full-leaderboard xl:col-span-2 bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
+                <div className="full-leaderboard xl:col-span-2 bg-white rounded-2xl shadow-lg p-4 sm:p-6 border-2 border-primary-200">
                   <div className="leaderboard-header flex items-center justify-between mb-4">
                     <h3 className="leaderboard-title text-xl sm:text-2xl font-bold text-gray-800 no-wrap">
                       Full Leaderboard
@@ -567,7 +464,7 @@ export const PublicHome: React.FC = () => {
                     {totalResults > 0 && (
                       <button
                         onClick={() => setShowDetailedBreakdown(true)}
-                        className="detailed-breakdown-button bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
+                        className="detailed-breakdown-button bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
                       >
                         📊 Detailed Breakdown
                       </button>
@@ -585,9 +482,9 @@ export const PublicHome: React.FC = () => {
                         <div
                           key={entry.member.id}
                           onClick={() => profile && setSelectedProfile(profile)}
-                          className={`leaderboard-entry flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
+                          className={`leaderboard-entry relative flex items-center ${bumps.has(entry.member.id) ? 'score-bump' : ''} gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
                             getRank(entry.member.id) <= 3 && entry.score > 0
-                              ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
+                              ? 'bg-gradient-to-r from-yellow-50 to-primary-50 border border-yellow-300'
                               : 'bg-gray-50'
                           } ${profile ? 'cursor-pointer hover:shadow-md' : ''}`}
                         >
@@ -595,7 +492,7 @@ export const PublicHome: React.FC = () => {
                             entry.score === 0 ? 'bg-gray-200 text-gray-400' :
                             getRank(entry.member.id) === 1 ? 'bg-yellow-500 text-white' :
                             getRank(entry.member.id) === 2 ? 'bg-gray-400 text-white' :
-                            getRank(entry.member.id) === 3 ? 'bg-orange-600 text-white' :
+                            getRank(entry.member.id) === 3 ? 'bg-primary-600 text-white' :
                             'bg-gray-300 text-gray-700'
                           }`}>
                             {entry.score === 0 ? '-' : getRank(entry.member.id)}
@@ -604,7 +501,7 @@ export const PublicHome: React.FC = () => {
                             <div className="member-name-row flex items-center gap-2 flex-wrap">
                               <div className="member-name font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
                               {profile && profile.label && (
-                                <span className="member-label bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                <span className="member-label bg-gradient-to-r from-primary-400 to-secondary-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
                                   {profile.label}
                                 </span>
                               )}
@@ -629,13 +526,16 @@ export const PublicHome: React.FC = () => {
                             )}
                           </div>
                           <div className="member-score text-right">
-                            <div className="score-value text-2xl sm:text-3xl font-black text-orange-600">
+                            <div className="score-value text-2xl sm:text-3xl font-black text-primary-600">
                               {entry.score}
                             </div>
                             {maxPossibleScore > 0 && (
                               <div className="score-max text-xs text-gray-500">
                                 of {maxPossibleScore}
                               </div>
+                            )}
+                            {bumps.has(entry.member.id) && (
+                              <div key={bumpId} className="score-delta">+{bumps.get(entry.member.id)}</div>
                             )}
                           </div>
                         </div>
@@ -650,7 +550,7 @@ export const PublicHome: React.FC = () => {
               <>
                 {/* Welcome Message - shown before/during countdown when no results yet */}
                 {!countdownStarted ? (
-                  <div className="welcome-message bg-gradient-to-r from-orange-100 via-yellow-50 to-orange-100 border-2 border-orange-300 rounded-xl p-4 sm:p-6 mb-6">
+                  <div className="welcome-message bg-gradient-to-r from-primary-100 via-yellow-50 to-primary-100 border-2 border-primary-300 rounded-xl p-4 sm:p-6 mb-6">
                     <div className="welcome-message-content text-center">
                       <h3 className="welcome-message-title text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">G'day Legends!</h3>
                       <div className="welcome-message-text text-sm sm:text-base text-gray-700 space-y-2 sm:space-y-3 mx-auto">
@@ -658,8 +558,8 @@ export const PublicHome: React.FC = () => {
                         </p>
                         <p>
                           <strong>Scoring is dead simple:</strong> If your song cracks the Hottest 100, you score points based on how high it lands.
-                          Position #100 gets you <span className="font-bold text-orange-600">1 point</span>, and if one of your picks somehow nabs the #1 spot,
-                          that's a whopping <span className="font-bold text-orange-600">100 points</span>. The higher the song, the more points you bag.
+                          Position #100 gets you <span className="font-bold text-primary-600">1 point</span>, and if one of your picks somehow nabs the #1 spot,
+                          that's a whopping <span className="font-bold text-primary-600">100 points</span>. The higher the song, the more points you bag.
                         </p>
                         <p className="text-gray-600 italic">
                           Good luck to all you legends. Stay hydrated, keep the snacks coming, and may your picks absolutely smash it.
@@ -668,7 +568,7 @@ export const PublicHome: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="countdown-started-message bg-gradient-to-r from-red-100 via-orange-50 to-red-100 border-2 border-red-300 rounded-xl p-4 sm:p-6 mb-6">
+                  <div className="countdown-started-message bg-gradient-to-r from-red-100 via-primary-50 to-red-100 border-2 border-red-300 rounded-xl p-4 sm:p-6 mb-6">
                     <div className="countdown-started-content text-center">
                       <h3 className="countdown-started-title text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">
                         It's Happening!
@@ -679,7 +579,7 @@ export const PublicHome: React.FC = () => {
                           Carl wasn't smart enough to make this thing update automatically, so we're doing it the old-fashioned way.
                         </p>
                         <p>
-                          <strong>If you're free:</strong> Log in and head to the <span className="font-bold text-orange-600">Countdown Results</span> tab
+                          <strong>If you're free:</strong> Log in and head to the <span className="font-bold text-primary-600">Countdown Results</span> tab
                           to start adding songs as Triple J announces them. Don't all rush at once - one legend at a time will do the trick.
                         </p>
                       </div>
@@ -687,7 +587,7 @@ export const PublicHome: React.FC = () => {
                   </div>
                 )}
 
-                <div className="predictions-submitted bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
+                <div className="predictions-submitted bg-white rounded-2xl shadow-lg p-4 sm:p-6 border-2 border-primary-200">
                   <h3 className="predictions-submitted-title text-xl sm:text-2xl font-bold mb-4 text-gray-800">
                     Predictions Submitted
                   </h3>
@@ -704,7 +604,7 @@ export const PublicHome: React.FC = () => {
                           <div className="prediction-member-name-row flex items-center gap-2 flex-wrap">
                             <div className="prediction-member-name font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
                             {profile && profile.label && (
-                              <span className="prediction-member-label bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                              <span className="prediction-member-label bg-gradient-to-r from-primary-400 to-secondary-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
                                 {profile.label}
                               </span>
                             )}
@@ -721,17 +621,19 @@ export const PublicHome: React.FC = () => {
                   })}
                 </div>
               </div>
+
+              <MostPickedSongs songs={songs} familyMembers={familyMembers} />
               </>
             )}
           </div>
         )}
 
-        {/* Awards Section - Only show when Hottest 100 complete and Hottest 200 NOT started */}
-        {isHottest100Complete && awards.length > 0 && !hasHottest200Started && (
+        {/* Awards Section - when Hottest 100 is complete, hidden while Hottest 200 is in progress */}
+        {isHottest100Complete && awards.length > 0 && (!hasHottest200Started || isHottest200Complete) && (
           <div className="awards-section mb-12">
             <div className="awards-header text-center mb-6">
-              <h2 className="awards-title text-2xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-yellow-600 via-orange-600 to-pink-600 bg-clip-text text-transparent">
-                🏆 Hottest 100 Awards 🏆
+              <h2 className="awards-title text-2xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-yellow-600 via-primary-600 to-secondary-600 bg-clip-text text-transparent">
+                🏆 {isHottest200Complete ? 'Hottest 200' : 'Hottest 100'} Awards 🏆
               </h2>
               <p className="awards-subtitle text-gray-600 text-xs sm:text-sm">Celebrating our champions!</p>
             </div>
@@ -739,7 +641,7 @@ export const PublicHome: React.FC = () => {
               {awards.map((award) => (
                 <div
                   key={award.id}
-                  className="award-card bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-3 sm:p-4 shadow-xl border-2 border-yellow-400 hover:border-yellow-500 hover:shadow-2xl transition-all transform hover:-translate-y-1"
+                  className="award-card bg-gradient-to-br from-yellow-50 to-primary-50 rounded-xl p-3 sm:p-4 shadow-xl border-2 border-yellow-400 hover:border-yellow-500 hover:shadow-2xl transition-all transform hover:-translate-y-1"
                 >
                   <div className="award-card-content text-center">
                     <div className='award-label flex sm:block items-start gap-3 sm:gap-0 mb-2 sm:mb-0 w-fit mx-auto'>
@@ -754,7 +656,7 @@ export const PublicHome: React.FC = () => {
                       </div>
                     </div>
                     <div className="award-winner-row flex flex-col sm:flex-row items-center justify-center gap-2 flex-wrap">
-                      <div className="award-winner-badge bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold text-sm sm:text-base py-1.5 px-2.5 sm:py-2 sm:px-3 rounded-full shadow-lg">
+                      <div className="award-winner-badge bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold text-sm sm:text-base py-1.5 px-2.5 sm:py-2 sm:px-3 rounded-full shadow-lg">
                         {award.winnerName}
                       </div>
                       {award.details && (
@@ -854,7 +756,7 @@ export const PublicHome: React.FC = () => {
                             <div className="profile-pick-artist-row text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                               <span className="profile-pick-artist truncate">{song.artist}</span>
                               {song.isAustralian && (
-                                <span className="profile-pick-australian-badge bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                <span className="profile-pick-australian-badge bg-primary-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                                   AUS
                                 </span>
                               )}

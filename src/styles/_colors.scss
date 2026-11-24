@@ -11,8 +11,9 @@ $range: $max - $min;
 
 /* Define Start/End Colors (Hex or Name is fine!) */
 /* We will force Saturation/Lightness later to keep UI consistent */
-$c-start: #6ea4bc; /* Blue at 1 */ 
-$c-end:   #ff9d00; /* Red at 200 */ 
+/* Cold/hot endpoints come from brand.colors.cold / .hot in src/config/brand.ts */
+$c-start: var(--hotness-cold, #6ea4bc);
+$c-end:   var(--hotness-hot, #ff9d00);
 
 /* Tuning */
 $sat: 85%;       /* Unified Saturation */

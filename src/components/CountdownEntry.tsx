@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { LazyImage } from './LazyImage';
+import type { CountdownResult } from '../types';
+
+interface UndoAction {
+  type: 'add' | 'remove';
+  tab: 'hottest100' | 'hottest200';
+  result: CountdownResult;
+}
 
 export const CountdownEntry: React.FC = () => {
   const { songs, countdownResults, updateCountdownResults, hottest200Results, updateHottest200Results } = useApp();
@@ -9,8 +16,10 @@ export const CountdownEntry: React.FC = () => {
   const defaultTab = countdownResults.length === 100 ? 'hottest200' : 'hottest100';
   const [activeTab, setActiveTab] = useState<'hottest100' | 'hottest200'>(defaultTab);
   const [searchTerm, setSearchTerm] = useState('');
+  const [resultsSearchTerm, setResultsSearchTerm] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [lastAction, setLastAction] = useState<UndoAction | null>(null);
 
   const currentResults = activeTab === 'hottest100' ? countdownResults : hottest200Results;
   const updateResults = activeTab === 'hottest100' ? updateCountdownResults : updateHottest200Results;
@@ -41,11 +50,12 @@ export const CountdownEntry: React.FC = () => {
 
     setIsUpdating(true);
     try {
-      const newResults = [...currentResults];
-      newResults.push({ songId, position: nextPos });
+      const newResult = { songId, position: nextPos };
+      const newResults = [...currentResults, newResult];
       newResults.sort((a, b) => a.position - b.position);
 
       await updateResults(newResults);
+      setLastAction({ type: 'add', tab: activeTab, result: newResult });
       setSearchTerm('');
     } catch (error) {
       console.error('Error adding countdown result:', error);
@@ -58,10 +68,14 @@ export const CountdownEntry: React.FC = () => {
   const handleRemoveResult = async (position: number) => {
     if (isUpdating) return; // Prevent multiple simultaneous updates
 
+    const removedResult = currentResults.find((r) => r.position === position);
+    if (!removedResult) return;
+
     setIsUpdating(true);
     try {
       const newResults = currentResults.filter((r) => r.position !== position);
       await updateResults(newResults);
+      setLastAction({ type: 'remove', tab: activeTab, result: removedResult });
     } catch (error) {
       console.error('Error removing countdown result:', error);
       alert('Failed to remove song. Please try again.');
@@ -69,6 +83,33 @@ export const CountdownEntry: React.FC = () => {
       setIsUpdating(false);
     }
   };
+
+  const handleUndo = useCallback(async () => {
+    if (!lastAction || isUpdating) return;
+
+    setIsUpdating(true);
+    try {
+      const targetResults = lastAction.tab === 'hottest100' ? countdownResults : hottest200Results;
+      const targetUpdate = lastAction.tab === 'hottest100' ? updateCountdownResults : updateHottest200Results;
+
+      if (lastAction.type === 'add') {
+        // Undo add = remove the song
+        const newResults = targetResults.filter((r) => r.position !== lastAction.result.position);
+        await targetUpdate(newResults);
+      } else {
+        // Undo remove = add the song back
+        const newResults = [...targetResults, lastAction.result];
+        newResults.sort((a, b) => a.position - b.position);
+        await targetUpdate(newResults);
+      }
+      setLastAction(null);
+    } catch (error) {
+      console.error('Error undoing action:', error);
+      alert('Failed to undo. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [lastAction, isUpdating, countdownResults, hottest200Results, updateCountdownResults, updateHottest200Results]);
 
   const handleClearAll = async () => {
     if (isUpdating) return; // Prevent multiple simultaneous updates
@@ -81,6 +122,7 @@ export const CountdownEntry: React.FC = () => {
       setIsUpdating(true);
       try {
         await updateResults([]);
+        setLastAction(null);
       } catch (error) {
         console.error('Error clearing countdown:', error);
         alert('Failed to clear countdown. Please try again.');
@@ -123,6 +165,7 @@ export const CountdownEntry: React.FC = () => {
       }));
 
       await updateResults(updatedResults);
+      setLastAction(null);
     } catch (error) {
       console.error('Error reordering countdown:', error);
       alert('Failed to reorder. Please try again.');
@@ -152,7 +195,7 @@ export const CountdownEntry: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl p-8 max-w-sm mx-4">
             <div className="flex flex-col items-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-500 mb-4"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-500 mb-4"></div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">Updating Countdown...</h3>
               <p className="text-sm text-gray-600 text-center">Please wait, do not refresh or navigate away</p>
             </div>
@@ -241,7 +284,7 @@ export const CountdownEntry: React.FC = () => {
                       <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                         <span className="truncate">{song.artist}</span>
                         {song.isAustralian && (
-                          <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                          <span className="bg-primary-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                             AUS
                           </span>
                         )}
@@ -258,48 +301,94 @@ export const CountdownEntry: React.FC = () => {
               <h3 className="text-lg sm:text-xl font-semibold text-white">
                 Current Results ({currentResults.length}/{maxPosition - minPosition + 1})
               </h3>
-              {currentResults.length > 0 && (
-                <button
-                  onClick={handleClearAll}
-                  disabled={isUpdating}
-                  className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition text-xs sm:text-sm font-semibold ${
-                    isUpdating
-                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                      : 'bg-red-500 text-white hover:bg-red-600'
-                  }`}
-                >
-                  {isUpdating ? 'Updating...' : 'Clear All'}
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {lastAction && (
+                  <button
+                    onClick={handleUndo}
+                    disabled={isUpdating}
+                    className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition text-xs sm:text-sm font-semibold ${
+                      isUpdating
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : 'bg-yellow-500 text-white hover:bg-yellow-600'
+                    }`}
+                    title={`Undo ${lastAction.type === 'add' ? 'add' : 'remove'}`}
+                  >
+                    ↩ Undo
+                  </button>
+                )}
+                {currentResults.length > 0 && (
+                  <button
+                    onClick={handleClearAll}
+                    disabled={isUpdating}
+                    className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition text-xs sm:text-sm font-semibold ${
+                      isUpdating
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : 'bg-red-500 text-white hover:bg-red-600'
+                    }`}
+                  >
+                    {isUpdating ? 'Updating...' : 'Clear All'}
+                  </button>
+                )}
+              </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">
+            <p className="text-xs sm:text-sm text-gray-400 mb-2">
               Drag and drop to reorder the countdown
             </p>
+            {currentResults.length > 5 && (
+              <div className="mb-3">
+                <input
+                  type="text"
+                  placeholder="Filter results..."
+                  className="w-full p-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500"
+                  value={resultsSearchTerm}
+                  onChange={(e) => setResultsSearchTerm(e.target.value)}
+                  disabled={isUpdating}
+                />
+                {resultsSearchTerm && (
+                  <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Clear the filter to drag and reorder</p>
+                )}
+              </div>
+            )}
             {currentResults.length === 0 ? (
               <p className="text-gray-500 text-xs sm:text-sm">No results entered yet</p>
             ) : (
               <div className="max-h-96 overflow-y-auto space-y-1.5 sm:space-y-2">
                 {[...currentResults]
                   .sort((a, b) => a.position - b.position)
+                  .filter((result) => {
+                    if (!resultsSearchTerm) return true;
+                    const song = songs.find((s) => s.id === result.songId);
+                    if (!song) return false;
+                    const searchLower = resultsSearchTerm.toLowerCase();
+                    return (
+                      song.title.toLowerCase().includes(searchLower) ||
+                      song.artist.toLowerCase().includes(searchLower) ||
+                      result.position.toString().includes(resultsSearchTerm)
+                    );
+                  })
                   .map((result, index) => {
                     const song = songs.find((s) => s.id === result.songId);
                     if (!song) return null;
+                    // Drag indexes refer to the full list, so reordering is disabled while filtering
+                    const canDrag = !isUpdating && !resultsSearchTerm;
                     return (
                       <div
                         key={result.songId}
-                        draggable={!isUpdating}
-                        onDragStart={() => !isUpdating && handleDragStart(index)}
+                        draggable={canDrag}
+                        onDragStart={() => canDrag && handleDragStart(index)}
                         onDragOver={handleDragOver}
-                        onDrop={() => handleDrop(index)}
+                        onDrop={() => canDrag && handleDrop(index)}
                         className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-800 rounded-lg transition ${
                           isUpdating
                             ? 'cursor-not-allowed opacity-50'
+                            : !canDrag
+                            ? 'hover:bg-gray-700'
                             : draggedIndex === index
                             ? 'opacity-50 cursor-move'
                             : 'cursor-move hover:bg-gray-700'
                         }`}
                       >
-                        <div className="font-bold text-sm sm:text-lg w-8 sm:w-12 flex-shrink-0 text-orange-400">#{result.position}</div>
+                        <div className="font-bold text-sm sm:text-lg w-8 sm:w-12 flex-shrink-0 text-primary-400">#{result.position}</div>
                         {song.thumbnail && (
                           <LazyImage
                             src={song.thumbnail}

@@ -75,6 +75,7 @@ export const Settings: React.FC = () => {
   const [error, setError] = useState('');
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState('');
+  const [playlistMessage, setPlaylistMessage] = useState('');
 
   // Data state
   const [showConfirm, setShowConfirm] = useState(false);
@@ -134,40 +135,67 @@ export const Settings: React.FC = () => {
     }
   };
 
+  // Helper to normalize strings for duplicate detection
+  const normalize = (s: string) => s.toLowerCase().trim();
+
+  // Check if a song already exists in the library
+  const isDuplicate = (artist: string, title: string) => {
+    const normArtist = normalize(artist);
+    const normTitle = normalize(title);
+    return songs.some(s => normalize(s.artist) === normArtist && normalize(s.title) === normTitle);
+  };
+
+  // Filter out duplicates and return unique songs with count info
+  const filterDuplicates = <T extends { artist: string; title: string }>(newSongs: T[]) => {
+    const unique: T[] = [];
+    const seen = new Set<string>();
+    let duplicateCount = 0;
+    for (const song of newSongs) {
+      const key = `${normalize(song.artist)}\u0000${normalize(song.title)}`;
+      if (isDuplicate(song.artist, song.title) || seen.has(key)) {
+        duplicateCount++;
+      } else {
+        seen.add(key);
+        unique.push(song);
+      }
+    }
+    return { unique, duplicateCount };
+  };
+
   // Event/Countdown handlers
-  const handleSetCountdownDate = () => {
+  const SHARED_DATE_HELP = 'Saved on this device only. Run supabase-add-app-settings.sql in Supabase to share it with everyone.';
+
+  const handleSetCountdownDate = async () => {
     const date = parseDateFromInput(countdownDateInput);
     if (date) {
-      setCountdownDate(date);
-      setSaveMessage('Countdown date saved!');
-      setTimeout(() => setSaveMessage(''), 3000);
+      const shared = await setCountdownDate(date);
+      setSaveMessage(shared ? 'Countdown date saved for everyone!' : SHARED_DATE_HELP);
+      setTimeout(() => setSaveMessage(''), shared ? 3000 : 8000);
     } else {
       setSaveMessage('Please enter a valid date and time');
       setTimeout(() => setSaveMessage(''), 3000);
     }
   };
 
-  const handleClearCountdownDate = () => {
-    setCountdownDate(null);
+  const handleClearCountdownDate = async () => {
     setCountdownDateInput('');
-    setSaveMessage('Countdown timer disabled');
-    setTimeout(() => setSaveMessage(''), 3000);
+    const shared = await setCountdownDate(null);
+    setSaveMessage(shared ? 'Countdown timer disabled' : SHARED_DATE_HELP);
+    setTimeout(() => setSaveMessage(''), shared ? 3000 : 8000);
   };
 
   const handleSetDefaultDate = () => {
-    // Default: Saturday of Australia Day weekend (around Jan 25) at 9:00 AM AWST
-    // AWST is UTC+8, so we create the date in UTC and convert to local
+    // Default: fourth Saturday of January (2025: Jan 25, 2026: Jan 24) at 9:00 AM AWST (1:00 AM UTC)
+    const fourthSaturday = (year: number) => {
+      const firstDay = new Date(Date.UTC(year, 0, 1)).getUTCDay();
+      const firstSaturday = 1 + ((6 - firstDay + 7) % 7);
+      return new Date(Date.UTC(year, 0, firstSaturday + 21, 1, 0, 0));
+    };
     const now = new Date();
-    let year = now.getFullYear();
-
-    // If we're past January 25 this year, use next year
-    const thisYearDate = new Date(Date.UTC(year, 0, 25, 1, 0, 0)); // 9am AWST = 1am UTC
-    if (now > thisYearDate) {
-      year += 1;
+    let defaultDateUTC = fourthSaturday(now.getFullYear());
+    if (now > defaultDateUTC) {
+      defaultDateUTC = fourthSaturday(now.getFullYear() + 1);
     }
-
-    // Create date as 9am AWST (1am UTC) on Jan 25
-    const defaultDateUTC = new Date(Date.UTC(year, 0, 25, 1, 0, 0));
     setCountdownDateInput(formatDateForInput(defaultDateUTC));
   };
 
@@ -181,12 +209,21 @@ export const Settings: React.FC = () => {
       // Try JSON first
       const parsed = JSON.parse(importText);
       if (Array.isArray(parsed)) {
-        const newSongs = parsed.map((item) => ({
+        const rawSongs = parsed.map((item) => ({
           title: item.title || item.song || item.track || '',
           artist: item.artist || '',
           thumbnail: item.thumbnail,
           isAustralian: item.isAustralian,
         }));
+
+        // Filter out duplicates
+        const { unique: newSongs, duplicateCount } = filterDuplicates(rawSongs);
+
+        if (newSongs.length === 0) {
+          setImportProgress(`All ${duplicateCount} songs already exist in your library.`);
+          setImporting(false);
+          return;
+        }
 
         // Import in chunks for large datasets
         const chunkSize = 50;
@@ -202,7 +239,8 @@ export const Settings: React.FC = () => {
               await new Promise(resolve => setTimeout(resolve, 500));
             }
 
-            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
+            const dupMsg = duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : '';
+            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!${dupMsg}`);
             setTimeout(() => {
               setImportText('');
               setImportProgress('');
@@ -217,7 +255,8 @@ export const Settings: React.FC = () => {
         } else {
           try {
             await addSongs(newSongs);
-            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
+            const dupMsg = duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : '';
+            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!${dupMsg}`);
             setTimeout(() => {
               setImportText('');
               setImportProgress('');
@@ -243,28 +282,36 @@ export const Settings: React.FC = () => {
         return;
       }
 
-      const newSongs: Omit<Song, 'id'>[] = [];
+      const rawSongs: Omit<Song, 'id'>[] = [];
       lines.forEach((line) => {
         const parts = line.split(',').map((p) => p.trim());
         if (parts.length >= 2) {
-          newSongs.push({
+          rawSongs.push({
             artist: parts[0],
             title: parts[1],
           });
         }
       });
 
-      if (newSongs.length > 0) {
-        try {
-          await addSongs(newSongs);
-          setImportText('');
-          setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
-          setTimeout(() => setImportProgress(''), 3000);
-        } catch (err) {
-          setError('Failed to import songs. Please try again.');
-        }
-      } else {
+      if (rawSongs.length === 0) {
         setError('No valid songs found. Format: Artist, Title (one per line)');
+      } else {
+        // Filter out duplicates
+        const { unique: newSongs, duplicateCount } = filterDuplicates(rawSongs);
+
+        if (newSongs.length === 0) {
+          setImportProgress(`All ${duplicateCount} songs already exist in your library.`);
+        } else {
+          try {
+            await addSongs(newSongs);
+            setImportText('');
+            const dupMsg = duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : '';
+            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!${dupMsg}`);
+            setTimeout(() => setImportProgress(''), 3000);
+          } catch (err) {
+            setError('Failed to import songs. Please try again.');
+          }
+        }
       }
     } finally {
       setImporting(false);
@@ -274,6 +321,12 @@ export const Settings: React.FC = () => {
   const handleAddManual = async () => {
     if (!manualTitle.trim() || !manualArtist.trim()) {
       setError('Please enter both title and artist');
+      return;
+    }
+
+    // Check for duplicate
+    if (isDuplicate(manualArtist.trim(), manualTitle.trim())) {
+      setError('This song already exists in your library');
       return;
     }
 
@@ -312,6 +365,39 @@ export const Settings: React.FC = () => {
     const a = document.createElement('a');
     a.href = url;
     a.download = `hottest100-data-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getPlaylistRows = () =>
+    [...countdownResults, ...hottest200Results]
+      .sort((a, b) => a.position - b.position)
+      .map(r => ({ position: r.position, song: songs.find(s => s.id === r.songId) }))
+      .filter((r): r is { position: number; song: Song } => !!r.song);
+
+  const handleCopyPlaylist = async () => {
+    const text = getPlaylistRows()
+      .map(({ position, song }) => `${position}. ${song.artist} - ${song.title}`)
+      .join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      setPlaylistMessage('✅ Copied! Paste into a playlist import tool to build it in Spotify/Apple Music.');
+    } catch {
+      setPlaylistMessage('Could not access the clipboard — use the CSV download instead.');
+    }
+    setTimeout(() => setPlaylistMessage(''), 5000);
+  };
+
+  const handleDownloadPlaylistCsv = () => {
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const csv = ['Position,Artist,Title', ...getPlaylistRows().map(({ position, song }) =>
+      `${position},${escape(song.artist)},${escape(song.title)}`
+    )].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hottest-${hottest200Results.length > 0 ? 200 : 100}-playlist.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -359,7 +445,7 @@ export const Settings: React.FC = () => {
           onClick={() => setActiveTab('event')}
           className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
             activeTab === 'event'
-              ? 'text-orange-600 border-b-2 border-orange-600'
+              ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
@@ -369,7 +455,7 @@ export const Settings: React.FC = () => {
           onClick={() => setActiveTab('ai')}
           className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
             activeTab === 'ai'
-              ? 'text-orange-600 border-b-2 border-orange-600'
+              ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
@@ -379,7 +465,7 @@ export const Settings: React.FC = () => {
           onClick={() => setActiveTab('songs')}
           className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
             activeTab === 'songs'
-              ? 'text-orange-600 border-b-2 border-orange-600'
+              ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
@@ -389,7 +475,7 @@ export const Settings: React.FC = () => {
           onClick={() => setActiveTab('data')}
           className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
             activeTab === 'data'
-              ? 'text-orange-600 border-b-2 border-orange-600'
+              ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
@@ -423,17 +509,17 @@ export const Settings: React.FC = () => {
                     type="datetime-local"
                     value={countdownDateInput}
                     onChange={(e) => setCountdownDateInput(e.target.value)}
-                    className="flex-1 p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none"
+                    className="flex-1 p-3 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none"
                   />
                   <button
                     onClick={handleSetDefaultDate}
                     className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition text-sm"
                   >
-                    Use Default (Jan 25, 9am AWST)
+                    Use Default (4th Sat of Jan, 9am AWST)
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Typically the Saturday of the Australia Day long weekend at 9:00 AM AWST
+                  Recent countdowns ran on the fourth Saturday of January at 9:00 AM AWST. The date is shared with everyone who opens the site.
                 </p>
               </div>
 
@@ -441,7 +527,7 @@ export const Settings: React.FC = () => {
                 <button
                   onClick={handleSetCountdownDate}
                   disabled={!countdownDateInput}
-                  className="px-6 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold rounded-lg hover:from-orange-600 hover:to-pink-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold rounded-lg hover:from-primary-600 hover:to-secondary-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   💾 Save Countdown Date
                 </button>
@@ -541,7 +627,7 @@ export const Settings: React.FC = () => {
             <textarea
               value={labelPrompt}
               onChange={(e) => setLabelPrompt(e.target.value)}
-              className="w-full h-64 p-3 border-2 border-gray-200 rounded-lg font-mono text-xs sm:text-sm focus:border-orange-500 focus:outline-none"
+              className="w-full h-64 p-3 border-2 border-gray-200 rounded-lg font-mono text-xs sm:text-sm focus:border-primary-500 focus:outline-none"
               placeholder="Enter prompt template..."
             />
           </div>
@@ -559,7 +645,7 @@ export const Settings: React.FC = () => {
             <textarea
               value={musicTastePrompt}
               onChange={(e) => setMusicTastePrompt(e.target.value)}
-              className="w-full h-64 p-3 border-2 border-gray-200 rounded-lg font-mono text-xs sm:text-sm focus:border-orange-500 focus:outline-none"
+              className="w-full h-64 p-3 border-2 border-gray-200 rounded-lg font-mono text-xs sm:text-sm focus:border-primary-500 focus:outline-none"
               placeholder="Enter prompt template..."
             />
           </div>
@@ -570,7 +656,7 @@ export const Settings: React.FC = () => {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold rounded-lg hover:from-orange-600 hover:to-pink-600 transition text-sm sm:text-base"
+                className="px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold rounded-lg hover:from-primary-600 hover:to-secondary-600 transition text-sm sm:text-base"
               >
                 💾 Save Prompts
               </button>
@@ -629,7 +715,7 @@ export const Settings: React.FC = () => {
               Paste JSON array with thumbnails and Australian artist flags, or CSV (format: Artist, Title - one per line)
             </p>
             <textarea
-              className="w-full h-40 p-3 border-2 border-gray-200 rounded-lg mb-3 font-mono text-xs sm:text-sm focus:border-orange-500 focus:outline-none"
+              className="w-full h-40 p-3 border-2 border-gray-200 rounded-lg mb-3 font-mono text-xs sm:text-sm focus:border-primary-500 focus:outline-none"
               placeholder='JSON: [{"artist": "Artist Name", "title": "Song Title", "thumbnail": "url", "isAustralian": true}]&#10;CSV: Artist Name, Song Title'
               value={importText}
               onChange={(e) => setImportText(e.target.value)}
@@ -640,7 +726,7 @@ export const Settings: React.FC = () => {
             <button
               onClick={handleImport}
               disabled={importing}
-              className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-pink-600 transition font-bold disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-6 py-2 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition font-bold disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {importing ? 'Importing...' : '📥 Import Songs'}
             </button>
@@ -655,7 +741,7 @@ export const Settings: React.FC = () => {
                   type="text"
                   placeholder="Artist"
                   list="artist-suggestions"
-                  className="p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none w-full"
+                  className="p-3 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none w-full"
                   value={manualArtist}
                   onChange={(e) => setManualArtist(e.target.value)}
                 />
@@ -668,30 +754,30 @@ export const Settings: React.FC = () => {
               <input
                 type="text"
                 placeholder="Song Title"
-                className="p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none"
+                className="p-3 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none"
                 value={manualTitle}
                 onChange={(e) => setManualTitle(e.target.value)}
               />
               <input
                 type="text"
                 placeholder="Thumbnail URL (optional)"
-                className="p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none md:col-span-2"
+                className="p-3 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none md:col-span-2"
                 value={manualThumbnail}
                 onChange={(e) => setManualThumbnail(e.target.value)}
               />
-              <label className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-orange-500 transition md:col-span-2">
+              <label className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary-500 transition md:col-span-2">
                 <input
                   type="checkbox"
                   checked={manualIsAustralian}
                   onChange={(e) => setManualIsAustralian(e.target.checked)}
-                  className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                  className="w-5 h-5 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
                 />
                 <span className="text-gray-700 font-medium">Australian Artist 🦘</span>
               </label>
             </div>
             <button
               onClick={handleAddManual}
-              className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-pink-600 transition font-bold"
+              className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-6 py-2 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition font-bold"
             >
               ➕ Add Song
             </button>
@@ -721,7 +807,7 @@ export const Settings: React.FC = () => {
                         <div className="text-sm text-gray-600 flex items-center gap-2">
                           <span className="truncate">{song.artist}</span>
                           {song.isAustralian && (
-                            <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded flex-shrink-0">
+                            <span className="bg-primary-500 text-white text-xs font-bold px-2 py-0.5 rounded flex-shrink-0">
                               AUS
                             </span>
                           )}
@@ -749,20 +835,20 @@ export const Settings: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Current Data</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gradient-to-br from-orange-50 to-pink-50 p-4 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">{songs.length}</div>
+              <div className="bg-gradient-to-br from-primary-50 to-secondary-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-primary-600">{songs.length}</div>
                 <div className="text-sm text-gray-600">Songs</div>
               </div>
-              <div className="bg-gradient-to-br from-orange-50 to-pink-50 p-4 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">{familyMembers.length}</div>
+              <div className="bg-gradient-to-br from-primary-50 to-secondary-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-primary-600">{familyMembers.length}</div>
                 <div className="text-sm text-gray-600">Members</div>
               </div>
-              <div className="bg-gradient-to-br from-orange-50 to-pink-50 p-4 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">{countdownResults.length}/100</div>
+              <div className="bg-gradient-to-br from-primary-50 to-secondary-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-primary-600">{countdownResults.length}/100</div>
                 <div className="text-sm text-gray-600">Hottest 100</div>
               </div>
-              <div className="bg-gradient-to-br from-orange-50 to-pink-50 p-4 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">{hottest200Results.length}/100</div>
+              <div className="bg-gradient-to-br from-primary-50 to-secondary-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-primary-600">{hottest200Results.length}/100</div>
                 <div className="text-sm text-gray-600">Hottest 200</div>
               </div>
             </div>
@@ -797,7 +883,7 @@ export const Settings: React.FC = () => {
                   onChange={(e) => setArchiveYear(parseInt(e.target.value))}
                   min={2020}
                   max={2030}
-                  className="w-32 p-2 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none font-semibold"
+                  className="w-32 p-2 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none font-semibold"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   This year will be used in the Archive dropdown
@@ -840,11 +926,36 @@ export const Settings: React.FC = () => {
             </p>
             <button
               onClick={handleExport}
-              className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-pink-600 transition font-bold"
+              className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-6 py-2 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition font-bold"
             >
               📦 Export All Data
             </button>
           </div>
+
+          {/* Playlist Export */}
+          {countdownResults.length + hottest200Results.length > 0 && (
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Export Countdown Playlist</h2>
+              <p className="text-gray-600 mb-4 text-sm sm:text-base">
+                The countdown results in order (#1 first), ready to paste into a playlist import tool.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleCopyPlaylist}
+                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-bold"
+                >
+                  🎧 Copy as text
+                </button>
+                <button
+                  onClick={handleDownloadPlaylistCsv}
+                  className="bg-gray-700 text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition font-bold"
+                >
+                  ⬇️ Download CSV
+                </button>
+              </div>
+              {playlistMessage && <p className="text-sm text-gray-700 mt-3">{playlistMessage}</p>}
+            </div>
+          )}
 
           {/* Clear All Data */}
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 border-2 border-red-200">

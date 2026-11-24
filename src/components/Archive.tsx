@@ -41,7 +41,7 @@ export const Archive: React.FC = () => {
             const archive = archives.find(a => a.id === e.target.value);
             setSelectedArchive(archive || null);
           }}
-          className="p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none text-lg font-semibold"
+          className="p-3 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none text-lg font-semibold"
         >
           {archives.map(archive => (
             <option key={archive.id} value={archive.id}>
@@ -67,7 +67,7 @@ export const Archive: React.FC = () => {
                       text-2xl font-black w-10 h-10 flex items-center justify-center rounded-full
                       ${index === 0 ? 'bg-yellow-400 text-white' : ''}
                       ${index === 1 ? 'bg-gray-300 text-white' : ''}
-                      ${index === 2 ? 'bg-orange-600 text-white' : ''}
+                      ${index === 2 ? 'bg-primary-600 text-white' : ''}
                       ${index > 2 ? 'bg-gray-100 text-gray-600' : ''}
                     `}>
                       {index + 1}
@@ -80,7 +80,7 @@ export const Archive: React.FC = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-black text-orange-600">{entry.score}</div>
+                    <div className="text-2xl font-black text-primary-600">{entry.score}</div>
                     <div className="text-xs text-gray-500">points</div>
                   </div>
                 </div>
@@ -104,7 +104,7 @@ export const Archive: React.FC = () => {
 
                       return (
                         <div key={result.position} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="text-xl font-black text-orange-500 w-12 text-center">
+                          <div className="text-xl font-black text-primary-500 w-12 text-center">
                             #{result.position}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -112,7 +112,7 @@ export const Archive: React.FC = () => {
                             <div className="text-sm text-gray-600 truncate">{song.artist}</div>
                           </div>
                           {song.isAustralian && (
-                            <span className="text-sm bg-orange-500 px-2 py-0.5 rounded-full text-white">🦘</span>
+                            <span className="text-sm bg-primary-500 px-2 py-0.5 rounded-full text-white">🦘</span>
                           )}
                         </div>
                       );
@@ -135,7 +135,7 @@ export const Archive: React.FC = () => {
 
                       return (
                         <div key={result.position} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="text-xl font-black text-pink-500 w-12 text-center">
+                          <div className="text-xl font-black text-secondary-500 w-12 text-center">
                             #{result.position}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -143,7 +143,7 @@ export const Archive: React.FC = () => {
                             <div className="text-sm text-gray-600 truncate">{song.artist}</div>
                           </div>
                           {song.isAustralian && (
-                            <span className="text-sm bg-orange-500 px-2 py-0.5 rounded-full text-white">🦘</span>
+                            <span className="text-sm bg-primary-500 px-2 py-0.5 rounded-full text-white">🦘</span>
                           )}
                         </div>
                       );

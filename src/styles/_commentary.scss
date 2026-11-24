@@ -52,7 +52,7 @@ main {
     flex-shrink: 0;
     width: 2.5rem;
     height: 2.5rem;
-    background: linear-gradient(to bottom right, #f97316, #ef4444);
+    background: linear-gradient(to bottom right, var(--brand-primary), var(--brand-tertiary));
     border-radius: 9999px;
     display: flex;
     align-items: center;

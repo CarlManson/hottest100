@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Song } from '../types';
 import { getPositionAdjective } from '../data/positionAdjectives';
+import { COUNTDOWN_YEAR } from '../config/brand';
 
 export interface CurrentSongCardProps {
   /** The song to display */
@@ -41,11 +42,11 @@ export const CurrentSongCard: React.FC<CurrentSongCardProps> = ({
   cardClassName = '',
 }) => {
   // Determine fallback gradient based on variant
-  const fallbackGradient = variant === 'tv'
-    ? 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)'
-    : isNumberOne
-      ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'
-      : 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)';
+  const fallbackGradient = isNumberOne
+    ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'
+    : variant === 'tv'
+      ? 'linear-gradient(135deg, var(--accent-col-dark, var(--brand-surface)) 0%, var(--accent-col-base, var(--brand-primary)) 100%)'
+      : 'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%)';
 
   // Size classes
   const sizeClasses = {
@@ -55,7 +56,7 @@ export const CurrentSongCard: React.FC<CurrentSongCardProps> = ({
   };
 
   // Default label if not provided - uses position-based adjective
-  const displayLabel = label ?? (isNumberOne ? '#1 Song of 2025' : getPositionAdjective(position));
+  const displayLabel = label ?? (isNumberOne ? `#1 Song of ${COUNTDOWN_YEAR}` : getPositionAdjective(position));
 
   return (
     <div id={id} className={`flex justify-center ${className}`}>
