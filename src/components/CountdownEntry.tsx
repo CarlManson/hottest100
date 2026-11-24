@@ -16,6 +16,7 @@ export const CountdownEntry: React.FC = () => {
   const defaultTab = countdownResults.length === 100 ? 'hottest200' : 'hottest100';
   const [activeTab, setActiveTab] = useState<'hottest100' | 'hottest200'>(defaultTab);
   const [searchTerm, setSearchTerm] = useState('');
+  const [resultsSearchTerm, setResultsSearchTerm] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [lastAction, setLastAction] = useState<UndoAction | null>(null);
@@ -328,15 +329,38 @@ export const CountdownEntry: React.FC = () => {
                 )}
               </div>
             </div>
-            <p className="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4">
+            <p className="text-xs sm:text-sm text-gray-400 mb-2">
               Drag and drop to reorder the countdown
             </p>
+            {currentResults.length > 5 && (
+              <div className="mb-3">
+                <input
+                  type="text"
+                  placeholder="Filter results..."
+                  className="w-full p-2 bg-gray-800 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500"
+                  value={resultsSearchTerm}
+                  onChange={(e) => setResultsSearchTerm(e.target.value)}
+                  disabled={isUpdating}
+                />
+              </div>
+            )}
             {currentResults.length === 0 ? (
               <p className="text-gray-500 text-xs sm:text-sm">No results entered yet</p>
             ) : (
               <div className="max-h-96 overflow-y-auto space-y-1.5 sm:space-y-2">
                 {[...currentResults]
                   .sort((a, b) => a.position - b.position)
+                  .filter((result) => {
+                    if (!resultsSearchTerm) return true;
+                    const song = songs.find((s) => s.id === result.songId);
+                    if (!song) return false;
+                    const searchLower = resultsSearchTerm.toLowerCase();
+                    return (
+                      song.title.toLowerCase().includes(searchLower) ||
+                      song.artist.toLowerCase().includes(searchLower) ||
+                      result.position.toString().includes(resultsSearchTerm)
+                    );
+                  })
                   .map((result, index) => {
                     const song = songs.find((s) => s.id === result.songId);
                     if (!song) return null;

@@ -22,8 +22,13 @@
   - New "Deep Diver" award: most picks in 101-200 range
   - New "Total Domination" award: most matches across full 200
   - Perfect 10 details show breakdown of Hottest 100 vs 200
+- Search/filter for countdown results list (shows when >5 results)
+  - Filter by song title, artist, or position number
 
 ### Changed
+- Extracted `CountdownProgressWidget` component from PublicHome
+  - Eliminates ~130 lines of duplicate code
+  - Used in both pre-countdown and countdown-started views
 - Dynamic year display across all components (no more hardcoded "2025"/"2026")
   - PublicHome.tsx: "#1 Song of {year}", "The Hottest 100/200 of {year}"
   - TVMode.tsx: "#1 Song of {year}", "The Hottest 200 of {year}"
