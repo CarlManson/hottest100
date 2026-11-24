@@ -509,7 +509,7 @@ export const Settings: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Countdown Timer</h2>
             <p className="text-sm text-gray-600 mb-4">
-              Set the date and time when the Hottest 100 countdown begins. The countdown timer will appear in the blue banner on the dashboard and public home page.
+              Set the date and time when the Hottest 100 countdown begins. Everyone who visits the site sees the same timer.
             </p>
 
             <div className="space-y-4">
@@ -613,11 +613,11 @@ export const Settings: React.FC = () => {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="font-bold text-blue-900 mb-2 text-sm sm:text-base">ℹ️ About the Countdown Timer</h3>
             <ul className="text-xs sm:text-sm text-blue-800 space-y-1">
-              <li>• The countdown timer appears in a blue banner on the Dashboard and Public Home page</li>
-              <li>• Once the countdown reaches zero, the timer automatically hides</li>
-              <li>• This setting is stored locally in your browser</li>
-              <li>• The Hottest 100 typically starts at 9:00 AM AWST on the Saturday of Australia Day weekend</li>
-              <li>• The default button sets January 25th of the next upcoming year</li>
+              <li>• The countdown timer appears on the home page, Dashboard and TV mode</li>
+              <li>• Once the countdown reaches zero, the timer hides and votes lock</li>
+              <li>• The date is saved for everyone who visits the site (needs supabase-add-app-settings.sql)</li>
+              <li>• Recent countdowns started at 9:00 AM AWST on the fourth Saturday of January</li>
+              <li>• The default button picks the next fourth Saturday of January at 9:00 AM AWST</li>
             </ul>
           </div>
         </div>
