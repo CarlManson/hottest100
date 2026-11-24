@@ -119,6 +119,30 @@ export const Settings: React.FC = () => {
     }
   };
 
+  // Helper to normalize strings for duplicate detection
+  const normalize = (s: string) => s.toLowerCase().trim();
+
+  // Check if a song already exists in the library
+  const isDuplicate = (artist: string, title: string) => {
+    const normArtist = normalize(artist);
+    const normTitle = normalize(title);
+    return songs.some(s => normalize(s.artist) === normArtist && normalize(s.title) === normTitle);
+  };
+
+  // Filter out duplicates and return unique songs with count info
+  const filterDuplicates = <T extends { artist: string; title: string }>(newSongs: T[]) => {
+    const unique: T[] = [];
+    let duplicateCount = 0;
+    for (const song of newSongs) {
+      if (!isDuplicate(song.artist, song.title)) {
+        unique.push(song);
+      } else {
+        duplicateCount++;
+      }
+    }
+    return { unique, duplicateCount };
+  };
+
   // Songs handlers
   const handleImport = async () => {
     setError('');
@@ -129,12 +153,21 @@ export const Settings: React.FC = () => {
       // Try JSON first
       const parsed = JSON.parse(importText);
       if (Array.isArray(parsed)) {
-        const newSongs = parsed.map((item) => ({
+        const rawSongs = parsed.map((item) => ({
           title: item.title || item.song || item.track || '',
           artist: item.artist || '',
           thumbnail: item.thumbnail,
           isAustralian: item.isAustralian,
         }));
+
+        // Filter out duplicates
+        const { unique: newSongs, duplicateCount } = filterDuplicates(rawSongs);
+
+        if (newSongs.length === 0) {
+          setImportProgress(`All ${duplicateCount} songs already exist in your library.`);
+          setImporting(false);
+          return;
+        }
 
         // Import in chunks for large datasets
         const chunkSize = 50;
@@ -150,7 +183,8 @@ export const Settings: React.FC = () => {
               await new Promise(resolve => setTimeout(resolve, 500));
             }
 
-            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
+            const dupMsg = duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : '';
+            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!${dupMsg}`);
             setTimeout(() => {
               setImportText('');
               setImportProgress('');
@@ -165,7 +199,8 @@ export const Settings: React.FC = () => {
         } else {
           try {
             await addSongs(newSongs);
-            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
+            const dupMsg = duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : '';
+            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!${dupMsg}`);
             setTimeout(() => {
               setImportText('');
               setImportProgress('');
@@ -191,28 +226,36 @@ export const Settings: React.FC = () => {
         return;
       }
 
-      const newSongs: Omit<Song, 'id'>[] = [];
+      const rawSongs: Omit<Song, 'id'>[] = [];
       lines.forEach((line) => {
         const parts = line.split(',').map((p) => p.trim());
         if (parts.length >= 2) {
-          newSongs.push({
+          rawSongs.push({
             artist: parts[0],
             title: parts[1],
           });
         }
       });
 
-      if (newSongs.length > 0) {
-        try {
-          await addSongs(newSongs);
-          setImportText('');
-          setImportProgress(`✅ Successfully imported ${newSongs.length} songs!`);
-          setTimeout(() => setImportProgress(''), 3000);
-        } catch (err) {
-          setError('Failed to import songs. Please try again.');
-        }
-      } else {
+      if (rawSongs.length === 0) {
         setError('No valid songs found. Format: Artist, Title (one per line)');
+      } else {
+        // Filter out duplicates
+        const { unique: newSongs, duplicateCount } = filterDuplicates(rawSongs);
+
+        if (newSongs.length === 0) {
+          setImportProgress(`All ${duplicateCount} songs already exist in your library.`);
+        } else {
+          try {
+            await addSongs(newSongs);
+            setImportText('');
+            const dupMsg = duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : '';
+            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!${dupMsg}`);
+            setTimeout(() => setImportProgress(''), 3000);
+          } catch (err) {
+            setError('Failed to import songs. Please try again.');
+          }
+        }
       }
     } finally {
       setImporting(false);
@@ -222,6 +265,12 @@ export const Settings: React.FC = () => {
   const handleAddManual = async () => {
     if (!manualTitle.trim() || !manualArtist.trim()) {
       setError('Please enter both title and artist');
+      return;
+    }
+
+    // Check for duplicate
+    if (isDuplicate(manualArtist.trim(), manualTitle.trim())) {
+      setError('This song already exists in your library');
       return;
     }
 

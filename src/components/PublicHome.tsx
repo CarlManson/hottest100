@@ -9,10 +9,7 @@ import { CountdownQuip } from './CountdownQuip';
 import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 import { DetailedBreakdownTable } from './DetailedBreakdownTable';
-
-// Hottest 100 starts Jan 24, 2026 at 9:00 AM AWST (UTC+8)
-// AWST is UTC+8, so 9:00 AM AWST = 1:00 AM UTC on Jan 24
-const COUNTDOWN_START = new Date(Date.UTC(2026, 0, 24, 1, 0, 0));
+import { COUNTDOWN_START, COUNTDOWN_YEAR } from '../config/countdown';
 
 interface CountdownTime {
   days: number;
@@ -302,7 +299,7 @@ export const PublicHome: React.FC = () => {
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 sm:p-8">
                     <div className="text-white">
                       <div className="text-xs sm:text-sm font-bold text-yellow-400 mb-2 uppercase tracking-wider">
-                        #1 Song of 2025
+                        {`#1 Song of ${COUNTDOWN_YEAR}`}
                       </div>
                       <h3 className="text-2xl sm:text-3xl font-black mb-2 leading-tight">
                         {numberOneSongData.title}
@@ -371,7 +368,7 @@ export const PublicHome: React.FC = () => {
             <div className="xl:col-span-2">
               <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200 h-fit">
                 <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                  📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
+                  📊 {hasHottest200Started ? `The Hottest 200 of ${COUNTDOWN_YEAR}` : numberOneSong ? `The Hottest 100 of ${COUNTDOWN_YEAR}` : "Countdown Progress"}
                 </h3>
 
                 <div className="mb-4">
@@ -615,7 +612,7 @@ export const PublicHome: React.FC = () => {
                 <div>
                   <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-orange-200 h-fit">
                     <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                      📊 {hasHottest200Started ? "The Hottest 200 of 2025" : numberOneSong ? "The Hottest 100 of 2025" : "Countdown Progress"}
+                      📊 {hasHottest200Started ? `The Hottest 200 of ${COUNTDOWN_YEAR}` : numberOneSong ? `The Hottest 100 of ${COUNTDOWN_YEAR}` : "Countdown Progress"}
                     </h3>
 
                     <div className="mb-4">

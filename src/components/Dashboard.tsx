@@ -3,10 +3,7 @@ import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import type { MemberProfile } from '../types';
 import { LazyImage } from './LazyImage';
-
-// Hottest 100 starts Jan 24, 2026 at 9:00 AM AWST (UTC+8)
-// AWST is UTC+8, so 9:00 AM AWST = 1:00 AM UTC on Jan 24
-const COUNTDOWN_START = new Date(Date.UTC(2026, 0, 24, 1, 0, 0));
+import { COUNTDOWN_START } from '../config/countdown';
 
 interface CountdownTime {
   days: number;

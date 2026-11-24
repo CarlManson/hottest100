@@ -184,7 +184,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // If we're in the middle of an update operation, ignore real-time updates
     // This prevents the temporary 0-results state from showing during DELETE->INSERT
     if (isUpdatingCountdown.current || isUpdatingHottest200.current) {
-      console.log('Ignoring real-time countdown update during active update operation');
       return;
     }
 
@@ -707,7 +706,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       for (const member of state.familyMembers) {
         // Check 24-hour rate limit
         if (!canRegenerateMusicTaste(member.id)) {
-          console.log(`Skipping ${member.name} - updated within last 24 hours`);
           // Still add their existing label to the used list
           const existingProfile = state.profiles.find(p => p.familyMemberId === member.id);
           if (existingProfile?.label) {
@@ -751,8 +749,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         usedLabels.push(result.label);
         regeneratedCount++;
       }
-
-      console.log(`Regenerated ${regeneratedCount} profiles, skipped ${skippedCount}`);
     } catch (err) {
       setProfileError(err instanceof Error ? err.message : 'Failed to regenerate profiles');
       console.error('Profile regeneration error:', err);

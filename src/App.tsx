@@ -10,6 +10,7 @@ import { Leaderboard } from './components/Leaderboard';
 import { DetailedBreakdown } from './components/DetailedBreakdown';
 import { Settings } from './components/Settings';
 import { Archive } from './components/Archive';
+import { BROADCAST_YEAR } from './config/countdown';
 import logo from './assets/fairest-100-logo.png';
 import banner from './assets/banner-bg.jpg';
 import bannerRight from './assets/banner-right.png';
@@ -391,7 +392,7 @@ function AppContent() {
               <a href="https://axiom.com.au" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">
                 Axiom
               </a>{' '}
-              • 2026
+              • {BROADCAST_YEAR}
             </p>
             <div className="mt-4 space-y-2">
               {isAuthenticated ? (

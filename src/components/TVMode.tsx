@@ -6,6 +6,7 @@ import { getPodiumQuip } from '../data/podiumQuips';
 import { CountdownQuip } from './CountdownQuip';
 import banner from '../assets/banner-bg.jpg';
 import logo from '../assets/fairest-100-logo.png';
+import { COUNTDOWN_YEAR } from '../config/countdown';
 
 // TV Mode - Simplified view for large screens
 export const TVMode: React.FC = () => {
@@ -165,7 +166,7 @@ export const TVMode: React.FC = () => {
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 sm:p-8">
                       <div className="text-white">
                         <div className="text-xs sm:text-sm font-bold text-yellow-400 mb-2 uppercase tracking-wider">
-                          {numberOneSong ? '#1 Song of 2025' : 'Current Highest Song'}
+                          {numberOneSong ? `#1 Song of ${COUNTDOWN_YEAR}` : 'Current Highest Song'}
                         </div>
                         <h3 className="text-2xl sm:text-3xl font-black mb-2 leading-tight">
                           {(numberOneSongData || currentHighestSong)?.title}
@@ -236,7 +237,7 @@ export const TVMode: React.FC = () => {
             <div className="countdown-progress bg-white rounded-xl shadow-lg p-6 border-2 border-blue-200">
             <div className="header-group mb-4">
               <h3 className="text-2xl font-bold text-gray-800">
-                📊 {hasHottest200Started ? "The Hottest 200 of 2025" : "Countdown Progress"}
+                📊 {hasHottest200Started ? `The Hottest 200 of ${COUNTDOWN_YEAR}` : "Countdown Progress"}
               </h3>
 
               <div className="">
