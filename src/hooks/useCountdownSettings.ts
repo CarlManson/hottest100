@@ -1,7 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
 
 const COUNTDOWN_DATE_KEY = 'hottest100_countdown_date';
 const COUNTDOWN_CHANGE_EVENT = 'hottest100_countdown_change';
+const SETTINGS_TABLE = 'app_settings';
+const SETTING_KEY = 'countdown_date';
 
 export interface CountdownTime {
   days: number;
@@ -13,79 +16,103 @@ export interface CountdownTime {
 
 export interface CountdownSettings {
   countdownDate: Date | null;
-  setCountdownDate: (date: Date | null) => void;
+  /** Resolves true when saved for everyone, false when only saved in this browser */
+  setCountdownDate: (date: Date | null) => Promise<boolean>;
   isEnabled: boolean;
 }
 
-// Read countdown date from localStorage
-const readCountdownDate = (): Date | null => {
+const parseDate = (value: unknown): Date | null => {
+  if (typeof value !== 'string' || !value) return null;
+  const date = new Date(value);
+  return isNaN(date.getTime()) ? null : date;
+};
+
+// localStorage is only a cache so the timer paints instantly; Supabase is the source of truth
+const readCachedDate = (): Date | null => {
   try {
-    const stored = localStorage.getItem(COUNTDOWN_DATE_KEY);
-    if (!stored) return null;
-    const date = new Date(stored);
-    return isNaN(date.getTime()) ? null : date;
+    return parseDate(localStorage.getItem(COUNTDOWN_DATE_KEY));
   } catch {
     return null;
   }
 };
 
-// Write countdown date to localStorage
-const writeCountdownDate = (date: Date | null): void => {
+const writeCachedDate = (date: Date | null): void => {
   try {
-    if (date) {
-      localStorage.setItem(COUNTDOWN_DATE_KEY, date.toISOString());
-    } else {
-      localStorage.removeItem(COUNTDOWN_DATE_KEY);
-    }
+    if (date) localStorage.setItem(COUNTDOWN_DATE_KEY, date.toISOString());
+    else localStorage.removeItem(COUNTDOWN_DATE_KEY);
   } catch {
-    // Ignore localStorage errors
+    // Storage unavailable - the shared value still applies for this session
   }
 };
 
-/**
- * Hook to manage countdown date settings
- * Reads directly from localStorage to avoid sync issues
- */
+// Module-level store shared by every hook instance (also prevents a blink on remount)
+let currentDate: Date | null = readCachedDate();
+let remoteSyncStarted = false;
+
+const setCurrentDate = (date: Date | null) => {
+  currentDate = date;
+  writeCachedDate(date);
+  window.dispatchEvent(new CustomEvent(COUNTDOWN_CHANGE_EVENT));
+};
+
+const settingsTable = () => supabase.from(SETTINGS_TABLE as never) as ReturnType<typeof supabase.from>;
+
+async function fetchRemoteDate() {
+  const { data, error } = await settingsTable()
+    .select('value')
+    .eq('key', SETTING_KEY)
+    .maybeSingle();
+  // Table not created yet (or offline): keep whatever this browser has
+  if (error) return;
+  setCurrentDate(parseDate((data as { value?: unknown } | null)?.value));
+}
+
+function startRemoteSync() {
+  if (remoteSyncStarted) return;
+  remoteSyncStarted = true;
+  fetchRemoteDate();
+  supabase
+    .channel('app-settings-channel')
+    .on('postgres_changes', { event: '*', schema: 'public', table: SETTINGS_TABLE }, () => {
+      fetchRemoteDate();
+    })
+    .subscribe();
+}
+
+async function saveCountdownDate(date: Date | null): Promise<boolean> {
+  setCurrentDate(date);
+  const { error } = await settingsTable().upsert(
+    { key: SETTING_KEY, value: date ? date.toISOString() : null, updated_at: new Date().toISOString() } as never,
+    { onConflict: 'key' }
+  );
+  if (error) console.error('Countdown date saved locally only:', error);
+  return !error;
+}
+
+/** Subscribes a component to the shared countdown date */
+const useSharedCountdownDate = () => {
+  const [date, setDate] = useState<Date | null>(currentDate);
+
+  useEffect(() => {
+    startRemoteSync();
+    const sync = () => setDate(currentDate);
+    const refetch = () => { fetchRemoteDate(); };
+    sync();
+    window.addEventListener(COUNTDOWN_CHANGE_EVENT, sync);
+    window.addEventListener('focus', refetch);
+    return () => {
+      window.removeEventListener(COUNTDOWN_CHANGE_EVENT, sync);
+      window.removeEventListener('focus', refetch);
+    };
+  }, []);
+
+  return date;
+};
+
+/** Hook to read and change the countdown start date (shared across all visitors via Supabase) */
 export const useCountdownSettings = (): CountdownSettings => {
-  // Read initial value from localStorage
-  const [countdownDate, setCountdownDateState] = useState<Date | null>(() => readCountdownDate());
-
-  // Keep a ref to track if we've mounted
-  const isMounted = useRef(true);
-
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  // Sync with localStorage on mount and when storage changes
-  useEffect(() => {
-    const syncFromStorage = () => {
-      if (!isMounted.current) return;
-      const stored = readCountdownDate();
-      setCountdownDateState(stored);
-    };
-
-    // Listen for storage events from other tabs
-    window.addEventListener('storage', syncFromStorage);
-
-    // Also sync on focus in case another tab changed it
-    window.addEventListener('focus', syncFromStorage);
-
-    return () => {
-      window.removeEventListener('storage', syncFromStorage);
-      window.removeEventListener('focus', syncFromStorage);
-    };
-  }, []);
-
-  const setCountdownDate = useCallback((date: Date | null) => {
-    writeCountdownDate(date);
-    setCountdownDateState(date);
-    // Dispatch custom event for same-tab sync (storage event only fires cross-tab)
-    window.dispatchEvent(new CustomEvent(COUNTDOWN_CHANGE_EVENT));
-  }, []);
+  const countdownDate = useSharedCountdownDate();
+  const setCountdownDate = useCallback((date: Date | null) => saveCountdownDate(date), []);
 
   return {
     countdownDate,
@@ -94,83 +121,35 @@ export const useCountdownSettings = (): CountdownSettings => {
   };
 };
 
-// Module-level cache to persist across component unmounts/remounts
-let cachedCountdownDate: Date | null = readCountdownDate();
-let cacheInitialized = false;
-
-// Initialize cache on module load
-const initCache = () => {
-  if (!cacheInitialized) {
-    cachedCountdownDate = readCountdownDate();
-    cacheInitialized = true;
+const calculateState = (date: Date | null): CountdownTime & { isEnabled: boolean } => {
+  if (!date) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true, isEnabled: false };
   }
+  const diff = date.getTime() - Date.now();
+  if (diff <= 0) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true, isEnabled: true };
+  }
+  return {
+    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+    minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+    seconds: Math.floor((diff % (1000 * 60)) / 1000),
+    isStarted: false,
+    isEnabled: true,
+  };
 };
 
-/**
- * Hook to get countdown time values
- * Combines settings with timer logic
- *
- * Uses a module-level cache to persist countdown date across component
- * unmounts/remounts, preventing the "blink" issue when other state changes
- * cause React to remount components.
- */
+/** Live countdown values (ticks every second) */
 export const useCountdown = (): CountdownTime & { isEnabled: boolean } => {
-  // Ensure cache is initialized
-  initCache();
-
-  const calculateState = useCallback((date: Date | null): CountdownTime & { isEnabled: boolean } => {
-    if (!date) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true, isEnabled: false };
-    }
-    const now = new Date();
-    const diff = date.getTime() - now.getTime();
-    if (diff <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true, isEnabled: true };
-    }
-    return {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-      seconds: Math.floor((diff % (1000 * 60)) / 1000),
-      isStarted: false,
-      isEnabled: true,
-    };
-  }, []);
-
-  const [state, setState] = useState<CountdownTime & { isEnabled: boolean }>(() =>
-    calculateState(cachedCountdownDate)
-  );
+  const date = useSharedCountdownDate();
+  const [state, setState] = useState(() => calculateState(currentDate));
 
   useEffect(() => {
-    // Update countdown based on cached date
-    const updateCountdown = () => {
-      setState(calculateState(cachedCountdownDate));
-    };
-
-    // Sync from localStorage - updates module-level cache
-    const syncFromStorage = () => {
-      cachedCountdownDate = readCountdownDate();
-      updateCountdown();
-    };
-
-    // Update immediately
-    updateCountdown();
-
-    // Then update every second
-    const timer = setInterval(updateCountdown, 1000);
-
-    // Listen for storage/focus/custom events
-    window.addEventListener('storage', syncFromStorage);
-    window.addEventListener('focus', syncFromStorage);
-    window.addEventListener(COUNTDOWN_CHANGE_EVENT, syncFromStorage);
-
-    return () => {
-      clearInterval(timer);
-      window.removeEventListener('storage', syncFromStorage);
-      window.removeEventListener('focus', syncFromStorage);
-      window.removeEventListener(COUNTDOWN_CHANGE_EVENT, syncFromStorage);
-    };
-  }, [calculateState]);
+    const update = () => setState(calculateState(date));
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [date]);
 
   return state;
 };

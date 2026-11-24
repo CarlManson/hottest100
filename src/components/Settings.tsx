@@ -163,23 +163,25 @@ export const Settings: React.FC = () => {
   };
 
   // Event/Countdown handlers
-  const handleSetCountdownDate = () => {
+  const SHARED_DATE_HELP = 'Saved on this device only. Run supabase-add-app-settings.sql in Supabase to share it with everyone.';
+
+  const handleSetCountdownDate = async () => {
     const date = parseDateFromInput(countdownDateInput);
     if (date) {
-      setCountdownDate(date);
-      setSaveMessage('Countdown date saved!');
-      setTimeout(() => setSaveMessage(''), 3000);
+      const shared = await setCountdownDate(date);
+      setSaveMessage(shared ? 'Countdown date saved for everyone!' : SHARED_DATE_HELP);
+      setTimeout(() => setSaveMessage(''), shared ? 3000 : 8000);
     } else {
       setSaveMessage('Please enter a valid date and time');
       setTimeout(() => setSaveMessage(''), 3000);
     }
   };
 
-  const handleClearCountdownDate = () => {
-    setCountdownDate(null);
+  const handleClearCountdownDate = async () => {
     setCountdownDateInput('');
-    setSaveMessage('Countdown timer disabled');
-    setTimeout(() => setSaveMessage(''), 3000);
+    const shared = await setCountdownDate(null);
+    setSaveMessage(shared ? 'Countdown timer disabled' : SHARED_DATE_HELP);
+    setTimeout(() => setSaveMessage(''), shared ? 3000 : 8000);
   };
 
   const handleSetDefaultDate = () => {
@@ -513,11 +515,11 @@ export const Settings: React.FC = () => {
                     onClick={handleSetDefaultDate}
                     className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition text-sm"
                   >
-                    Use Default (Jan 25, 9am AWST)
+                    Use Default (4th Sat of Jan, 9am AWST)
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Typically the Saturday of the Australia Day long weekend at 9:00 AM AWST
+                  Recent countdowns ran on the fourth Saturday of January at 9:00 AM AWST. The date is shared with everyone who opens the site.
                 </p>
               </div>
 

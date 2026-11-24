@@ -129,3 +129,13 @@ ALTER PUBLICATION supabase_realtime ADD TABLE votes;
 ALTER PUBLICATION supabase_realtime ADD TABLE countdown_results;
 ALTER PUBLICATION supabase_realtime ADD TABLE member_profiles;
 ALTER PUBLICATION supabase_realtime ADD TABLE archives;
+
+-- Shared app settings (countdown start date etc.)
+CREATE TABLE app_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all operations on app_settings" ON app_settings FOR ALL USING (true) WITH CHECK (true);
+ALTER PUBLICATION supabase_realtime ADD TABLE app_settings;

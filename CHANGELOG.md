@@ -5,6 +5,7 @@
 ### Action needed before the countdown
 - **Set the countdown date** in Settings once Triple J announces it ("Use default" now picks the fourth Saturday of January)
 - **Drop in the new event branding** — see `src/assets/brand/README.md` and `src/config/brand.ts`
+- **Run `supabase-add-app-settings.sql`** in the Supabase SQL Editor so the countdown date is shared with every visitor
 - **Run `supabase-add-song-unique-index.sql`** in the Supabase SQL Editor (new projects get it from `supabase-schema.sql`)
 - Optional: set `VITE_STREAM_URL` to show the "Listen live" button
 
@@ -18,6 +19,10 @@
 - TV rehearsal mode: open `/?rehearsal#tv` to scrub or auto-play a simulated countdown with the real song list
 - Song arrival animations: featured song card "reveal", new entries slide in with an accent glow, leaderboard rows bump with a floating "+N"
 - All motion lives in `src/styles/_motion.scss` and is disabled under `prefers-reduced-motion`
+
+### Changed — shared countdown date
+- The countdown date set in Settings is now stored in Supabase (`app_settings` table) and synced live, so every visitor sees the same timer and votes lock for everyone at start time
+- Falls back to this-browser-only (previous behaviour) until the table exists; Settings says which happened
 
 ### Changed — polish
 - Home: removed the duplicated progress bar from the latest-entries card (the hero already shows it), fixed "Full Leaderboard" breaking onto two lines, smaller podium heading, lighter and consistent card borders
