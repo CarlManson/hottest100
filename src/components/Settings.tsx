@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import type { Song } from '../types';
+import { useCountdownSettings, useCountdown, formatDateForInput, parseDateFromInput } from '../hooks/useCountdownSettings';
 
 const DEFAULT_LABEL_PROMPT = `You're a cheeky Aussie music critic analyzing someone's Hottest 100 picks. Be funny, playful, and engaging.
 
@@ -34,7 +35,7 @@ Be observant, funny, and engaging about their musical preferences. Keep it frien
 Return format:
 MUSIC_TASTE: [Your 3-4 sentence analysis here]`;
 
-type TabType = 'ai' | 'songs' | 'data';
+type TabType = 'event' | 'ai' | 'songs' | 'data';
 
 export const Settings: React.FC = () => {
   const {
@@ -52,7 +53,12 @@ export const Settings: React.FC = () => {
   } = useApp();
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<TabType>('ai');
+  const [activeTab, setActiveTab] = useState<TabType>('event');
+
+  // Countdown settings
+  const { countdownDate, setCountdownDate, isEnabled: isCountdownEnabled } = useCountdownSettings();
+  const countdown = useCountdown();
+  const [countdownDateInput, setCountdownDateInput] = useState<string>('');
 
   // AI Prompts state
   const [labelPrompt, setLabelPrompt] = useState(DEFAULT_LABEL_PROMPT);
@@ -85,6 +91,15 @@ export const Settings: React.FC = () => {
     if (savedLabelPrompt) setLabelPrompt(savedLabelPrompt);
     if (savedMusicTastePrompt) setMusicTastePrompt(savedMusicTastePrompt);
   }, []);
+
+  // Initialize countdown date input when countdown date changes
+  useEffect(() => {
+    if (countdownDate) {
+      setCountdownDateInput(formatDateForInput(countdownDate));
+    } else {
+      setCountdownDateInput('');
+    }
+  }, [countdownDate]);
 
   // Get unique artists for autocomplete
   const uniqueArtists = useMemo(() => {
@@ -145,6 +160,41 @@ export const Settings: React.FC = () => {
       }
     }
     return { unique, duplicateCount };
+  };
+
+  // Event/Countdown handlers
+  const handleSetCountdownDate = () => {
+    const date = parseDateFromInput(countdownDateInput);
+    if (date) {
+      setCountdownDate(date);
+      setSaveMessage('Countdown date saved!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } else {
+      setSaveMessage('Please enter a valid date and time');
+      setTimeout(() => setSaveMessage(''), 3000);
+    }
+  };
+
+  const handleClearCountdownDate = () => {
+    setCountdownDate(null);
+    setCountdownDateInput('');
+    setSaveMessage('Countdown timer disabled');
+    setTimeout(() => setSaveMessage(''), 3000);
+  };
+
+  const handleSetDefaultDate = () => {
+    // Default: fourth Saturday of January (2025: Jan 25, 2026: Jan 24) at 9:00 AM AWST (1:00 AM UTC)
+    const fourthSaturday = (year: number) => {
+      const firstDay = new Date(Date.UTC(year, 0, 1)).getUTCDay();
+      const firstSaturday = 1 + ((6 - firstDay + 7) % 7);
+      return new Date(Date.UTC(year, 0, firstSaturday + 21, 1, 0, 0));
+    };
+    const now = new Date();
+    let defaultDateUTC = fourthSaturday(now.getFullYear());
+    if (now > defaultDateUTC) {
+      defaultDateUTC = fourthSaturday(now.getFullYear() + 1);
+    }
+    setCountdownDateInput(formatDateForInput(defaultDateUTC));
   };
 
   // Songs handlers
@@ -388,12 +438,22 @@ export const Settings: React.FC = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200">
+      <div className="flex gap-2 mb-6 border-b border-gray-200 overflow-x-auto">
+        <button
+          onClick={() => setActiveTab('event')}
+          className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
+            activeTab === 'event'
+              ? 'text-primary-600 border-b-2 border-primary-600'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          📅 Event
+        </button>
         <button
           onClick={() => setActiveTab('ai')}
-          className={`px-4 py-2 font-semibold transition ${
+          className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
             activeTab === 'ai'
-              ? 'text-orange-600 border-b-2 border-orange-600'
+              ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
@@ -401,9 +461,9 @@ export const Settings: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('songs')}
-          className={`px-4 py-2 font-semibold transition ${
+          className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
             activeTab === 'songs'
-              ? 'text-orange-600 border-b-2 border-orange-600'
+              ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
@@ -411,9 +471,9 @@ export const Settings: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('data')}
-          className={`px-4 py-2 font-semibold transition ${
+          className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
             activeTab === 'data'
-              ? 'text-orange-600 border-b-2 border-orange-600'
+              ? 'text-primary-600 border-b-2 border-primary-600'
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
@@ -424,6 +484,127 @@ export const Settings: React.FC = () => {
       {saveMessage && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
           {saveMessage}
+        </div>
+      )}
+
+      {/* Event Tab */}
+      {activeTab === 'event' && (
+        <div className="space-y-6">
+          {/* Countdown Date/Time Setting */}
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Countdown Timer</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Set the date and time when the Hottest 100 countdown begins. The countdown timer will appear in the blue banner on the dashboard and public home page.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Countdown Start Date & Time
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="datetime-local"
+                    value={countdownDateInput}
+                    onChange={(e) => setCountdownDateInput(e.target.value)}
+                    className="flex-1 p-3 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none"
+                  />
+                  <button
+                    onClick={handleSetDefaultDate}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition text-sm"
+                  >
+                    Use Default (Jan 25, 9am AWST)
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Typically the Saturday of the Australia Day long weekend at 9:00 AM AWST
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleSetCountdownDate}
+                  disabled={!countdownDateInput}
+                  className="px-6 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold rounded-lg hover:from-primary-600 hover:to-secondary-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  💾 Save Countdown Date
+                </button>
+                {isCountdownEnabled && (
+                  <button
+                    onClick={handleClearCountdownDate}
+                    className="px-6 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition"
+                  >
+                    🗑️ Disable Countdown
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Current Status */}
+          <div className={`rounded-lg shadow-md p-4 sm:p-6 ${isCountdownEnabled ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800' : 'bg-gray-100'}`}>
+            <h2 className={`text-lg sm:text-xl font-bold mb-4 ${isCountdownEnabled ? 'text-white' : 'text-gray-800'}`}>
+              {isCountdownEnabled ? '⏰ Countdown Status' : '⏰ Countdown Disabled'}
+            </h2>
+
+            {isCountdownEnabled && countdownDate ? (
+              countdown.isStarted ? (
+                <div className="text-center py-4">
+                  <div className="text-2xl sm:text-3xl font-black text-white mb-2">
+                    The Countdown Has Started!
+                  </div>
+                  <p className="text-white/80">
+                    The countdown timer is no longer visible as the event has begun.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <div className="text-white/80 text-xs sm:text-sm font-semibold mb-2 uppercase tracking-wide text-center">
+                    Countdown Starts In
+                  </div>
+                  <div className="flex justify-center gap-2 sm:gap-4">
+                    <div className="bg-white rounded-lg px-3 sm:px-6 py-2 sm:py-4 min-w-[60px] sm:min-w-[80px] text-center">
+                      <div className="text-2xl sm:text-4xl font-black text-gray-800">{String(countdown.days).padStart(2, '0')}</div>
+                      <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase">Days</div>
+                    </div>
+                    <div className="bg-white rounded-lg px-3 sm:px-6 py-2 sm:py-4 min-w-[60px] sm:min-w-[80px] text-center">
+                      <div className="text-2xl sm:text-4xl font-black text-gray-800">{String(countdown.hours).padStart(2, '0')}</div>
+                      <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase">Hours</div>
+                    </div>
+                    <div className="bg-white rounded-lg px-3 sm:px-6 py-2 sm:py-4 min-w-[60px] sm:min-w-[80px] text-center">
+                      <div className="text-2xl sm:text-4xl font-black text-gray-800">{String(countdown.minutes).padStart(2, '0')}</div>
+                      <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase">Minutes</div>
+                    </div>
+                    <div className="bg-white rounded-lg px-3 sm:px-6 py-2 sm:py-4 min-w-[60px] sm:min-w-[80px] text-center">
+                      <div className="text-2xl sm:text-4xl font-black text-gray-800">{String(countdown.seconds).padStart(2, '0')}</div>
+                      <div className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase">Seconds</div>
+                    </div>
+                  </div>
+                  <p className="text-white/80 text-center text-sm mt-4">
+                    Counting down to: {countdownDate.toLocaleString()}
+                  </p>
+                </div>
+              )
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-gray-600">
+                  No countdown date is set. Set a date above to enable the countdown timer on the dashboard.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Info Section */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="font-bold text-blue-900 mb-2 text-sm sm:text-base">ℹ️ About the Countdown Timer</h3>
+            <ul className="text-xs sm:text-sm text-blue-800 space-y-1">
+              <li>• The countdown timer appears in a blue banner on the Dashboard and Public Home page</li>
+              <li>• Once the countdown reaches zero, the timer automatically hides</li>
+              <li>• This setting is stored locally in your browser</li>
+              <li>• The Hottest 100 typically starts at 9:00 AM AWST on the Saturday of Australia Day weekend</li>
+              <li>• The default button sets January 25th of the next upcoming year</li>
+            </ul>
+          </div>
         </div>
       )}
 
@@ -444,7 +625,7 @@ export const Settings: React.FC = () => {
             <textarea
               value={labelPrompt}
               onChange={(e) => setLabelPrompt(e.target.value)}
-              className="w-full h-64 p-3 border-2 border-gray-200 rounded-lg font-mono text-xs sm:text-sm focus:border-orange-500 focus:outline-none"
+              className="w-full h-64 p-3 border-2 border-gray-200 rounded-lg font-mono text-xs sm:text-sm focus:border-primary-500 focus:outline-none"
               placeholder="Enter prompt template..."
             />
           </div>
@@ -462,7 +643,7 @@ export const Settings: React.FC = () => {
             <textarea
               value={musicTastePrompt}
               onChange={(e) => setMusicTastePrompt(e.target.value)}
-              className="w-full h-64 p-3 border-2 border-gray-200 rounded-lg font-mono text-xs sm:text-sm focus:border-orange-500 focus:outline-none"
+              className="w-full h-64 p-3 border-2 border-gray-200 rounded-lg font-mono text-xs sm:text-sm focus:border-primary-500 focus:outline-none"
               placeholder="Enter prompt template..."
             />
           </div>
@@ -473,7 +654,7 @@ export const Settings: React.FC = () => {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold rounded-lg hover:from-orange-600 hover:to-pink-600 transition text-sm sm:text-base"
+                className="px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold rounded-lg hover:from-primary-600 hover:to-secondary-600 transition text-sm sm:text-base"
               >
                 💾 Save Prompts
               </button>
@@ -532,7 +713,7 @@ export const Settings: React.FC = () => {
               Paste JSON array with thumbnails and Australian artist flags, or CSV (format: Artist, Title - one per line)
             </p>
             <textarea
-              className="w-full h-40 p-3 border-2 border-gray-200 rounded-lg mb-3 font-mono text-xs sm:text-sm focus:border-orange-500 focus:outline-none"
+              className="w-full h-40 p-3 border-2 border-gray-200 rounded-lg mb-3 font-mono text-xs sm:text-sm focus:border-primary-500 focus:outline-none"
               placeholder='JSON: [{"artist": "Artist Name", "title": "Song Title", "thumbnail": "url", "isAustralian": true}]&#10;CSV: Artist Name, Song Title'
               value={importText}
               onChange={(e) => setImportText(e.target.value)}
@@ -543,7 +724,7 @@ export const Settings: React.FC = () => {
             <button
               onClick={handleImport}
               disabled={importing}
-              className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-pink-600 transition font-bold disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-6 py-2 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition font-bold disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {importing ? 'Importing...' : '📥 Import Songs'}
             </button>
@@ -558,7 +739,7 @@ export const Settings: React.FC = () => {
                   type="text"
                   placeholder="Artist"
                   list="artist-suggestions"
-                  className="p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none w-full"
+                  className="p-3 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none w-full"
                   value={manualArtist}
                   onChange={(e) => setManualArtist(e.target.value)}
                 />
@@ -571,30 +752,30 @@ export const Settings: React.FC = () => {
               <input
                 type="text"
                 placeholder="Song Title"
-                className="p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none"
+                className="p-3 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none"
                 value={manualTitle}
                 onChange={(e) => setManualTitle(e.target.value)}
               />
               <input
                 type="text"
                 placeholder="Thumbnail URL (optional)"
-                className="p-3 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none md:col-span-2"
+                className="p-3 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none md:col-span-2"
                 value={manualThumbnail}
                 onChange={(e) => setManualThumbnail(e.target.value)}
               />
-              <label className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-orange-500 transition md:col-span-2">
+              <label className="flex items-center gap-3 p-3 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary-500 transition md:col-span-2">
                 <input
                   type="checkbox"
                   checked={manualIsAustralian}
                   onChange={(e) => setManualIsAustralian(e.target.checked)}
-                  className="w-5 h-5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                  className="w-5 h-5 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
                 />
                 <span className="text-gray-700 font-medium">Australian Artist 🦘</span>
               </label>
             </div>
             <button
               onClick={handleAddManual}
-              className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-pink-600 transition font-bold"
+              className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-6 py-2 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition font-bold"
             >
               ➕ Add Song
             </button>
@@ -624,7 +805,7 @@ export const Settings: React.FC = () => {
                         <div className="text-sm text-gray-600 flex items-center gap-2">
                           <span className="truncate">{song.artist}</span>
                           {song.isAustralian && (
-                            <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded flex-shrink-0">
+                            <span className="bg-primary-500 text-white text-xs font-bold px-2 py-0.5 rounded flex-shrink-0">
                               AUS
                             </span>
                           )}
@@ -652,20 +833,20 @@ export const Settings: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Current Data</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gradient-to-br from-orange-50 to-pink-50 p-4 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">{songs.length}</div>
+              <div className="bg-gradient-to-br from-primary-50 to-secondary-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-primary-600">{songs.length}</div>
                 <div className="text-sm text-gray-600">Songs</div>
               </div>
-              <div className="bg-gradient-to-br from-orange-50 to-pink-50 p-4 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">{familyMembers.length}</div>
+              <div className="bg-gradient-to-br from-primary-50 to-secondary-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-primary-600">{familyMembers.length}</div>
                 <div className="text-sm text-gray-600">Members</div>
               </div>
-              <div className="bg-gradient-to-br from-orange-50 to-pink-50 p-4 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">{countdownResults.length}/100</div>
+              <div className="bg-gradient-to-br from-primary-50 to-secondary-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-primary-600">{countdownResults.length}/100</div>
                 <div className="text-sm text-gray-600">Hottest 100</div>
               </div>
-              <div className="bg-gradient-to-br from-orange-50 to-pink-50 p-4 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">{hottest200Results.length}/100</div>
+              <div className="bg-gradient-to-br from-primary-50 to-secondary-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-primary-600">{hottest200Results.length}/100</div>
                 <div className="text-sm text-gray-600">Hottest 200</div>
               </div>
             </div>
@@ -700,7 +881,7 @@ export const Settings: React.FC = () => {
                   onChange={(e) => setArchiveYear(parseInt(e.target.value))}
                   min={2020}
                   max={2030}
-                  className="w-32 p-2 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:outline-none font-semibold"
+                  className="w-32 p-2 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none font-semibold"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   This year will be used in the Archive dropdown
@@ -743,7 +924,7 @@ export const Settings: React.FC = () => {
             </p>
             <button
               onClick={handleExport}
-              className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-pink-600 transition font-bold"
+              className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-6 py-2 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition font-bold"
             >
               📦 Export All Data
             </button>

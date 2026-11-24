@@ -1,0 +1,45 @@
+@use 'sass:color';
+
+
+.ranked-song {
+ 
+  background-color: color-mix(in srgb, var(--accent-col-base) 10%, white);
+  border-left: 2px solid var(--accent-col-base);
+  transition: background-color 0.3s ease;
+  position: relative;
+
+  .points {
+    font-weight: bold;
+    color: color-mix(in srgb, var(--accent-col-dark) 75%, black);
+  }
+
+  .position-marker {
+    position: absolute;
+    bottom: 0.5em;
+    right: 0.5em;
+    background-color: var(--accent-col-base);
+    color: var(--color-white);
+    font-weight: bold;
+    padding: 0.2em 0.5em;
+    border-radius: 0.3em;
+    font-size: 0.8em;
+    text-shadow: 1px 1px 2px var(--accent-col-dark);
+  }
+}
+
+.leaderboard {
+  container-type: inline-size;
+  .member {
+    font-size: 2cqw;
+    font-weight: 600;
+    line-height: 1.1;
+    
+    &-name {
+      font-size: 1.5em;
+    }
+
+    .picks {
+      color: var(--color-gray-600);
+    }
+  }
+}

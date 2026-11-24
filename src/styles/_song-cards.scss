@@ -1,4 +1,61 @@
 @use 'variables' as *;
+@use 'mixins' as *;
+
+
+#song {
+  --hotness-mod-1: calc(var(--hotness) * 0.01); // Border Opacity
+  --hottness-mod-2: calc(var(--hotness) * 0.005 + 0.5); // Box Shadow Opacity
+  --hotness-mod-3: calc(10px + (1px * var(--hotness) * 0.75)); // Box Shadow Size
+  --hottness-mod-4: calc(1 + var(--hotness) * 0.0003); // Scale
+
+  [data-display-mode="tv"] & {
+    @include sine-rotate($amp: 3.5deg);
+  }
+
+  scale: var(--hottness-mod-4);
+
+  container-type: inline-size;
+  [data-display-mode="tv"] & {
+    outline: 3px solid hsl(from var(--accent-col-light) h s l / var(--hotness-mod-1));
+    box-shadow: 0 0 var(--hotness-mod-3) hsl(from var(--accent-col-base) h s l / var(--hottness-mod-2));
+  }
+
+  .song-details {
+    color: var(--color-white);
+    font-size: 6cqw;
+    font-weight: 600;
+
+    .rank-label {
+      color: var(--accent-col-base);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.7em;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.3em;
+    }
+
+    .song-name {
+      font-size: 1.5em;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    .artist-name {
+      color: hsl(from currentColor H S L / 0.7);
+    }
+  }
+}
+
+.aus-badge {
+  background-color: var(--accent-col-base);
+  text-shadow: 1px 1px 3px var(--accent-col-dark);
+  font-size: 0.7em;
+  color: var(--color-white);
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  line-height: 1.5em;
+  border-radius: 0.5em;
+}
 
 // Song card background properties
 .song-card-background {
@@ -9,6 +66,10 @@
   &:hover {
     // Hover effects can be added here if needed
   }
+}
+
+.song-card-number {
+  background: var(--accent-col-base); 
 }
 
 // Song card overlay mixin (for gradients)

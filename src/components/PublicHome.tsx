@@ -1,69 +1,20 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import { calculateAwards } from '../utils/awards';
 import type { MemberProfile } from '../types';
-import banner from '../assets/banner-bg.jpg';
+import { brand } from '../config/brand';
 import { LazyImage } from './LazyImage';
 import { CountdownQuip } from './CountdownQuip';
 import { Podium } from './Podium';
 import { getPodiumQuip } from '../data/podiumQuips';
 import { DetailedBreakdownTable } from './DetailedBreakdownTable';
+import { CurrentSongCard } from './CurrentSongCard';
+import { useCountdown } from '../hooks/useCountdownSettings';
 import { CountdownProgressWidget } from './CountdownProgressWidget';
 import { MostPickedSongs } from './MostPickedSongs';
 import { LiveStreamPlayer } from './LiveStreamPlayer';
 import { useResultNotifications } from '../utils/useResultNotifications';
-import { COUNTDOWN_START, COUNTDOWN_YEAR } from '../config/countdown';
-
-interface CountdownTime {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  isStarted: boolean;
-}
-
-const useCountdown = (): CountdownTime => {
-  const [timeLeft, setTimeLeft] = useState<CountdownTime>(() => {
-    const now = new Date();
-    const diff = COUNTDOWN_START.getTime() - now.getTime();
-    if (diff <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true };
-    }
-    return {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-      seconds: Math.floor((diff % (1000 * 60)) / 1000),
-      isStarted: false,
-    };
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      const diff = COUNTDOWN_START.getTime() - now.getTime();
-
-      if (diff <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true });
-        clearInterval(timer);
-        return;
-      }
-
-      setTimeLeft({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((diff % (1000 * 60)) / 1000),
-        isStarted: false,
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  return timeLeft;
-};
 
 export const PublicHome: React.FC = () => {
   const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
@@ -197,22 +148,28 @@ export const PublicHome: React.FC = () => {
     return getPodiumQuip(currentPosition, leader, loser, margin);
   }, [countdownResults, hottest200Results, leaderboard]);
 
+  // Countdown timer visibility is controlled by CSS :has() based on marker elements
+  // This avoids React state sync issues that caused the "blink" bug
+  const showCountdownTimerBase = countdown.isEnabled && !countdownStarted && !numberOneSong;
+  const showNumberOneSong = numberOneSong && numberOneSongData && !hasHottest200Started;
+  const hasBannerRightContent = (showCountdownTimerBase && songs.length === 0) || showNumberOneSong;
+
   return (
-    <div className="min-h-screen">
+    <div className="public-home min-h-screen">
       {/* Hero Section with Banner Background */}
       <div
-        className="relative bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 py-12 sm:py-20 mb-8 full-banner-background"
-        style={{ '--banner-image': `url(${banner})` } as React.CSSProperties}
+        className="hero-banner relative bg-gradient-to-r from-primary-500 via-tertiary-500 to-secondary-500 py-6 sm:py-20 mb-8 full-banner-background"
+        style={{ '--banner-image': `url(${brand.images.background})` } as React.CSSProperties}
       >
-        <div className="absolute inset-0 bg-black/30"></div>
-        <div className="relative max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 lg:gap-12 items-center">
+        <div className="hero-banner-overlay absolute inset-0 bg-black/30"></div>
+        <div className="hero-banner-content relative max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className={`hero-banner-grid grid grid-cols-1 ${hasBannerRightContent ? 'xl:grid-cols-2' : ''} gap-8 lg:gap-12 items-center`}>
             {/* Title and Progress */}
-            <div className="text-center xl:text-left text-white">
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl 2xl:text-7xl font-black mb-4 drop-shadow-lg">
+            <div className={`hero-title-section text-white ${hasBannerRightContent ? 'text-center xl:text-left' : 'text-center'}`}>
+              <h1 className="hero-title text-2xl sm:text-5xl lg:text-6xl 2xl:text-7xl font-black mb-4 drop-shadow-lg">
                 {hasHottest200Started ? 'Triple J Hottest 200 Tracker' : 'Triple J Hottest 100 Tracker'}
               </h1>
-              <p className="text-lg sm:text-2xl 2xl:text-3xl font-semibold mb-8 drop-shadow-md">
+              <p className="hero-subtitle hidden md:block text-lg sm:text-2xl 2xl:text-3xl font-semibold mb-8 drop-shadow-md">
                 {totalResults === 0
                   ? 'Predictions are in! Let the countdown begin...'
                   : hasHottest200Started
@@ -222,10 +179,10 @@ export const PublicHome: React.FC = () => {
 
               {/* Progress Bar */}
               {totalResults > 0 && (
-                <div className="max-w-2xl lg:max-w-none">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-full h-8 overflow-hidden border-2 border-white/40">
+                <div className="hero-progress-container max-w-2xl lg:max-w-none">
+                  <div className="hero-progress-bar bg-white/20 backdrop-blur-sm rounded-full h-8 overflow-hidden border-2 border-white/40">
                     <div
-                      className="bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 h-full flex items-center justify-center font-black text-white text-sm transition-all"
+                      className="hero-progress-fill bg-gradient-to-r from-yellow-400 via-primary-400 to-secondary-400 h-full flex items-center justify-center font-black text-white text-sm transition-all"
                       style={{
                         width: hasHottest200Started
                           ? `${(hottest200Results.length / 100) * 100}%`
@@ -237,18 +194,18 @@ export const PublicHome: React.FC = () => {
                         : countdownResults.length > 10 && `${countdownResults.length}/100`}
                     </div>
                   </div>
-                  <p className="text-white/90 text-sm mt-2 font-semibold">
+                  <p className="hero-progress-text hidden md:block text-white/90 text-sm mt-2 font-semibold">
                     Hottest 100: {countdownResults.length}/100 revealed
                     {hottest200Results.length > 0 && ` • Hottest 200: ${hottest200Results.length}/100`}
                   </p>
                 </div>
               )}
 
-              <div className="mt-6 flex flex-wrap gap-3 justify-center xl:justify-start">
+              <div className="hero-tv-button-container hero-actions mt-6 flex flex-wrap gap-3 justify-center xl:justify-start">
                 {/* TV Mode Button - large screens only */}
                 <a
                   href="#tv"
-                  className="hidden lg:inline-block bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
+                  className="hero-tv-button hidden lg:inline-block bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
                 >
                   📺 TV Mode
                 </a>
@@ -265,8 +222,11 @@ export const PublicHome: React.FC = () => {
               </div>
             </div>
 
-            {/* Countdown Timer - shown before countdown starts */}
-            {!countdownStarted && !numberOneSong && (
+            {/* Countdown Timer - visibility controlled by CSS :has() to avoid React state blink issues */}
+            {/* Hidden marker element for CSS :has() detection */}
+            {songs.length > 0 && <span data-has-songs hidden />}
+
+            {showCountdownTimerBase && (
               <div className="countdown">
                     <h3>Countdown Starts In</h3>
                     <div className="countdown-timer">
@@ -291,103 +251,42 @@ export const PublicHome: React.FC = () => {
             )}
 
             {/* #1 Song Card - Only when available and Hottest 200 NOT started */}
-            {numberOneSong && numberOneSongData && !hasHottest200Started && (
-              <div className="flex justify-center xl:justify-end">
-                <div
-                  className="relative w-full max-w-md xl:max-w-lg aspect-square rounded-2xl shadow-2xl overflow-hidden transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
-                  style={{
-                    backgroundImage: numberOneSongData.thumbnail
-                      ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${numberOneSongData.thumbnail})`
-                      : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-                  }}
-                >
-                  {/* Crown Badge - Top Left */}
-                  <div className="absolute top-4 left-4 text-5xl sm:text-6xl drop-shadow-xl">
-                    👑
-                  </div>
-
-                  {/* #1 Badge - Top Right */}
-                  <div className="absolute top-4 right-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black text-4xl sm:text-5xl w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-xl border-4 border-white">
-                    1
-                  </div>
-
-                  {/* Song Info - Bottom Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 sm:p-8">
-                    <div className="text-white">
-                      <div className="text-xs sm:text-sm font-bold text-yellow-400 mb-2 uppercase tracking-wider">
-                        {`#1 Song of ${COUNTDOWN_YEAR}`}
-                      </div>
-                      <h3 className="text-2xl sm:text-3xl font-black mb-2 leading-tight">
-                        {numberOneSongData.title}
-                      </h3>
-                      <p className="text-lg sm:text-xl font-semibold text-gray-200 flex items-center gap-2">
-                        {numberOneSongData.artist}
-                        {numberOneSongData.isAustralian && (
-                          <span className="text-sm bg-orange-500 px-2 py-0.5 rounded-full">🦘</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Decorative corner accent */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent"></div>
-                </div>
-              </div>
+            {showNumberOneSong && (
+              <CurrentSongCard
+                song={numberOneSongData}
+                position={1}
+                isNumberOne
+                variant="home"
+                size="lg"
+                className="xl:justify-end"
+              />
             )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+      <div className="main-content max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {/* Current Highest Song Card + Countdown Progress - Side by side on md+ */}
         {currentHighestResult && currentHighestSong && totalResults > 0 && (
-          <div className="mb-12 grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+          <div className="current-song-and-progress mb-12 grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
             {/* Current Highest Song Card */}
-            <div className="flex justify-center xl:justify-start">
-              <div
-                className="relative w-full max-w-md aspect-square rounded-2xl shadow-2xl overflow-hidden group transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
-                style={{
-                  backgroundImage: currentHighestSong.thumbnail
-                    ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${currentHighestSong.thumbnail})`
-                    : 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
-                }}
-              >
-                {/* Rank Badge - Top Left */}
-                <div className="absolute top-4 left-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black text-4xl sm:text-5xl w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-xl border-4 border-white">
-                  {currentHighestResult.position}
-                </div>
-
-                {/* Song Info - Bottom Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 sm:p-8">
-                  <div className="text-white">
-                    <div className="text-xs sm:text-sm font-bold text-orange-400 mb-2 uppercase tracking-wider">
-                      Current Highest Song
-                    </div>
-                    <h3 className="text-2xl sm:text-3xl font-black mb-2 leading-tight">
-                      {currentHighestSong.title}
-                    </h3>
-                    <p className="text-lg sm:text-xl font-semibold text-gray-200 flex items-center gap-2">
-                      {currentHighestSong.artist}
-                      {currentHighestSong.isAustralian && (
-                        <span className="text-sm bg-orange-500 px-2 py-0.5 rounded-full">🦘</span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Decorative corner accent */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent"></div>
-              </div>
-            </div>
+            <CurrentSongCard
+              song={currentHighestSong}
+              position={currentHighestResult.position}
+              variant="home"
+              size="md"
+              className="xl:justify-start"
+            />
 
             {/* Countdown Progress Widget */}
-            <div className="xl:col-span-2">
+            <div className="countdown-widget-wrapper xl:col-span-2">
               <CountdownProgressWidget
                 songs={songs}
                 countdownResults={countdownResults}
                 hottest200Results={hottest200Results}
                 recentResults={recentResults}
                 numberOneSong={numberOneSong}
+                compact
               />
 
               {/* Commentator Quip */}
@@ -398,57 +297,29 @@ export const PublicHome: React.FC = () => {
 
         {/* Current Highest Song Card - Solo display when no countdown results yet */}
         {currentHighestResult && currentHighestSong && totalResults === 0 && (
-          <div className="mb-12 flex justify-center">
-            <div
-              className="relative w-full max-w-md xl:max-w-2xl aspect-square rounded-2xl shadow-2xl overflow-hidden group transform transition-all hover:scale-105 hover:shadow-3xl song-card-background"
-              style={{
-                backgroundImage: currentHighestSong.thumbnail
-                  ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${currentHighestSong.thumbnail})`
-                  : 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
-              }}
-            >
-              {/* Rank Badge - Top Left */}
-              <div className="absolute top-4 left-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-black text-4xl sm:text-5xl w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-xl border-4 border-white">
-                {currentHighestResult.position}
-              </div>
-
-              {/* Song Info - Bottom Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 sm:p-8">
-                <div className="text-white">
-                  <div className="text-xs sm:text-sm font-bold text-orange-400 mb-2 uppercase tracking-wider">
-                    Current Highest Song
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-black mb-2 leading-tight">
-                    {currentHighestSong.title}
-                  </h3>
-                  <p className="text-lg sm:text-xl font-semibold text-gray-200 flex items-center gap-2">
-                    {currentHighestSong.artist}
-                    {currentHighestSong.isAustralian && (
-                      <span className="text-sm bg-orange-500 px-2 py-0.5 rounded-full">🦘</span>
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {/* Decorative corner accent */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/20 to-transparent"></div>
-            </div>
+          <div className="current-song-solo mb-12">
+            <CurrentSongCard
+              song={currentHighestSong}
+              position={currentHighestResult.position}
+              variant="home"
+              size="2xl"
+            />
           </div>
         )}
 
         {/* Leader Podium - Visual representation of top 3 */}
         {leaderboard.length > 0 && (
-          <div className="mb-12">
+          <div className="leaderboard-section mb-12">
 
             {/* Conditional Layout: Podium + Leaderboard OR Countdown + Leaderboard OR just Leaderboard */}
             {currentHighestResult && currentHighestSong ? (
               // Featured song is showing above, so show podium + leaderboard side by side on md+
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
+              <div className="podium-leaderboard-layout grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
                 {/* Podium Visualization (Top 3) + Commentary */}
-                <div>
-                  <h2 className="text-center text-3xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                <div className="podium-section">
+                  <h2 className="podium-title text-center text-2xl sm:text-5xl font-black mb-2 bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
                 {hottest200Results.length === 100 ? "Winners Podium" : "Current Standings"}</h2>
-                <p className="text-center text-gray-600 text-sm sm:text-base mb-5">Who's leading the pack?</p>
+                <p className="podium-subtitle hidden md:block text-center text-gray-600 text-sm sm:text-base mb-5">Who's leading the pack?</p>
                   <Podium
                     entries={leaderboard}
                     isComplete={hottest200Results.length === 100}
@@ -459,21 +330,21 @@ export const PublicHome: React.FC = () => {
                 </div>
 
                 {/* Full Leaderboard */}
-                <div className="xl:col-span-2 bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
-                      Full Leaderboard
+                <div className="full-leaderboard xl:col-span-2 bg-white rounded-xl shadow-xl p-2 sm:p-6 border-2 border-accent-light">
+                  <div className="leaderboard-header flex items-center justify-between mb-4">
+                    <h3 className="leaderboard-title text-xl sm:text-2xl font-bold text-gray-800">
+                      <span className="hidden md:block">Full</span> Leaderboard
                     </h3>
                     {totalResults > 0 && (
                       <button
                         onClick={() => setShowDetailedBreakdown(true)}
-                        className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
+                        className="detailed-breakdown-button bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
                       >
                         📊 Detailed Breakdown
                       </button>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 2xl:grid-cols-2 gap-2">
+                  <div className="leaderboard-grid grid grid-cols-1 2xl:grid-cols-2 gap-2">
                     {leaderboard.map((entry) => {
                       const matchCount = entry.member.votes.filter(vote =>
                         [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
@@ -485,55 +356,55 @@ export const PublicHome: React.FC = () => {
                         <div
                           key={entry.member.id}
                           onClick={() => profile && setSelectedProfile(profile)}
-                          className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
+                          className={`leaderboard-entry flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
                             getRank(entry.member.id) <= 3 && entry.score > 0
-                              ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
+                              ? 'bg-gradient-to-r from-yellow-50 to-primary-50 border-2 border-yellow-300'
                               : 'bg-gray-50'
                           } ${profile ? 'cursor-pointer hover:shadow-md' : ''}`}
                         >
-                          <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${
+                          <div className={`rank-badge flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${
                             entry.score === 0 ? 'bg-gray-200 text-gray-400' :
                             getRank(entry.member.id) === 1 ? 'bg-yellow-500 text-white' :
                             getRank(entry.member.id) === 2 ? 'bg-gray-400 text-white' :
-                            getRank(entry.member.id) === 3 ? 'bg-orange-600 text-white' :
+                            getRank(entry.member.id) === 3 ? 'bg-primary-600 text-white' :
                             'bg-gray-300 text-gray-700'
                           }`}>
                             {entry.score === 0 ? '-' : getRank(entry.member.id)}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
+                          <div className="member-info flex-1 min-w-0">
+                            <div className="member-name-row flex items-center gap-2 flex-wrap">
+                              <div className="member-name font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
                               {profile && profile.label && (
-                                <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                <span className="member-label bg-gradient-to-r from-primary-400 to-secondary-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
                                   {profile.label}
                                 </span>
                               )}
                             </div>
-                            <div className="text-xs sm:text-sm text-gray-600">
+                            <div className="member-stats text-xs sm:text-sm text-gray-600">
                               {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
                             </div>
                             {maxPossibleScore > 0 && (
-                              <div className="mt-1">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                              <div className="efficiency-bar-container mt-1">
+                                <div className="efficiency-bar-wrapper flex items-center gap-2">
+                                  <div className="efficiency-bar flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
                                     <div
-                                      className="bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all"
+                                      className="efficiency-bar-fill bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all"
                                       style={{ width: `${efficiency}%` }}
                                     />
                                   </div>
-                                  <span className="text-xs font-semibold text-gray-600 w-12">
+                                  <span className="efficiency-percentage text-xs font-semibold text-gray-600 w-12">
                                     {efficiency}%
                                   </span>
                                 </div>
                               </div>
                             )}
                           </div>
-                          <div className="text-right">
-                            <div className="text-2xl sm:text-3xl font-black text-orange-600">
+                          <div className="member-score text-right">
+                            <div className="score-value text-2xl sm:text-3xl font-black text-primary-600">
                               {entry.score}
                             </div>
                             {maxPossibleScore > 0 && (
-                              <div className="text-xs text-gray-500">
+                              <div className="score-max text-xs text-gray-500">
                                 of {maxPossibleScore}
                               </div>
                             )}
@@ -548,7 +419,7 @@ export const PublicHome: React.FC = () => {
               // No featured song, show podium + countdown + leaderboard
               <>
                 {/* Podium Display for Top 3 */}
-                <div className="mb-8">
+                <div className="podium-standalone mb-8">
                   <Podium
                     entries={leaderboard}
                     isComplete={hottest200Results.length === 100}
@@ -558,9 +429,9 @@ export const PublicHome: React.FC = () => {
                 {/* Podium Commentator Quip */}
                 <CountdownQuip quip={podiumQuip} />
 
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
+                <div className="countdown-leaderboard-layout grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
                 {/* Countdown Progress Widget - spans first column on the left */}
-                <div>
+                <div className="countdown-widget-wrapper">
                   <CountdownProgressWidget
                     songs={songs}
                     countdownResults={countdownResults}
@@ -574,21 +445,21 @@ export const PublicHome: React.FC = () => {
                 </div>
 
                 {/* Full Leaderboard */}
-                <div className="xl:col-span-2 bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
+                <div className="full-leaderboard xl:col-span-2 bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-primary-200">
+                  <div className="leaderboard-header flex items-center justify-between mb-4">
+                    <h3 className="leaderboard-title text-xl sm:text-2xl font-bold text-gray-800 no-wrap">
                       Full Leaderboard
                     </h3>
                     {totalResults > 0 && (
                       <button
                         onClick={() => setShowDetailedBreakdown(true)}
-                        className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
+                        className="detailed-breakdown-button bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
                       >
                         📊 Detailed Breakdown
                       </button>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 2xl:grid-cols-2 gap-2">
+                  <div className="leaderboard-grid grid grid-cols-1 2xl:grid-cols-2 gap-2">
                     {leaderboard.map((entry) => {
                       const matchCount = entry.member.votes.filter(vote =>
                         [...countdownResults, ...hottest200Results].some(r => r.songId === vote.songId)
@@ -600,55 +471,55 @@ export const PublicHome: React.FC = () => {
                         <div
                           key={entry.member.id}
                           onClick={() => profile && setSelectedProfile(profile)}
-                          className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
+                          className={`leaderboard-entry flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg transition ${
                             getRank(entry.member.id) <= 3 && entry.score > 0
-                              ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300'
+                              ? 'bg-gradient-to-r from-yellow-50 to-primary-50 border-2 border-yellow-300'
                               : 'bg-gray-50'
                           } ${profile ? 'cursor-pointer hover:shadow-md' : ''}`}
                         >
-                          <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${
+                          <div className={`rank-badge flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full font-bold text-lg sm:text-xl ${
                             entry.score === 0 ? 'bg-gray-200 text-gray-400' :
                             getRank(entry.member.id) === 1 ? 'bg-yellow-500 text-white' :
                             getRank(entry.member.id) === 2 ? 'bg-gray-400 text-white' :
-                            getRank(entry.member.id) === 3 ? 'bg-orange-600 text-white' :
+                            getRank(entry.member.id) === 3 ? 'bg-primary-600 text-white' :
                             'bg-gray-300 text-gray-700'
                           }`}>
                             {entry.score === 0 ? '-' : getRank(entry.member.id)}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
+                          <div className="member-info flex-1 min-w-0">
+                            <div className="member-name-row flex items-center gap-2 flex-wrap">
+                              <div className="member-name font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
                               {profile && profile.label && (
-                                <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                <span className="member-label bg-gradient-to-r from-primary-400 to-secondary-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
                                   {profile.label}
                                 </span>
                               )}
                             </div>
-                            <div className="text-xs sm:text-sm text-gray-600">
+                            <div className="member-stats text-xs sm:text-sm text-gray-600">
                               {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
                             </div>
                             {maxPossibleScore > 0 && (
-                              <div className="mt-1">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                              <div className="efficiency-bar-container mt-1">
+                                <div className="efficiency-bar-wrapper flex items-center gap-2">
+                                  <div className="efficiency-bar flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
                                     <div
-                                      className="bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all"
+                                      className="efficiency-bar-fill bg-gradient-to-r from-green-400 to-blue-500 h-full transition-all"
                                       style={{ width: `${efficiency}%` }}
                                     />
                                   </div>
-                                  <span className="text-xs font-semibold text-gray-600 w-12">
+                                  <span className="efficiency-percentage text-xs font-semibold text-gray-600 w-12">
                                     {efficiency}%
                                   </span>
                                 </div>
                               </div>
                             )}
                           </div>
-                          <div className="text-right">
-                            <div className="text-2xl sm:text-3xl font-black text-orange-600">
+                          <div className="member-score text-right">
+                            <div className="score-value text-2xl sm:text-3xl font-black text-primary-600">
                               {entry.score}
                             </div>
                             {maxPossibleScore > 0 && (
-                              <div className="text-xs text-gray-500">
+                              <div className="score-max text-xs text-gray-500">
                                 of {maxPossibleScore}
                               </div>
                             )}
@@ -665,16 +536,16 @@ export const PublicHome: React.FC = () => {
               <>
                 {/* Welcome Message - shown before/during countdown when no results yet */}
                 {!countdownStarted ? (
-                  <div className="bg-gradient-to-r from-orange-100 via-yellow-50 to-orange-100 border-2 border-orange-300 rounded-xl p-4 sm:p-6 mb-6 welcome-message">
-                    <div className="text-center">
-                      <h3 className="text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">G'day Legends!</h3>
-                      <div className="text-sm sm:text-base text-gray-700 space-y-2 sm:space-y-3 mx-auto">
+                  <div className="welcome-message bg-gradient-to-r from-primary-100 via-yellow-50 to-primary-100 border-2 border-primary-300 rounded-xl p-4 sm:p-6 mb-6">
+                    <div className="welcome-message-content text-center">
+                      <h3 className="welcome-message-title text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">G'day Legends!</h3>
+                      <div className="welcome-message-text text-sm sm:text-base text-gray-700 space-y-2 sm:space-y-3 mx-auto">
                         <p><strong>Righto, here's how this works. You've chucked in your top 10 picks, and now we wait for Triple J to do their thing.</strong>
                         </p>
                         <p>
                           <strong>Scoring is dead simple:</strong> If your song cracks the Hottest 100, you score points based on how high it lands.
-                          Position #100 gets you <span className="font-bold text-orange-600">1 point</span>, and if one of your picks somehow nabs the #1 spot,
-                          that's a whopping <span className="font-bold text-orange-600">100 points</span>. The higher the song, the more points you bag.
+                          Position #100 gets you <span className="font-bold text-primary-600">1 point</span>, and if one of your picks somehow nabs the #1 spot,
+                          that's a whopping <span className="font-bold text-primary-600">100 points</span>. The higher the song, the more points you bag.
                         </p>
                         <p className="text-gray-600 italic">
                           Good luck to all you legends. Stay hydrated, keep the snacks coming, and may your picks absolutely smash it.
@@ -683,18 +554,18 @@ export const PublicHome: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-gradient-to-r from-red-100 via-orange-50 to-red-100 border-2 border-red-300 rounded-xl p-4 sm:p-6 mb-6">
-                    <div className="text-center">
-                      <h3 className="text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">
+                  <div className="countdown-started-message bg-gradient-to-r from-red-100 via-primary-50 to-red-100 border-2 border-red-300 rounded-xl p-4 sm:p-6 mb-6">
+                    <div className="countdown-started-content text-center">
+                      <h3 className="countdown-started-title text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">
                         It's Happening!
                       </h3>
-                      <div className="text-sm sm:text-base text-gray-700 space-y-2 sm:space-y-3 max-w-2xl mx-auto">
+                      <div className="countdown-started-text text-sm sm:text-base text-gray-700 space-y-2 sm:space-y-3 max-w-2xl mx-auto">
                         <p>
                           The countdown has kicked off, but someone needs to actually log the results here.
                           Carl wasn't smart enough to make this thing update automatically, so we're doing it the old-fashioned way.
                         </p>
                         <p>
-                          <strong>If you're free:</strong> Log in and head to the <span className="font-bold text-orange-600">Countdown Results</span> tab
+                          <strong>If you're free:</strong> Log in and head to the <span className="font-bold text-primary-600">Countdown Results</span> tab
                           to start adding songs as Triple J announces them. Don't all rush at once - one legend at a time will do the trick.
                         </p>
                       </div>
@@ -702,34 +573,34 @@ export const PublicHome: React.FC = () => {
                   </div>
                 )}
 
-                <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-orange-200">
-                  <h3 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">
+                <div className="predictions-submitted bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-primary-200">
+                  <h3 className="predictions-submitted-title text-xl sm:text-2xl font-bold mb-4 text-gray-800">
                     Predictions Submitted
                   </h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2">
+                <div className="predictions-grid grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2">
                   {leaderboard.map((entry) => {
                     const profile = getProfileForMember(entry.member.id);
                     return (
                       <div
                         key={entry.member.id}
                         onClick={() => profile && setSelectedProfile(profile)}
-                        className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-gray-50 ${profile ? 'cursor-pointer hover:bg-gray-100 transition' : ''}`}
+                        className={`prediction-entry flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-gray-50 ${profile ? 'cursor-pointer hover:bg-gray-100 transition' : ''}`}
                       >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <div className="font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
+                        <div className="prediction-member-info flex-1 min-w-0">
+                          <div className="prediction-member-name-row flex items-center gap-2 flex-wrap">
+                            <div className="prediction-member-name font-bold text-sm sm:text-lg text-gray-900">{entry.member.name}</div>
                             {profile && profile.label && (
-                              <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                              <span className="prediction-member-label bg-gradient-to-r from-primary-400 to-secondary-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
                                 {profile.label}
                               </span>
                             )}
                           </div>
-                          <div className="text-xs sm:text-sm text-gray-600">
+                          <div className="prediction-member-stats text-xs sm:text-sm text-gray-600">
                             {entry.member.votes.length}/10 predictions submitted
                           </div>
                         </div>
                         {entry.member.votes.length === 10 && (
-                          <div className="text-green-600 text-xl">✓</div>
+                          <div className="prediction-complete-check text-green-600 text-xl">✓</div>
                         )}
                       </div>
                     );
@@ -745,35 +616,41 @@ export const PublicHome: React.FC = () => {
 
         {/* Awards Section - when Hottest 100 is complete, hidden while Hottest 200 is in progress */}
         {isHottest100Complete && awards.length > 0 && (!hasHottest200Started || isHottest200Complete) && (
-          <div className="mb-12">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-yellow-600 via-orange-600 to-pink-600 bg-clip-text text-transparent">
+          <div className="awards-section mb-12">
+            <div className="awards-header text-center mb-6">
+              <h2 className="awards-title text-2xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-yellow-600 via-primary-600 to-secondary-600 bg-clip-text text-transparent">
                 🏆 {isHottest200Complete ? 'Hottest 200' : 'Hottest 100'} Awards 🏆
               </h2>
-              <p className="text-gray-600 text-xs sm:text-sm">Celebrating our champions!</p>
+              <p className="awards-subtitle text-gray-600 text-xs sm:text-sm">Celebrating our champions!</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
+            <div className="awards-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-6">
               {awards.map((award) => (
                 <div
                   key={award.id}
-                  className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 shadow-xl border-2 border-yellow-400 hover:border-yellow-500 hover:shadow-2xl transition-all transform hover:-translate-y-1"
+                  className="award-card bg-gradient-to-br from-yellow-50 to-primary-50 rounded-xl p-3 sm:p-4 shadow-xl border-2 border-yellow-400 hover:border-yellow-500 hover:shadow-2xl transition-all transform hover:-translate-y-1"
                 >
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">{award.emoji}</div>
-                    <h4 className="font-black text-lg text-gray-800 mb-2">
-                      {award.title}
-                    </h4>
-                    <p className="text-xs text-gray-600 mb-3">
-                      {award.description}
-                    </p>
-                    <div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold text-base py-2 px-3 rounded-full inline-block mb-2 shadow-lg">
-                      {award.winnerName}
+                  <div className="award-card-content text-center">
+                    <div className='award-label flex sm:block items-start gap-3 sm:gap-0 mb-2 sm:mb-0 w-fit mx-auto'>
+                      <div className="award-emoji text-3xl sm:text-4xl sm:mb-2 flex-shrink-0">{award.emoji}</div>
+                      <div className="award-text flex-1 min-w-0 text-left sm:text-center">
+                        <h4 className="award-name font-black text-sm sm:text-lg text-gray-800 mb-1 sm:mb-2">
+                          {award.title}
+                        </h4>
+                        <p className="award-description text-[11px] sm:text-xs text-gray-600 mb-0 sm:mb-3">
+                          {award.description}
+                        </p>
+                      </div>
                     </div>
-                    {award.details && (
-                      <p className="text-[11px] text-gray-500 mt-2 italic">
-                        {award.details}
-                      </p>
-                    )}
+                    <div className="award-winner-row flex flex-col sm:flex-row items-center justify-center gap-2 flex-wrap">
+                      <div className="award-winner-badge bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold text-sm sm:text-base py-1.5 px-2.5 sm:py-2 sm:px-3 rounded-full shadow-lg">
+                        {award.winnerName}
+                      </div>
+                      {award.details && (
+                        <p className="award-details text-[10px] sm:text-[11px] text-gray-500 italic">
+                          {award.details}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -783,12 +660,12 @@ export const PublicHome: React.FC = () => {
 
         {/* Empty State */}
         {leaderboard.length === 0 && (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">🎵</div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+          <div className="empty-state text-center py-20">
+            <div className="empty-state-icon text-6xl mb-4">🎵</div>
+            <h2 className="empty-state-title text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
               Get Started!
             </h2>
-            <p className="text-gray-600 text-sm sm:text-base">
+            <p className="empty-state-text text-gray-600 text-sm sm:text-base">
               Log in to add mates and start making predictions
             </p>
           </div>
@@ -798,31 +675,31 @@ export const PublicHome: React.FC = () => {
       {/* Profile Modal */}
       {selectedProfile && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="profile-modal-overlay fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedProfile(null)}
         >
           <div
-            className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-4 sm:p-6 max-h-[80vh] overflow-y-auto"
+            className="profile-modal bg-white rounded-lg shadow-xl max-w-2xl w-full p-4 sm:p-6 max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg sm:text-xl font-bold">
+            <div className="profile-modal-header flex items-center justify-between mb-4">
+              <h3 className="profile-modal-title text-lg sm:text-xl font-bold">
                 {familyMembers.find(m => m.id === selectedProfile.familyMemberId)?.name}'s Music Taste
               </h3>
               <button
                 onClick={() => setSelectedProfile(null)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="profile-modal-close text-gray-500 hover:text-gray-700 text-2xl"
               >
                 ×
               </button>
             </div>
 
             {selectedProfile.musicTasteDescription ? (
-              <p className="text-sm sm:text-base text-gray-700 leading-relaxed mb-6">
+              <p className="profile-description text-sm sm:text-base text-gray-700 leading-relaxed mb-6">
                 {selectedProfile.musicTasteDescription}
               </p>
             ) : (
-              <p className="text-sm text-gray-500 italic mb-6">No music taste profile generated yet</p>
+              <p className="profile-description-empty text-sm text-gray-500 italic mb-6">No music taste profile generated yet</p>
             )}
 
             {/* Member's Picks */}
@@ -831,9 +708,9 @@ export const PublicHome: React.FC = () => {
               if (!member || member.votes.length === 0) return null;
 
               return (
-                <div>
-                  <h4 className="text-base sm:text-lg font-bold mb-3 text-gray-800">Their Picks</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2">
+                <div className="profile-picks">
+                  <h4 className="profile-picks-title text-base sm:text-lg font-bold mb-3 text-gray-800">Their Picks</h4>
+                  <div className="profile-picks-grid grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2">
                     {member.votes.map((vote) => {
                       const song = songs.find((s) => s.id === vote.songId);
                       if (!song) return null;
@@ -847,7 +724,7 @@ export const PublicHome: React.FC = () => {
                       return (
                         <div
                           key={vote.songId}
-                          className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg ${
+                          className={`profile-pick-item flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg ${
                             isMatched
                               ? 'bg-green-50 border-2 border-green-500'
                               : 'bg-gray-50'
@@ -857,22 +734,22 @@ export const PublicHome: React.FC = () => {
                             <LazyImage
                               src={song.thumbnail}
                               alt={`${song.title} artwork`}
-                              className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
+                              className="profile-pick-thumbnail w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
                             />
                           )}
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-xs sm:text-sm truncate">{song.title}</div>
-                            <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
-                              <span className="truncate">{song.artist}</span>
+                          <div className="profile-pick-info flex-1 min-w-0">
+                            <div className="profile-pick-title font-semibold text-xs sm:text-sm truncate">{song.title}</div>
+                            <div className="profile-pick-artist-row text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
+                              <span className="profile-pick-artist truncate">{song.artist}</span>
                               {song.isAustralian && (
-                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                <span className="profile-pick-australian-badge bg-primary-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                                   AUS
                                 </span>
                               )}
                             </div>
                           </div>
                           {countdownEntry && (
-                            <div className="font-bold text-green-600 text-sm sm:text-lg flex-shrink-0">
+                            <div className="profile-pick-position font-bold text-green-600 text-sm sm:text-lg flex-shrink-0">
                               #{countdownEntry.position}
                             </div>
                           )}
@@ -890,23 +767,23 @@ export const PublicHome: React.FC = () => {
       {/* Detailed Breakdown Modal */}
       {showDetailedBreakdown && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="breakdown-modal-overlay fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={() => setShowDetailedBreakdown(false)}
         >
           <div
-            className="bg-white rounded-lg shadow-xl max-w-[95vw] w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
+            className="breakdown-modal bg-white rounded-lg shadow-xl max-w-[95vw] w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg sm:text-2xl font-bold">Detailed Vote Breakdown</h3>
-                <p className="text-xs sm:text-sm text-gray-600">
+            <div className="breakdown-modal-header flex items-center justify-between mb-4">
+              <div className="breakdown-modal-header-text">
+                <h3 className="breakdown-modal-title text-lg sm:text-2xl font-bold">Detailed Vote Breakdown</h3>
+                <p className="breakdown-modal-subtitle text-xs sm:text-sm text-gray-600">
                   Complete breakdown of all votes and scores earned
                 </p>
               </div>
               <button
                 onClick={() => setShowDetailedBreakdown(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl flex-shrink-0 ml-4"
+                className="breakdown-modal-close text-gray-500 hover:text-gray-700 text-2xl flex-shrink-0 ml-4"
               >
                 ×
               </button>

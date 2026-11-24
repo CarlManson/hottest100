@@ -8,7 +8,7 @@ export const CountdownQuip: React.FC<CountdownQuipProps> = ({ quip }) => {
   if (!quip) return null;
 
   return (
-    <div className="commentary-quip commentary-quip--animated">
+    <div className="commentary-quip mb-6 commentary-quip--animated">
       {/* Speech bubble tail pointing up */}
       <div className="commentary-quip__tail"></div>
 

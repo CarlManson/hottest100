@@ -1,7 +1,13 @@
 // Commentary Speech Bubble Styles
 // Customize colors, sizes, shadows, and animations here
 
-$commentary-bg: var(--color-yellow-400);
+$commentary-bg: var(--accent-col-base);
+
+main {
+  --commentary-quip-bg: hsl(from #{$commentary-bg} H S 85%);
+  [data-display-mode="tv"] & { --commentary-quip-bg: hsl(from #{$commentary-bg} H S L / 20%) }
+}
+
 
 .commentary-quip {
   position: relative;
@@ -15,7 +21,7 @@ $commentary-bg: var(--color-yellow-400);
     left: calc(50% - 0.75rem) ;
     width: 1.5rem;
     height: 1.5rem;
-    background: $commentary-bg;
+    background: var(--commentary-quip-bg);
     transform: rotate(45deg);
     // border-top: 2px solid #fed7aa;
     // border-left: 2px solid #fed7aa;
@@ -24,7 +30,7 @@ $commentary-bg: var(--color-yellow-400);
   // Main bubble container
   &__bubble {
     position: relative;
-    background: $commentary-bg;
+    background: var(--commentary-quip-bg);
     border-radius: 1rem;
     padding: 1rem 1.25rem;
     // border: 2px solid #fed7aa;
@@ -46,7 +52,7 @@ $commentary-bg: var(--color-yellow-400);
     flex-shrink: 0;
     width: 2.5rem;
     height: 2.5rem;
-    background: linear-gradient(to bottom right, #f97316, #ef4444);
+    background: linear-gradient(to bottom right, var(--brand-primary), var(--brand-tertiary));
     border-radius: 9999px;
     display: flex;
     align-items: center;

@@ -105,6 +105,29 @@ Data mapping: Snake_case in DB (PostgreSQL) → camelCase in app (JavaScript/Typ
 - Responsive design with sticky navigation
 - Album artwork thumbnails displayed via Song.thumbnail URLs
 
+**CSS Class Naming Conventions:**
+All major components use descriptive class names alongside Tailwind utilities for easier custom styling:
+- **Structural classes**: Component containers (e.g., `hero-banner`, `leaderboard-section`, `awards-grid`)
+- **Element classes**: Individual elements within components (e.g., `song-title`, `member-name`, `rank-badge`)
+- **Modifier pattern**: Related elements grouped by prefix (e.g., `profile-pick-*`, `award-*`, `leaderboard-*`)
+
+Example hierarchy:
+```html
+<div class="leaderboard-entry">
+  <div class="rank-badge">...</div>
+  <div class="member-info">
+    <div class="member-name-row">
+      <div class="member-name">...</div>
+      <span class="member-label">...</span>
+    </div>
+    <div class="member-stats">...</div>
+  </div>
+  <div class="member-score">...</div>
+</div>
+```
+
+See `PublicHome.tsx` for complete class reference. Custom SCSS can target these classes in `src/styles/` directory.
+
 ## Key Implementation Details
 
 ### Settings Page

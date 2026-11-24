@@ -1,12 +1,12 @@
 import React, { useRef, useState } from 'react';
-import { STREAM_URL } from '../config/countdown';
+import { brand } from '../config/brand';
 
 export const LiveStreamPlayer: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState(false);
 
-  const streamUrl = STREAM_URL;
+  const streamUrl = brand.streamUrl;
   if (!streamUrl) return null;
 
   const toggle = async () => {

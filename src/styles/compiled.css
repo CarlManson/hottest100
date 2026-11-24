@@ -1,5 +1,76 @@
+body {
+  --hotness: calc((201 - var(--current-song)) / 2);
+}
+
+/* --- CONFIGURATION --- */
+/* Define Start/End Colors (Hex or Name is fine!) */
+/* We will force Saturation/Lightness later to keep UI consistent */
+/* Cold/hot endpoints come from brand.colors.cold / .hot in src/config/brand.ts */
+/* Tuning */
+/* Unified Saturation */
+/* Base Lightness */
+/* Light Variant */
+/* Dark Variant */
+/* Hue shift amount (Unitless for Calc) */
+/* Rotation Amplitude */
+[style*="--current-song"] {
+  --hotness: calc((201 - var(--current-song)) / 2);
+  /* 1. CALCULATE MIX PERCENTAGE */
+  /* color-mix needs a percentage, so we convert our 0-1 fraction */
+  --progress: calc((var(--hotness) - 1) / 99);
+  --mix-pct: calc(var(--progress) * 100%);
+  /* 2. CREATE THE BASE COLOR (The Source of Truth) */
+  /* 'in hsl' interpolates around the color wheel */
+  /* Use 'shorter hue' (default) or 'longer hue' to control direction */
+  --c-source: color-mix(in hsl, var(--hotness-cold, #6ea4bc), var(--hotness-hot, #ff9d00) var(--mix-pct));
+  /* 3. GENERATE THE 9 VARIABLES USING RELATIVE COLOR SYNTAX */
+  /* We extract 'h' from the source, but FORCE 's' and 'l' to our constants */
+  /* GROUP A: Main Accent */
+  --accent-col-base: hsl(from var(--c-source) h 85% 50%);
+  --accent-col-light: hsl(from var(--c-source) h 85% 75%);
+  --accent-col-dark: hsl(from var(--c-source) h 85% 38%);
+  /* GROUP B: Pre-Accent (Shift Hue Backward) */
+  --pre-accent-col-base: hsl(from var(--c-source) calc(h - 45) 85% 50%);
+  --pre-accent-col-light: hsl(from var(--c-source) calc(h - 45) 85% 75%);
+  --pre-accent-col-dark: hsl(from var(--c-source) calc(h - 45) 85% 38%);
+  /* GROUP C: Post-Accent (Shift Hue Forward) */
+  --post-accent-col-base: hsl(from var(--c-source) calc(h + 45) 85% 50%);
+  --post-accent-col-light: hsl(from var(--c-source) calc(h + 45) 85% 75%);
+  --post-accent-col-dark: hsl(from var(--c-source) calc(h + 45) 85% 38%);
+}
+
+.text-accent {
+  color: var(--accent-col-base);
+}
+.text-accent-dark {
+  color: var(--accent-col-dark);
+}
+.text-accent-light {
+  color: var(--accent-col-light);
+}
+
+.bg-accent {
+  background-color: var(--accent-col-base);
+}
+.bg-accent-dark {
+  background-color: var(--accent-col-dark);
+}
+.bg-accent-light {
+  background-color: var(--accent-col-light);
+}
+
+.border-accent {
+  border-color: var(--accent-col-base);
+}
+.border-accent-dark {
+  border-color: var(--accent-col-dark);
+}
+.border-accent-light {
+  border-color: var(--accent-col-light);
+}
+
 #main-menu {
-  background-color: rgb(41.226993865, 46.036809816, 70.773006135);
+  background-color: var(--brand-surface);
 }
 #main-menu .desktop-menu .menu-link, #main-menu .mobile-menu .menu-link {
   color: #ffffff;
@@ -14,11 +85,11 @@
 }
 #main-menu .desktop-menu .menu-link:hover, #main-menu .mobile-menu .menu-link:hover {
   color: #ffffff;
-  background-color: rgb(36.381595092, 41.6294478528, 64.418404908);
+  background-color: color-mix(in srgb, var(--brand-surface) 80%, #111827);
 }
 #main-menu .desktop-menu .menu-link.active, #main-menu .mobile-menu .menu-link.active {
   color: #ffffff;
-  background-color: #f97316;
+  background-color: var(--brand-primary);
 }
 #main-menu .desktop-menu {
   gap: 0;
@@ -82,10 +153,76 @@
   height: 90px;
 }
 
+#song {
+  --hotness-mod-1: calc(var(--hotness) * 0.01);
+  --hottness-mod-2: calc(var(--hotness) * 0.005 + 0.5);
+  --hotness-mod-3: calc(10px + (1px * var(--hotness) * 0.75));
+  --hottness-mod-4: calc(1 + var(--hotness) * 0.0003);
+}
+[data-display-mode=tv] #song {
+  /* The CSS variable to listen to */
+  /* Value where rotation is 0 */
+  /* Value where rotation ends at 0 */
+  /* Calculate the range for normalization */
+  /* 1. Normalize progress (0 to 1) */
+  --progress: calc((var(--hotness) - 0.5) / 99.5);
+  /* 2. Map to 360deg cycle */
+  --theta: calc(var(--progress) * 360deg);
+  /* 3. Apply Rotation */
+  /* Multiplied by -1 to ensure it dips negative first, as requested */
+  transform: rotate(calc(-1 * 3.5deg * sin(var(--theta))));
+  /* Smooth out rapid value changes */
+  transition: transform 0.3s ease-out;
+}
+#song {
+  scale: var(--hottness-mod-4);
+  container-type: inline-size;
+}
+[data-display-mode=tv] #song {
+  outline: 3px solid hsl(from var(--accent-col-light) h s l/var(--hotness-mod-1));
+  box-shadow: 0 0 var(--hotness-mod-3) hsl(from var(--accent-col-base) h s l/var(--hottness-mod-2));
+}
+#song .song-details {
+  color: var(--color-white);
+  font-size: 6cqw;
+  font-weight: 600;
+}
+#song .song-details .rank-label {
+  color: var(--accent-col-base);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7em;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.3em;
+}
+#song .song-details .song-name {
+  font-size: 1.5em;
+  font-weight: 600;
+  line-height: 1;
+}
+#song .song-details .artist-name {
+  color: hsl(from currentColor H S L/0.7);
+}
+
+.aus-badge {
+  background-color: var(--accent-col-base);
+  text-shadow: 1px 1px 3px var(--accent-col-dark);
+  font-size: 0.7em;
+  color: var(--color-white);
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  line-height: 1.5em;
+  border-radius: 0.5em;
+}
+
 .song-card-background {
   background-size: cover;
   background-position: center;
 }
+.song-card-number {
+  background: var(--accent-col-base);
+}
+
 .full-banner-background {
   background-image: var(--banner-image);
   background-size: cover;
@@ -111,7 +248,7 @@
   font-weight: bold;
   letter-spacing: 0.02em;
   margin-bottom: 1rem;
-  color: #f97316;
+  color: var(--brand-primary);
 }
 .countdown-timer {
   display: flex;
@@ -150,6 +287,56 @@
   }
 }
 
+.countdown-progress-wrapper {
+  backdrop-filter: brightness(0.8);
+  outline: 1px solid hsl(from var(--accent-col-light) h s l/0.6);
+  box-shadow: 0.5rem 0.5rem 1rem rgba(0, 0, 0, 0.5);
+}
+
+.list-table {
+  container-type: inline-size;
+}
+.list-table .list-item-song {
+  --hotness: calc((201 - var(--current-song)) / 2);
+  font-size: max(2.1cqw, 1rem);
+  line-height: 1;
+}
+.list-table .list-item-song .song-info {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  font-weight: 600;
+  gap: 0.75rem;
+}
+.list-table .list-item-song .song-info .song-title {
+  font-size: 1.4em;
+}
+.list-table .list-item-song .song-info .song-artist {
+  color: var(--color-gray-600);
+}
+.list-table .list-item-song .song-info .aus-badge {
+  background-color: var(--accent-col-dark);
+}
+.list-table .list-item-song .position {
+  font-size: 1.5em;
+  color: var(--accent-col-dark);
+}
+
+.progress-bar-marker {
+  background: linear-gradient(90deg, var(--pre-accent-col-base), var(--accent-col-base), var(--post-accent-col-base));
+}
+
+:has([data-has-songs]) .countdown {
+  display: none;
+}
+
+main {
+  --commentary-quip-bg: hsl(from var(--accent-col-base) H S 85%);
+}
+[data-display-mode=tv] main {
+  --commentary-quip-bg: hsl(from var(--accent-col-base) H S L / 20%) ;
+}
+
 .commentary-quip {
   position: relative;
   margin-top: 1.5rem;
@@ -161,12 +348,12 @@
   left: calc(50% - 0.75rem);
   width: 1.5rem;
   height: 1.5rem;
-  background: var(--color-yellow-400);
+  background: var(--commentary-quip-bg);
   transform: rotate(45deg);
 }
 .commentary-quip__bubble {
   position: relative;
-  background: var(--color-yellow-400);
+  background: var(--commentary-quip-bg);
   border-radius: 1rem;
   padding: 1rem 1.25rem;
 }
@@ -184,7 +371,7 @@
   flex-shrink: 0;
   width: 2.5rem;
   height: 2.5rem;
-  background: linear-gradient(to bottom right, #f97316, #ef4444);
+  background: linear-gradient(to bottom right, var(--brand-primary), var(--brand-tertiary));
   border-radius: 9999px;
   display: flex;
   align-items: center;
@@ -237,17 +424,58 @@
   animation: slideInFromTop 0.3s ease-out;
 }
 
+.ranked-song {
+  background-color: color-mix(in srgb, var(--accent-col-base) 10%, white);
+  border-left: 2px solid var(--accent-col-base);
+  transition: background-color 0.3s ease;
+  position: relative;
+}
+.ranked-song .points {
+  font-weight: bold;
+  color: color-mix(in srgb, var(--accent-col-dark) 75%, black);
+}
+.ranked-song .position-marker {
+  position: absolute;
+  bottom: 0.5em;
+  right: 0.5em;
+  background-color: var(--accent-col-base);
+  color: var(--color-white);
+  font-weight: bold;
+  padding: 0.2em 0.5em;
+  border-radius: 0.3em;
+  font-size: 0.8em;
+  text-shadow: 1px 1px 2px var(--accent-col-dark);
+}
+
+.leaderboard {
+  container-type: inline-size;
+}
+.leaderboard .member {
+  font-size: 2cqw;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.leaderboard .member-name {
+  font-size: 1.5em;
+}
+.leaderboard .member .picks {
+  color: var(--color-gray-600);
+}
+
+[data-display-mode=tv] #tv-mode-container {
+  background: var(--brand-background-tv) no-repeat center center/cover;
+}
 [data-display-mode=tv] .home-link {
   position: fixed;
   color: var(--color-white);
-  top: 1rem;
-  right: 1rem;
+  top: 0.5rem;
+  right: 0.5rem;
   z-index: 8;
   opacity: 0.5;
   border: 1px solid currentColor;
   display: block;
   border-radius: 3px;
-  padding: 0.15em 0.667em;
+  padding: 0.05em 0.667em;
 }
 [data-display-mode=tv] .home-link:hover, [data-display-mode=tv] .home-link:focus {
   opacity: 1;
@@ -259,19 +487,62 @@
 }
 [data-display-mode=tv] .logo {
   width: 100%;
-  max-width: 28rem;
+  max-width: 20rem;
   margin-right: auto;
 }
 [data-display-mode=tv] #song {
   max-width: 27rem;
   margin-left: auto;
   margin-right: auto;
+  border-radius: 1.5rem;
+  overflow: hidden;
+}
+[data-display-mode=tv] #song.song-rank-1 {
+  box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.5);
+  border: 3px solid color-mix(in oklab, var(--color-white) 60%, transparent);
 }
 [data-display-mode=tv] .commentary-quip__icon {
   display: none;
 }
+[data-display-mode=tv] .left-column {
+  backdrop-filter: blur(30px) brightness(0.8);
+  border-right: 1px solid hsl(from var(--accent-col-base) h s l/0.5);
+}
+[data-display-mode=tv] .left-column .logo {
+  position: absolute;
+  top: 3rem;
+  right: 2rem;
+  width: 60%;
+  z-index: 1;
+  rotate: 5deg;
+  filter: drop-shadow(2px 2px 10px rgba(0, 0, 50, 0.7));
+}
+[data-display-mode=tv] .left-column > div {
+  gap: 2rem;
+  justify-content: space-around;
+}
+[data-display-mode=tv] .left-column:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--accent-col-base) -10%, var(--accent-col-dark), transparent 25%, transparent 75%, var(--accent-col-dark) 120%);
+  z-index: -1;
+  opacity: 0.3;
+}
 [data-display-mode=tv] .right-column {
-  background: linear-gradient(to bottom right, color-mix(in srgb, var(--color-black) 80%, var(--color-blue-600)) 40%, var(--color-blue-600), var(--color-blue-400), var(--color-purple-400));
+  display: flex;
+  flex-direction: column;
+  row-gap: 2rem;
+  height: 100vh;
+}
+[data-display-mode=tv] .right-column > div {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+[data-display-mode=tv] .right-column [class*=-wrapper] > :last-child {
+  flex-grow: 1;
+  overflow-y: auto;
 }
 [data-display-mode=tv] .header-group {
   display: flex;
@@ -285,11 +556,91 @@
 }
 [data-display-mode=tv] .list-table {
   max-height: 30vh;
+  flex-grow: 1;
 }
 [data-display-mode=tv] .list-table.leaderboard {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  column-gap: 0.5rem;
+  gap: 0.5rem;
 }
-
-/*# sourceMappingURL=compiled.css.map */
+[data-display-mode=tv] .list-table.leaderboard .member {
+  margin-bottom: 0;
+}
+[data-display-mode=tv] #podium {
+  position: relative;
+}
+[data-display-mode=tv] #podium .medal {
+  display: none;
+}
+[data-display-mode=tv] #podium .name {
+  color: var(--color-white);
+}
+[data-display-mode=tv] #podium:after {
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: calc(100% + 1rem);
+  border-bottom: 2px solid var(--color-white);
+  translate: -50%;
+  opacity: 0.5;
+}
+[data-display-mode=tv] {
+  --commentary-quip-bg: color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+[data-display-mode=tv] .commentary-quip {
+  font-size: 1.25rem;
+}
+[data-display-mode=tv] .commentary-quip__tail {
+  display: none;
+}
+[data-display-mode=tv] .commentary-quip__bubble {
+  background: var(--commentary-quip-bg);
+  color: var(--color-white);
+  font-style: italic;
+}
+[data-display-mode=tv] .commentary-quip .commentary-quip__text {
+  color: inherit;
+  font-size: inherit;
+}
+[data-display-mode=tv] .countdown-progress-wrapper, [data-display-mode=tv] .leaderboard-wrapper {
+  backdrop-filter: brightness(0.8);
+  outline: 1px solid hsl(from var(--accent-col-light) h s l/0.6);
+  box-shadow: 0.5rem 0.5rem 1rem rgba(0, 0, 0, 0.5);
+}
+[data-display-mode=tv]:has([data-has-songs]) .pre-countdown-content {
+  display: none;
+}
+[data-display-mode=tv] .pre-countdown-content .pre-countdown-logo {
+  width: 100%;
+  max-width: 400px;
+  filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.3));
+}
+[data-display-mode=tv] .pre-countdown-content .countdown h3 {
+  color: var(--color-white);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+[data-display-mode=tv] .pre-countdown-content .countdown-ticker {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  min-width: 100px;
+  padding: 1.5rem;
+}
+[data-display-mode=tv] .pre-countdown-content .countdown-ticker .big-number {
+  font-size: 4rem;
+}
+[data-display-mode=tv] .pre-countdown-content .countdown-ticker .small-text {
+  font-size: 1rem;
+}
+[data-display-mode=tv] .pre-countdown-content .participants-section {
+  max-width: 800px;
+  margin: 0 auto;
+}
+[data-display-mode=tv] .pre-countdown-content .participant-card {
+  transition: transform 0.2s, background 0.2s;
+}
+[data-display-mode=tv] .pre-countdown-content .participant-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.2);
+}

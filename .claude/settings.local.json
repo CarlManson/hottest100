@@ -29,7 +29,8 @@
       "Bash(gh pr view:*)",
       "Bash(gh run rerun:*)",
       "Bash(npm run sass:watch:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npx vite build)"
     ]
   }
 }

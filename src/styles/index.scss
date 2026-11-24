@@ -3,7 +3,7 @@
 
 // Variables must be imported first
 @use 'variables';
-
+@use 'colors';
 // Component styles
 @use 'menu';
 @use 'header';
@@ -13,6 +13,7 @@
 @use 'messages';
 @use 'countdown';
 @use 'commentary';
+@use 'leaderboard';
 @use 'utilities';
 @use 'tv';
 

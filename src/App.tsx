@@ -10,10 +10,7 @@ import { Leaderboard } from './components/Leaderboard';
 import { DetailedBreakdown } from './components/DetailedBreakdown';
 import { Settings } from './components/Settings';
 import { Archive } from './components/Archive';
-import { BROADCAST_YEAR } from './config/countdown';
-import logo from './assets/fairest-100-logo.png';
-import banner from './assets/banner-bg.jpg';
-import bannerRight from './assets/banner-right.png';
+import { brand, BROADCAST_YEAR } from './config/brand';
 
 type Tab = 'home' | 'tv' | 'dashboard' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings' | 'archive';
 
@@ -110,22 +107,22 @@ function AppContent() {
   };
 
   return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-purple-50">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-red-50 to-purple-50">
         {/* Hide header for TV mode */}
         {activeTab !== 'tv' && (
         <header
-          className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 shadow-lg header-with-banner"
-          style={{ '--banner-image': `url(${banner})` } as React.CSSProperties}
+          className="bg-gradient-to-r from-primary-500 via-tertiary-500 to-secondary-500 shadow-lg header-with-banner"
+          style={{ '--banner-image': `url(${brand.images.background})` } as React.CSSProperties}
         >
           <div className="max-w-7xl mx-auto px-6 py-6 relative">
             <img
               className="logo cursor-pointer"
-              src={logo}
-              alt="Fairest 100 Logo"
+              src={brand.images.logo}
+              alt={`${brand.appName} logo`}
               onClick={() => handleTabClick('home')}
             />
             {/* Banner right - hidden on mobile, shown on desktop */}
-            <img className="banner-right hidden md:block" src={bannerRight} alt="Banner decoration" />
+            {brand.images.mascot && <img className="banner-right hidden md:block" src={brand.images.mascot} alt="" />}
             {/* Mobile menu button - shown on mobile when authenticated */}
             {isAuthenticated && (
               <button
@@ -216,8 +213,8 @@ function AppContent() {
                       onClick={() => handleTabClick('archive')}
                       className={`w-full text-left px-4 py-3 font-bold transition ${
                         activeTab === 'archive'
-                          ? 'bg-orange-500 text-white'
-                          : 'text-gray-700 hover:bg-orange-100'
+                          ? 'bg-primary-500 text-white'
+                          : 'text-gray-700 hover:bg-primary-100'
                       }`}
                     >
                       Archive
@@ -274,8 +271,8 @@ function AppContent() {
                     onClick={() => handleTabClick('archive')}
                     className={`px-6 py-4 font-bold transition whitespace-nowrap rounded-t-lg ${
                       activeTab === 'archive'
-                        ? 'bg-orange-500 text-white'
-                        : 'text-gray-700 hover:bg-orange-100'
+                        ? 'bg-primary-500 text-white'
+                        : 'text-gray-700 hover:bg-primary-100'
                     }`}
                   >
                     Archive
@@ -329,7 +326,7 @@ function AppContent() {
                     id="modal-username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-500 focus:outline-none transition"
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition"
                     placeholder="Enter username"
                     required
                     autoFocus
@@ -345,7 +342,7 @@ function AppContent() {
                     id="modal-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-500 focus:outline-none transition"
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition"
                     placeholder="Enter password"
                     required
                   />
@@ -360,7 +357,7 @@ function AppContent() {
                 <div className="flex gap-3">
                   <button
                     type="submit"
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold py-3 px-6 rounded-lg hover:from-orange-600 hover:to-pink-600 transition shadow-lg"
+                    className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold py-3 px-6 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition shadow-lg"
                   >
                     Login
                   </button>
@@ -384,9 +381,9 @@ function AppContent() {
 
         {/* Hide footer for TV mode */}
         {activeTab !== 'tv' && (
-        <footer className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 border-t mt-12 py-6">
+        <footer className="bg-gradient-to-r from-primary-500 via-tertiary-500 to-secondary-500 border-t mt-12 py-6">
           <div className="max-w-7xl mx-auto px-6 text-center text-white text-sm">
-            <p className="font-semibold">Fairest 100: The Triple J Hottest 100 Voting Scorecard</p>
+            <p className="font-semibold">{brand.appName}: {brand.tagline}</p>
             <p className="mt-2 text-white/90 text-xs">
               Open source project • Made by Carl Manson,{' '}
               <a href="https://axiom.com.au" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">

@@ -195,7 +195,7 @@ export const CountdownEntry: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-2xl p-8 max-w-sm mx-4">
             <div className="flex flex-col items-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-500 mb-4"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-500 mb-4"></div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">Updating Countdown...</h3>
               <p className="text-sm text-gray-600 text-center">Please wait, do not refresh or navigate away</p>
             </div>
@@ -284,7 +284,7 @@ export const CountdownEntry: React.FC = () => {
                       <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                         <span className="truncate">{song.artist}</span>
                         {song.isAustralian && (
-                          <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                          <span className="bg-primary-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                             AUS
                           </span>
                         )}
@@ -388,7 +388,7 @@ export const CountdownEntry: React.FC = () => {
                             : 'cursor-move hover:bg-gray-700'
                         }`}
                       >
-                        <div className="font-bold text-sm sm:text-lg w-8 sm:w-12 flex-shrink-0 text-orange-400">#{result.position}</div>
+                        <div className="font-bold text-sm sm:text-lg w-8 sm:w-12 flex-shrink-0 text-primary-400">#{result.position}</div>
                         {song.thumbnail && (
                           <LazyImage
                             src={song.thumbnail}

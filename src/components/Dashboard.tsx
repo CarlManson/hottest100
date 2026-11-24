@@ -1,64 +1,15 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import type { MemberProfile } from '../types';
 import { LazyImage } from './LazyImage';
-import { COUNTDOWN_START } from '../config/countdown';
-
-interface CountdownTime {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  isStarted: boolean;
-}
-
-const useCountdown = (): CountdownTime => {
-  const [timeLeft, setTimeLeft] = useState<CountdownTime>(() => {
-    const now = new Date();
-    const diff = COUNTDOWN_START.getTime() - now.getTime();
-    if (diff <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true };
-    }
-    return {
-      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-      seconds: Math.floor((diff % (1000 * 60)) / 1000),
-      isStarted: false,
-    };
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      const diff = COUNTDOWN_START.getTime() - now.getTime();
-
-      if (diff <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, isStarted: true });
-        clearInterval(timer);
-        return;
-      }
-
-      setTimeLeft({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((diff % (1000 * 60)) / 1000),
-        isStarted: false,
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  return timeLeft;
-};
+import { useCountdown } from '../hooks/useCountdownSettings';
 
 const CountdownTimer: React.FC = () => {
-  const { days, hours, minutes, seconds, isStarted } = useCountdown();
+  const { days, hours, minutes, seconds, isStarted, isEnabled } = useCountdown();
 
-  if (isStarted) return null;
+  // Don't show if countdown is not enabled or has already started
+  if (!isEnabled || isStarted) return null;
 
   return (
     <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-blue-400">
@@ -102,7 +53,7 @@ const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ countdownStarted, hasRe
   if (!countdownStarted) {
     // Before countdown starts - welcome message with scoring explanation
     return (
-      <div className="bg-gradient-to-r from-orange-100 via-yellow-50 to-orange-100 border-2 border-orange-300 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+      <div className="bg-gradient-to-r from-primary-100 via-yellow-50 to-primary-100 border-2 border-primary-300 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="text-center">
           <h3 className="text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">
             🎵 G'day Legends! 🎵
@@ -113,8 +64,8 @@ const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ countdownStarted, hasRe
             </p>
             <p>
               <strong>Scoring is dead simple:</strong> If your song cracks the Hottest 100, you score points based on how high it lands.
-              Position #100 gets you <span className="font-bold text-orange-600">101 points</span>, and if one of your picks somehow nabs the #1 spot,
-              that's a whopping <span className="font-bold text-orange-600">200 points</span>. The higher the song, the more points you bag.
+              Position #100 gets you <span className="font-bold text-primary-600">101 points</span>, and if one of your picks somehow nabs the #1 spot,
+              that's a whopping <span className="font-bold text-primary-600">200 points</span>. The higher the song, the more points you bag.
             </p>
             <p>
               Your personal ranking (1-10) doesn't matter for scoring - it's just for your own reference so you can remember which bangers you rated highest.
@@ -130,7 +81,7 @@ const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ countdownStarted, hasRe
 
   // After countdown starts but no results yet
   return (
-    <div className="bg-gradient-to-r from-red-100 via-orange-50 to-red-100 border-2 border-red-300 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+    <div className="bg-gradient-to-r from-red-100 via-primary-50 to-red-100 border-2 border-red-300 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
       <div className="text-center">
         <h3 className="text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">
           🔥 It's Happening! 🔥
@@ -141,12 +92,12 @@ const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ countdownStarted, hasRe
             Carl wasn't smart enough to make this thing update automatically, so we're doing it the old-fashioned way.
           </p>
           <p>
-            <strong>If you're free:</strong> Jump into the <span className="font-bold text-orange-600">Countdown Results</span> tab
+            <strong>If you're free:</strong> Jump into the <span className="font-bold text-primary-600">Countdown Results</span> tab
             and start adding songs as Triple J announces them. Don't all rush at once - one legend at a time will do the trick.
           </p>
           <button
             onClick={() => onNavigate?.('countdown')}
-            className="mt-3 bg-orange-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-orange-600 transition font-bold text-sm sm:text-base"
+            className="mt-3 bg-primary-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-primary-600 transition font-bold text-sm sm:text-base"
           >
             Enter Countdown Results
           </button>
@@ -216,12 +167,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
       {/* Stats Cards - Hidden on mobile */}
       <div className={`hidden md:grid gap-4 mb-8 ${hottest200Results.length > 0 ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
-        <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-xl shadow-lg p-6 text-white">
+        <div className="bg-gradient-to-br from-primary-500 to-tertiary-500 rounded-xl shadow-lg p-6 text-white">
           <div className="text-3xl font-black">{songs.length}</div>
           <div className="text-white/80 font-semibold">Eligible Songs</div>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg p-6 text-white">
+        <div className="bg-gradient-to-br from-purple-500 to-secondary-500 rounded-xl shadow-lg p-6 text-white">
           <div className="text-3xl font-black">{familyMembers.length}</div>
           <div className="text-white/80 font-semibold">Mates</div>
         </div>
@@ -252,14 +203,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       )}
 
       {!hasVotes && familyMembers.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-lg p-6 sm:p-12 text-center border-2 border-orange-200">
+        <div className="bg-white rounded-xl shadow-lg p-6 sm:p-12 text-center border-2 border-primary-200">
           <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">🎵</div>
           <h3 className="text-lg sm:text-2xl font-bold mb-2 text-gray-800">Welcome to Hottest 100 Tracker!</h3>
           <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">Get started by adding songs and mates</p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <button
               onClick={() => onNavigate?.('settings')}
-              className="bg-orange-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-orange-600 transition font-bold text-sm sm:text-base"
+              className="bg-primary-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-primary-600 transition font-bold text-sm sm:text-base"
             >
               Manage Songs
             </button>
@@ -274,7 +225,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Countdown Progress */}
-          <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6 border-2 border-orange-200">
+          <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6 border-2 border-primary-200">
             <h3 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800 flex items-center gap-2">
               📊 Countdown Progress
             </h3>
@@ -300,7 +251,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
                     <div
-                      className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all"
+                      className="bg-gradient-to-r from-primary-500 to-tertiary-500 h-3 rounded-full transition-all"
                       style={{
                         width: hasHottest200Started
                           ? `${(totalResults / 200) * 100}%`
@@ -312,10 +263,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
                 {/* Featured Top Song */}
                 {topSong && topSongData && (
-                  <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-400 rounded-lg">
-                    <div className="text-[10px] sm:text-xs font-bold text-orange-600 mb-1 sm:mb-2">🏆 HIGHEST POSITION</div>
+                  <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gradient-to-r from-yellow-100 to-primary-100 border-2 border-yellow-400 rounded-lg">
+                    <div className="text-[10px] sm:text-xs font-bold text-primary-600 mb-1 sm:mb-2">🏆 HIGHEST POSITION</div>
                     <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="font-black text-xl sm:text-3xl text-orange-600">
+                      <div className="font-black text-xl sm:text-3xl text-primary-600">
                         #{topSong.position}
                       </div>
                       {topSongData.thumbnail && (
@@ -330,7 +281,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                         <div className="text-xs sm:text-sm text-gray-700 flex items-center gap-1">
                           <span className="truncate">{topSongData.artist}</span>
                           {topSongData.isAustralian && (
-                            <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                            <span className="bg-primary-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                               AUS
                             </span>
                           )}
@@ -367,13 +318,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                               <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                                 <span className="truncate">{song.artist}</span>
                                 {song.isAustralian && (
-                                  <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                  <span className="bg-primary-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                                     AUS
                                   </span>
                                 )}
                               </div>
                             </div>
-                            <div className="font-bold text-orange-600 text-sm sm:text-lg flex-shrink-0">
+                            <div className="font-bold text-primary-600 text-sm sm:text-lg flex-shrink-0">
                               #{result.position}
                             </div>
                           </div>
@@ -387,7 +338,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </div>
 
           {/* Leaderboard */}
-          <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6 border-2 border-orange-200">
+          <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6 border-2 border-primary-200">
             <h3 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800 flex items-center gap-2">
               🏆 Leaderboard
             </h3>
@@ -407,7 +358,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                       key={entry.member.id}
                       className={`flex items-center gap-2 sm:gap-4 p-2 sm:p-4 rounded-lg ${
                         rank === 1 && entry.score > 0
-                          ? 'bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-400'
+                          ? 'bg-gradient-to-r from-yellow-100 to-primary-100 border-2 border-yellow-400'
                           : 'bg-gray-50'
                       }`}
                     >
@@ -415,7 +366,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                         entry.score === 0 ? 'bg-gray-200 text-gray-400' :
                         rank === 1 ? 'bg-yellow-500 text-white' :
                         rank === 2 ? 'bg-gray-400 text-white' :
-                        rank === 3 ? 'bg-orange-600 text-white' :
+                        rank === 3 ? 'bg-primary-600 text-white' :
                         'bg-gray-300 text-gray-700'
                       }`}>
                         {entry.score === 0 ? '-' : rank}
@@ -434,14 +385,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                     e.stopPropagation();
                                     setSelectedProfile(profile);
                                   }}
-                                  className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-orange-500 hover:to-pink-500 transition whitespace-nowrap cursor-pointer"
+                                  className="bg-gradient-to-r from-primary-400 to-secondary-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full hover:from-primary-500 hover:to-secondary-500 transition whitespace-nowrap cursor-pointer"
                                 >
                                   {profile.label}
                                 </button>
                               );
                             } else {
                               return (
-                                <span className="bg-gradient-to-r from-orange-400 to-pink-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                <span className="bg-gradient-to-r from-primary-400 to-secondary-400 text-white text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
                                   {profile.label}
                                 </span>
                               );
@@ -468,7 +419,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                         )}
                       </div>
                       <div className="text-right">
-                        <div className="text-xl sm:text-2xl font-black text-orange-600">
+                        <div className="text-xl sm:text-2xl font-black text-primary-600">
                           {entry.score}
                         </div>
                         {maxPossibleScore > 0 && (
@@ -498,7 +449,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               onClick={() => onNavigate?.('countdown')}
-              className="bg-orange-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-orange-600 transition font-semibold text-sm"
+              className="bg-primary-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-primary-600 transition font-semibold text-sm"
             >
               Enter Results
             </button>
@@ -588,7 +539,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                             <div className="text-[10px] sm:text-xs text-gray-600 flex items-center gap-1">
                               <span className="truncate">{song.artist}</span>
                               {song.isAustralian && (
-                                <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
+                                <span className="bg-primary-500 text-white text-[10px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                                   AUS
                                 </span>
                               )}
