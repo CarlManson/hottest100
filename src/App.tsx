@@ -10,12 +10,16 @@ import { Leaderboard } from './components/Leaderboard';
 import { DetailedBreakdown } from './components/DetailedBreakdown';
 import { Settings } from './components/Settings';
 import { Archive } from './components/Archive';
+import { AlertsBar } from './components/AlertsBar';
+import { useResultNotifications } from './utils/useResultNotifications';
 import { brand, BROADCAST_YEAR } from './config/brand';
 
 type Tab = 'home' | 'tv' | 'dashboard' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings' | 'archive';
 
 function AppContent() {
-  const { archives } = useApp();
+  const { archives, songs, countdownResults, hottest200Results } = useApp();
+  // Single instance so each reveal notifies once, whichever page is open
+  const notifications = useResultNotifications(songs, countdownResults, hottest200Results);
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -122,7 +126,7 @@ function AppContent() {
               onClick={() => handleTabClick('home')}
             />
             {/* Banner right - hidden on mobile, shown on desktop */}
-            {brand.images.mascot && <img className="banner-right hidden md:block" src={brand.images.mascot} alt="" />}
+            {brand.images.mascot && <img className="banner-right hidden md:block pointer-events-none" src={brand.images.mascot} alt="" />}
             {/* Mobile menu button - shown on mobile when authenticated */}
             {isAuthenticated && (
               <button
@@ -284,6 +288,7 @@ function AppContent() {
         )}
 
         <main>
+          {activeTab === 'home' && <AlertsBar notifications={notifications} />}
           {activeTab === 'home' && <PublicHome />}
           {activeTab === 'tv' && <TVMode />}
           {activeTab === 'dashboard' && isAuthenticated && <Dashboard onNavigate={setActiveTab} />}
@@ -392,6 +397,16 @@ function AppContent() {
               • {BROADCAST_YEAR}
             </p>
             <div className="mt-4 space-y-2">
+              {notifications.supported && !notifications.blocked && (
+                <div>
+                  <button
+                    onClick={notifications.toggle}
+                    className="text-white/90 hover:text-white underline font-medium"
+                  >
+                    Song alerts: {notifications.enabled ? 'on' : 'off'}
+                  </button>
+                </div>
+              )}
               {isAuthenticated ? (
                 <>
                   <div className="flex justify-center gap-4 flex-wrap">

@@ -3,6 +3,8 @@ import { useApp } from '../context/AppContext';
 import { getLeaderboard, getSongMatches, calculateMaxPossibleScore, calculateEfficiency } from '../utils/scoring';
 import type { MemberProfile, FamilyMember } from '../types';
 import { LazyImage } from './LazyImage';
+import { useGroupView } from '../hooks/useGroupView';
+import { GroupSwitcher } from './GroupSwitcher';
 
 export const Leaderboard: React.FC = () => {
   const {
@@ -16,7 +18,8 @@ export const Leaderboard: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
 
-  const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
+  const { visibleMembers } = useGroupView();
+  const leaderboard = getLeaderboard(visibleMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const hasHottest200 = hottest200Results.length > 0;
 
@@ -59,6 +62,7 @@ export const Leaderboard: React.FC = () => {
             >
               View detailed vote breakdown →
             </a>
+            <GroupSwitcher className="mt-3" />
           </div>
         </div>
         {profileError && (

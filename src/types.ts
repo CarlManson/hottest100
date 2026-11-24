@@ -49,6 +49,13 @@ export interface Archive {
   };
 }
 
+export interface Group {
+  id: string;
+  name: string;
+  emoji?: string;
+  memberIds: string[];
+}
+
 export interface AppState {
   songs: Song[];
   familyMembers: FamilyMember[];

@@ -3,11 +3,22 @@
 ## [Unreleased] - 2026-11-24
 
 ### Action needed before the countdown
+- **Run `supabase-add-groups.sql`** in the Supabase SQL Editor to turn on member groups (group features stay hidden until then)
 - **Set the countdown date** in Settings once Triple J announces it ("Use default" now picks the fourth Saturday of January)
 - **Drop in the new event branding** — see `src/assets/brand/README.md` and `src/config/brand.ts`
 - **Run `supabase-add-app-settings.sql`** in the Supabase SQL Editor so the countdown date is shared with every visitor
 - **Run `supabase-add-song-unique-index.sql`** in the Supabase SQL Editor (new projects get it from `supabase-schema.sql`)
 - Optional: set `VITE_STREAM_URL` to show the "Listen live" button
+
+### Added — groups
+- Member groups (e.g. The Fair Family, Work, Friends): admins create, rename, re-member and delete them in Settings → Groups; a member can be in several groups
+- Everyone can switch the home page, leaderboard page and detailed breakdown between "All members" and a group; podium, quips, awards, Crowd Favourites and score bumps follow the group (scores don't change)
+- The choice is remembered and kept in the link (`?group=the-fair-family`), so TV screens can be pointed at a group (`/?group=work#tv`); Settings has "Copy link" / "Copy TV link" for each group
+
+### Changed — song alerts
+- The hero "Song alerts" button is now a slim, dismissible bar under the menu on the home page; it hides once alerts are on, if notifications are blocked, or after dismissal
+- "Song alerts: on/off" link in the footer to change it later; alerts now work from any page, not just home
+- Fixed the header mascot image intercepting clicks below the menu
 
 ### Added — branding, TV mode and motion
 - Brand layer: `src/config/brand.ts` + `src/assets/brand/` hold the event name, year, logo, mascot/badge, backgrounds, favicon and colours

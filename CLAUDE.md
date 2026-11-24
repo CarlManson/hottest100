@@ -59,6 +59,8 @@ Five main tables (see `supabase-schema.sql`):
 - `countdown_results` - Actual Hottest 100/200 results (type: 'hottest100' or 'hottest200')
 - `member_profiles` - AI-generated profiles (label, music_taste_description, timestamps)
 - `archives` - Historical year data (year, archived_at, data as JSONB)
+- `app_settings` - Shared key/value settings (e.g. `countdown_date`)
+- `groups` / `group_members` - Optional member groups for filtered leaderboards (see `supabase-add-groups.sql`)
 
 All tables use UUIDs as primary keys with foreign key constraints and ON DELETE CASCADE.
 
@@ -273,6 +275,12 @@ Dynamic, humorous commentary displayed on the Dashboard during the countdown.
 - Hottest 100 (positions 100→1): Shows quips for every position
 - Hottest 200 (positions 200→102): No quips shown
 - Position 101 only: Shows grand finale quip when revealed (overall winner across both countdowns)
+
+### Member Groups
+- Admin-only management in Settings → Groups (`GroupManager.tsx`); data loaded/saved in `AppContext` (`groups`, `saveGroup`, `removeGroup`, `groupsAvailable`)
+- `useGroupView()` (`src/hooks/useGroupView.ts`) is the single source for the selected group and `visibleMembers`; public views build their leaderboard from `visibleMembers`
+- Selection is shared across components, stored in localStorage and the `?group=<slug>` URL param (TV mode reads it on load)
+- Group features hide themselves when the tables don't exist (`groupsAvailable === false`)
 
 ### Archive System
 Preserves completed years' data and allows viewing historical results.

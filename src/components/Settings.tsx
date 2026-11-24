@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { GroupManager } from './GroupManager';
 import type { Song } from '../types';
 import { useCountdownSettings, useCountdown, formatDateForInput, parseDateFromInput } from '../hooks/useCountdownSettings';
 
@@ -35,7 +36,7 @@ Be observant, funny, and engaging about their musical preferences. Keep it frien
 Return format:
 MUSIC_TASTE: [Your 3-4 sentence analysis here]`;
 
-type TabType = 'event' | 'ai' | 'songs' | 'data';
+type TabType = 'event' | 'groups' | 'ai' | 'songs' | 'data';
 
 export const Settings: React.FC = () => {
   const {
@@ -452,6 +453,16 @@ export const Settings: React.FC = () => {
           📅 Event
         </button>
         <button
+          onClick={() => setActiveTab('groups')}
+          className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
+            activeTab === 'groups'
+              ? 'text-primary-600 border-b-2 border-primary-600'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          👥 Groups
+        </button>
+        <button
           onClick={() => setActiveTab('ai')}
           className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
             activeTab === 'ai'
@@ -488,6 +499,8 @@ export const Settings: React.FC = () => {
           {saveMessage}
         </div>
       )}
+
+      {activeTab === 'groups' && <GroupManager />}
 
       {/* Event Tab */}
       {activeTab === 'event' && (

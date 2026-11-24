@@ -1,16 +1,18 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard } from '../utils/scoring';
+import { useGroupView } from '../hooks/useGroupView';
 
 type BreakdownTab = 'hottest200' | 'hottest100' | 'positions101to200';
 
 export const DetailedBreakdownTable: React.FC = () => {
-  const { songs, familyMembers, countdownResults, hottest200Results } = useApp();
+  const { songs, countdownResults, hottest200Results } = useApp();
+  const { visibleMembers } = useGroupView();
 
   const hasHottest200 = hottest200Results.length > 0;
   const [activeTab, setActiveTab] = useState<BreakdownTab>('hottest200');
 
-  const leaderboard = getLeaderboard(familyMembers, countdownResults, hottest200Results);
+  const leaderboard = getLeaderboard(visibleMembers, countdownResults, hottest200Results);
   const allResults = [...countdownResults, ...hottest200Results];
 
   // Get score for a specific song based on active tab filter
