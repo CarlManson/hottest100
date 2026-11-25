@@ -219,10 +219,10 @@ function AppContent() {
                   {hasArchives && (
                     <button
                       onClick={() => handleTabClick('archive')}
-                      className={`w-full text-left px-4 py-3 font-bold transition ${
+                      className={`menu-link ${
                         activeTab === 'archive'
-                          ? 'bg-primary-500 text-white'
-                          : 'text-gray-700 hover:bg-primary-100'
+                          ? 'active'
+                          : ''
                       }`}
                     >
                       Archive
@@ -280,10 +280,10 @@ function AppContent() {
                 {hasArchives && (
                   <button
                     onClick={() => handleTabClick('archive')}
-                    className={`px-6 py-4 font-bold transition whitespace-nowrap rounded-t-lg ${
+                    className={`menu-link ${
                       activeTab === 'archive'
-                        ? 'bg-primary-500 text-white'
-                        : 'text-gray-700 hover:bg-primary-100'
+                        ? 'active'
+                        : ''
                     }`}
                   >
                     Archive
