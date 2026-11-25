@@ -9,17 +9,19 @@ import { Leaderboard } from './components/Leaderboard';
 import { DetailedBreakdown } from './components/DetailedBreakdown';
 import { Settings } from './components/Settings';
 import { Archive } from './components/Archive';
-import { AlertsBar } from './components/AlertsBar';
+import { AlertsBar, AlertsMemberSelect, ALERTS_SUMMARY } from './components/AlertsBar';
 import { useResultNotifications } from './utils/useResultNotifications';
+import { useCountdownSettings } from './hooks/useCountdownSettings';
 import { brand } from './config/brand';
 import { Icon } from './components/icons/Icon';
 
 type Tab = 'home' | 'tv' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings' | 'archive';
 
 function AppContent() {
-  const { archives, songs, countdownResults, hottest200Results } = useApp();
+  const { archives, songs, countdownResults, hottest200Results, familyMembers, loading } = useApp();
   // Single instance so each reveal notifies once, whichever page is open
-  const notifications = useResultNotifications(songs, countdownResults, hottest200Results);
+  const { countdownDate } = useCountdownSettings();
+  const notifications = useResultNotifications(songs, countdownResults, hottest200Results, familyMembers, countdownDate, !loading);
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -301,7 +303,7 @@ function AppContent() {
         )}
 
         <main>
-          {activeTab === 'home' && <AlertsBar notifications={notifications} />}
+          {activeTab === 'home' && <AlertsBar notifications={notifications} members={familyMembers} />}
           {activeTab === 'home' && <PublicHome showTvButton={!isAuthenticated} onLoginClick={isAuthenticated ? undefined : () => setShowLoginModal(true)} />}
           {activeTab === 'tv' && <TVMode />}
           {activeTab === 'voting' && isAuthenticated && <VotingInterface />}
@@ -410,13 +412,21 @@ function AppContent() {
             </p>
             <div className="mt-4 space-y-2">
               {notifications.supported && !notifications.blocked && (
-                <div>
+                <div className="footer-alerts flex justify-center items-center gap-3 flex-wrap">
                   <button
                     onClick={notifications.toggle}
+                    title={ALERTS_SUMMARY}
                     className="text-white/90 hover:text-white underline font-medium"
                   >
                     Song alerts: {notifications.enabled ? 'on' : 'off'}
                   </button>
+                  {notifications.enabled && (
+                    <AlertsMemberSelect
+                      notifications={notifications}
+                      members={familyMembers}
+                      className="bg-white/15 rounded-full px-3 py-1 text-xs text-white"
+                    />
+                  )}
                 </div>
               )}
               {isAuthenticated ? (
