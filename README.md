@@ -61,7 +61,7 @@ Perfect for first-time forkers:
 
 ### For Users
 - **Authentication**: Secure username/password login for your group
-- **Dashboard**: Live leaderboard with countdown progress widget
+- **Home**: Live leaderboard with countdown progress widget (also where you land after logging in)
 - **Hero Display**: Featured #1 song as large square tile with podium
 - **AI Member Profiles**: Claude AI-powered personality labels and music taste analysis with cheeky Aussie commentary (requires Anthropic API key)
 - **Awards System**: Hottest 100 awards and achievements

@@ -43,6 +43,9 @@
 - Home: removed the duplicated progress bar from the latest-entries card (the hero already shows it), fixed "Full Leaderboard" breaking onto two lines, smaller podium heading, lighter and consistent card borders
 - Merged latest `main` (hotness styling, CurrentSongCard, Settings-based countdown date); the hardcoded countdown date was removed in favour of the Settings one
 
+### Removed — Dashboard page
+- Logging in now lands on Home instead of the old Dashboard. The Dashboard left the menus in January but its page and the login redirect were still there; the page is now gone and old `#dashboard` links open Home
+
 ### Added
 - Single config for the countdown year and stream URL (now part of `src/config/brand.ts`)
 - Duplicate song prevention
