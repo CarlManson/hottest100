@@ -430,8 +430,9 @@ export const Settings: React.FC = () => {
     }
   };
 
-  // Check if both countdowns are complete
-  const bothCountdownsComplete = countdownResults.length === 100 && hottest200Results.length === 100;
+  // Archiving only needs the Hottest 100; the Hottest 200 is archived as it stands (it may be partial or empty)
+  const hottest100Complete = countdownResults.length === 100;
+  const hottest200Complete = hottest200Results.length === 100;
 
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-6">
@@ -868,11 +869,13 @@ export const Settings: React.FC = () => {
           </div>
 
           {/* Archive & Reset for Next Year */}
-          {bothCountdownsComplete && (
+          {hottest100Complete && (
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-md p-4 sm:p-6 border-2 border-green-200">
               <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Archive & Reset for Next Year</h2>
               <p className="text-gray-600 mb-4 text-sm sm:text-base">
-                Both countdowns are complete! Archive this year's results and reset for the next Hottest 100.
+                {hottest200Complete
+                  ? "Both countdowns are complete! Archive this year's results and reset for the next Hottest 100."
+                  : `The Hottest 100 is complete. The Hottest 200 has ${hottest200Results.length}/100 results and will be archived as it stands. Archive this year's results and reset for the next Hottest 100.`}
               </p>
 
               <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-4">

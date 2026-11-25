@@ -151,7 +151,7 @@ See `PublicHome.tsx` for complete class reference. Custom SCSS can target these 
 **Data Tab** - Export and manage all data:
 - View statistics (songs, members, results counts)
 - Export all data as JSON
-- Archive & Reset: Available when both countdowns complete (100 songs each)
+- Archive & Reset: Available once the Hottest 100 is complete (100 results); the Hottest 200 is archived as it stands
   - Configurable year input
   - Archives all data (songs, members, votes, results, profiles) to database
   - Clears all current data for fresh start
@@ -291,7 +291,7 @@ Preserves completed years' data and allows viewing historical results.
 - Unique constraint on year
 
 **Functionality:**
-- **Archive & Reset Button**: Appears in Settings > Data tab when both countdowns complete (100 songs each)
+- **Archive & Reset Button**: Appears in Settings > Data tab once the Hottest 100 is complete (the Hottest 200 can be partial or empty)
 - **Year Configuration**: User specifies which year to archive (defaults to previous year)
 - **Data Preserved**: Songs, members, votes, countdown results, profiles
 - **Archive Page**: New tab appears in navigation when archives exist
@@ -302,7 +302,7 @@ Preserves completed years' data and allows viewing historical results.
 - **Multi-year Support**: Unlimited archives, one per year
 
 **Archive Workflow:**
-1. Both countdowns complete (100 Hottest 100 + 100 Hottest 200)
+1. Hottest 100 complete (100 results); Hottest 200 optional
 2. Archive & Reset button appears in Settings
 3. User selects year to archive
 4. Two-click confirmation with warning
