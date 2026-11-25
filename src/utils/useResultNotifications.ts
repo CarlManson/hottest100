@@ -3,7 +3,9 @@ import type { CountdownResult, Song } from '../types';
 
 const STORAGE_KEY = 'song_alerts_enabled';
 // Larger jumps are initial loads or bulk edits, not live reveals
-const MAX_ALERTS_PER_UPDATE = 3;
+const MAX_NEW_PER_UPDATE = 3;
+/** One alert per this many songs revealed */
+export const ALERT_EVERY = 5;
 
 const readStored = () => {
   try {
@@ -21,6 +23,18 @@ const writeStored = (value: boolean) => {
   }
 };
 
+/**
+ * Returns the latest batch of songs to alert on when a list's size crosses a
+ * multiple of ALERT_EVERY, else null. The countdown runs down, so the latest
+ * songs are the lowest positions; they come back newest first.
+ */
+export function alertBatch(previousCount: number, results: CountdownResult[]): CountdownResult[] | null {
+  const added = results.length - previousCount;
+  if (added <= 0 || added > MAX_NEW_PER_UPDATE) return null;
+  if (Math.floor(results.length / ALERT_EVERY) === Math.floor(previousCount / ALERT_EVERY)) return null;
+  return [...results].sort((a, b) => a.position - b.position).slice(0, ALERT_EVERY);
+}
+
 export function useResultNotifications(
   songs: Song[],
   countdownResults: CountdownResult[],
@@ -31,31 +45,36 @@ export function useResultNotifications(
     () => supported && Notification.permission === 'granted' && readStored()
   );
   const [blocked, setBlocked] = useState(() => supported && Notification.permission === 'denied');
-  const seen = useRef<Set<string> | null>(null);
+  const counts = useRef<number[] | null>(null);
 
   useEffect(() => {
-    const all = [...countdownResults, ...hottest200Results];
-    const keys = all.map(r => `${r.position}:${r.songId}`);
+    const lists = [countdownResults, hottest200Results];
+    const previous = counts.current;
 
-    if (seen.current === null) {
-      if (all.length > 0) seen.current = new Set(keys);
+    if (previous === null) {
+      if (lists.some(list => list.length > 0)) counts.current = lists.map(list => list.length);
       return;
     }
+    counts.current = lists.map(list => list.length);
 
-    const fresh = all.filter(r => !seen.current!.has(`${r.position}:${r.songId}`));
-    seen.current = new Set(keys);
+    if (!enabled || !document.hidden) return;
 
-    if (!enabled || !document.hidden || fresh.length === 0 || fresh.length > MAX_ALERTS_PER_UPDATE) return;
-
-    for (const result of fresh) {
-      const song = songs.find(s => s.id === result.songId);
-      if (!song) continue;
-      new Notification(`#${result.position}: ${song.title}`, {
-        body: song.artist,
-        icon: song.thumbnail,
-        tag: `result-${result.position}`,
+    lists.forEach((list, i) => {
+      const batch = alertBatch(previous[i], list);
+      if (!batch) return;
+      const lines = batch.flatMap(result => {
+        const song = songs.find(s => s.id === result.songId);
+        return song ? [`#${result.position} ${song.title} - ${song.artist}`] : [];
       });
-    }
+      if (lines.length === 0) return;
+      const newest = batch[0].position;
+      const oldest = batch[batch.length - 1].position;
+      new Notification(`Songs #${oldest} to #${newest} are in`, {
+        body: lines.join('\n'),
+        icon: songs.find(s => s.id === batch[0].songId)?.thumbnail,
+        tag: `results-${newest}`,
+      });
+    });
   }, [countdownResults, hottest200Results, songs, enabled]);
 
   const toggle = useCallback(async () => {

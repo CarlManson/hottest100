@@ -47,8 +47,8 @@ export const AlertsBar: React.FC<AlertsBarProps> = ({ notifications }) => {
         <Icon name="bell" />
         <p className="flex-1 min-w-0">
           {enabled
-            ? 'Alerts on — we’ll ping you when each song drops.'
-            : 'Get a ping when each new song drops.'}
+            ? 'Alerts on — we’ll ping you every 5 songs.'
+            : 'Get a ping every 5 songs.'}
         </p>
         {!enabled && (
           <button
