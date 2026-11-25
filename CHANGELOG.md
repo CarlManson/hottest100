@@ -15,6 +15,9 @@
 - Everyone can switch the home page, leaderboard page and detailed breakdown between "All members" and a group; podium, quips, awards, Crowd Favourites and score bumps follow the group (scores don't change)
 - The choice is remembered and kept in the link (`?group=the-fair-family`), so TV screens can be pointed at a group (`/?group=work#tv`); Settings has "Copy link" / "Copy TV link" for each group
 
+### Changed — archive
+- "Archive & Reset for Next Year" (Settings → Data) now appears once the Hottest 100 is complete; the Hottest 200 no longer has to be finished and is archived as it stands
+
 ### Changed — song alerts
 - The hero "Song alerts" button is now a slim, dismissible bar under the menu on the home page; it hides once alerts are on, if notifications are blocked, or after dismissal
 - "Song alerts: on/off" link in the footer to change it later; alerts now work from any page, not just home
