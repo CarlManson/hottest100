@@ -18,7 +18,12 @@ import { useScoreBumps } from '../hooks/useScoreBumps';
 import { useGroupView } from '../hooks/useGroupView';
 import { GroupSwitcher } from './GroupSwitcher';
 
-export const PublicHome: React.FC = () => {
+interface PublicHomeProps {
+  /** Show the hero TV Mode button. Logged-in users get it in the navbar instead. */
+  showTvButton?: boolean;
+}
+
+export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) => {
   const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
   const countdown = useCountdown();
@@ -210,13 +215,15 @@ export const PublicHome: React.FC = () => {
               )}
 
               <div className="hero-tv-button-container hero-actions mt-6 flex flex-wrap gap-3 justify-center xl:justify-start">
-                {/* TV Mode Button - large screens only */}
-                <a
-                  href="#tv"
-                  className="hero-tv-button hidden lg:inline-block bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
-                >
-                  📺 TV Mode
-                </a>
+                {/* TV Mode Button - large screens only, for visitors without the navbar */}
+                {showTvButton && (
+                  <a
+                    href="#tv"
+                    className="hero-tv-button hidden lg:inline-block bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
+                  >
+                    📺 TV Mode
+                  </a>
+                )}
                 <LiveStreamPlayer />
               </div>
             </div>
