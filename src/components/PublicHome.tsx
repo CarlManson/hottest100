@@ -16,7 +16,7 @@ import { MostPickedSongs } from './MostPickedSongs';
 import { LiveStreamPlayer } from './LiveStreamPlayer';
 import { useScoreBumps } from '../hooks/useScoreBumps';
 import { useGroupView } from '../hooks/useGroupView';
-import { GroupSwitcher } from './GroupSwitcher';
+import { GroupMenu } from './GroupMenu';
 
 interface PublicHomeProps {
   /** Show the hero TV Mode button. Logged-in users get it in the navbar instead. */
@@ -174,11 +174,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
           <div className={`hero-banner-grid grid grid-cols-1 ${hasBannerRightContent ? 'xl:grid-cols-2' : ''} gap-8 lg:gap-12 items-center`}>
             {/* Title and Progress */}
             <div className={`hero-title-section text-white ${hasBannerRightContent ? 'text-center xl:text-left' : 'text-center'}`}>
-              {selectedGroup && (
-                <p className="hero-group-name text-base sm:text-2xl 2xl:text-3xl font-bold uppercase tracking-wide mb-1 sm:mb-2 drop-shadow-md text-white/90">
-                  {selectedGroup.name}
-                </p>
-              )}
+              <GroupMenu variant="hero" className="hero-group-name mb-2 sm:mb-3" />
               <h1 className="hero-title text-2xl sm:text-5xl lg:text-6xl 2xl:text-7xl font-black mb-4 drop-shadow-lg">
                 {hasHottest200Started ? 'Triple J Hottest 200 Tracker' : 'Triple J Hottest 100 Tracker'}
               </h1>
@@ -214,7 +210,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
                 </div>
               )}
 
-              <div className="hero-tv-button-container hero-actions mt-6 flex flex-wrap gap-3 justify-center xl:justify-start">
+              <div className={`hero-tv-button-container hero-actions mt-6 flex flex-wrap gap-3 justify-center ${hasBannerRightContent ? 'xl:justify-start' : ''}`}>
                 {/* TV Mode Button - large screens only, for visitors without the navbar */}
                 {showTvButton && (
                   <a
@@ -317,8 +313,6 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
             />
           </div>
         )}
-
-        <GroupSwitcher className="mb-6" />
 
         {/* Leader Podium - Visual representation of top 3 */}
         {leaderboard.length > 0 && (
