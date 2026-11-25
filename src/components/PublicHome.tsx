@@ -22,9 +22,11 @@ import { Icon } from './icons/Icon';
 interface PublicHomeProps {
   /** Show the hero TV Mode button. Logged-in users get it in the navbar instead. */
   showTvButton?: boolean;
+  /** Opens the login modal. Only passed for logged-out visitors, who then see a login prompt under the countdown timer. */
+  onLoginClick?: () => void;
 }
 
-export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) => {
+export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onLoginClick }) => {
   const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
   const countdown = useCountdown();
@@ -162,25 +164,30 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
   const showCountdownTimerBase = countdown.isEnabled && !countdownStarted && !numberOneSong;
   const showNumberOneSong = numberOneSong && numberOneSongData && !hasHottest200Started;
   const hasBannerRightContent = (showCountdownTimerBase && songs.length === 0) || showNumberOneSong;
+  // Nothing else to show yet (no songs, no results): the countdown timer becomes the centred feature of the page
+  const isCountdownFeature = showCountdownTimerBase && songs.length === 0 && totalResults === 0;
+  const isSplitBanner = hasBannerRightContent && !isCountdownFeature;
 
   return (
     <div className="public-home min-h-screen">
       {/* Hero Section with Banner Background */}
       <div
-        className="hero-banner relative bg-gradient-to-r from-primary-500 via-tertiary-500 to-secondary-500 py-6 sm:py-20 mb-8 full-banner-background"
+        className={`hero-banner ${isCountdownFeature ? 'hero-banner--feature' : ''} relative bg-gradient-to-r from-primary-500 via-tertiary-500 to-secondary-500 py-6 sm:py-20 mb-8 full-banner-background`}
         style={{ '--banner-image': `url(${brand.images.background})` } as React.CSSProperties}
       >
         <div className="hero-banner-overlay absolute inset-0 bg-black/30"></div>
         <div className="hero-banner-content relative max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`hero-banner-grid grid grid-cols-1 ${hasBannerRightContent ? 'xl:grid-cols-2' : ''} gap-8 lg:gap-12 items-center`}>
+          <div className={`hero-banner-grid grid grid-cols-1 ${isSplitBanner ? 'xl:grid-cols-2' : ''} gap-8 lg:gap-12 items-center`}>
             {/* Title and Progress */}
-            <div className={`hero-title-section text-white ${hasBannerRightContent ? 'text-center xl:text-left' : 'text-center'}`}>
+            <div className={`hero-title-section text-white ${isSplitBanner ? 'text-center xl:text-left' : 'text-center'}`}>
               <GroupMenu variant="hero" className="hero-group-name mb-3 sm:mb-4" />
               <h1 className="hero-title text-2xl sm:text-5xl lg:text-6xl 2xl:text-7xl font-black mb-4 drop-shadow-lg">
                 {hasHottest200Started ? 'Triple J Hottest 200 Tracker' : 'Triple J Hottest 100 Tracker'}
               </h1>
-              <p className="hero-subtitle hidden md:block text-lg sm:text-2xl 2xl:text-3xl font-semibold mb-8 drop-shadow-md">
-                {totalResults === 0
+              <p className={`hero-subtitle ${isCountdownFeature ? 'text-balance' : 'hidden md:block'} text-lg sm:text-2xl 2xl:text-3xl font-semibold mb-8 drop-shadow-md`}>
+                {isCountdownFeature
+                  ? 'Get your picks sorted. The countdown is coming.'
+                  : totalResults === 0
                   ? 'Predictions are in! Let the countdown begin...'
                   : hasHottest200Started
                   ? `${hottest200Results.length} songs revealed • ${visibleMembers.length} competitors`
@@ -211,7 +218,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
                 </div>
               )}
 
-              <div className={`hero-tv-button-container hero-actions mt-6 flex flex-wrap gap-3 justify-center ${hasBannerRightContent ? 'xl:justify-start' : ''}`}>
+              <div className={`hero-tv-button-container hero-actions mt-6 flex flex-wrap gap-3 justify-center ${isSplitBanner ? 'xl:justify-start' : ''}`}>
                 {/* TV Mode Button - large screens only, for visitors without the navbar */}
                 {showTvButton && (
                   <a
@@ -250,6 +257,14 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
                         <div className="small-text">Seconds</div>
                       </div>
                     </div>
+                    {onLoginClick && (
+                      <div className="countdown-login">
+                        <p className="countdown-login-text">Log in to add mates and your votes</p>
+                        <button type="button" onClick={onLoginClick} className="countdown-login-button">
+                          <Icon name="unlock" /> Log in
+                        </button>
+                      </div>
+                    )}
               </div>
             )}
 
@@ -677,17 +692,6 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
         {leaderboard.length === 0 && selectedGroup && (
           <div className="empty-state text-center py-16 text-gray-600">
             No one is in {selectedGroup.name} yet.
-          </div>
-        )}
-        {leaderboard.length === 0 && !selectedGroup && (
-          <div className="empty-state text-center py-20">
-            <div className="empty-state-icon text-6xl mb-4"><Icon name="music" /></div>
-            <h2 className="empty-state-title text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
-              Get Started!
-            </h2>
-            <p className="empty-state-text text-gray-600 text-sm sm:text-base">
-              Log in to add mates and start making predictions
-            </p>
           </div>
         )}
       </div>
