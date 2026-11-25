@@ -46,6 +46,8 @@ export interface Archive {
     countdownResults: CountdownResult[];
     hottest200Results: CountdownResult[];
     profiles: MemberProfile[];
+    /** That season's groups and their members (archives made before groups were saved lack this) */
+    groups?: Group[];
   };
 }
 

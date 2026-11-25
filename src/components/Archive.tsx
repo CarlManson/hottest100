@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard } from '../utils/scoring';
+import { membersInGroup } from '../utils/groups';
 import type { Archive as ArchiveType } from '../types';
 import { Icon } from './icons/Icon';
 
@@ -9,6 +10,7 @@ export const Archive: React.FC = () => {
   const [selectedArchive, setSelectedArchive] = useState<ArchiveType | null>(
     archives.length > 0 ? archives[0] : null
   );
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
 
   if (archives.length === 0) {
     return (
@@ -21,9 +23,13 @@ export const Archive: React.FC = () => {
     );
   }
 
+  // Each archive keeps the groups that existed that season
+  const archiveGroups = (selectedArchive?.data.groups ?? []).filter(g => g.memberIds.length > 0);
+  const selectedGroup = archiveGroups.find(g => g.id === selectedGroupId) ?? null;
+
   const leaderboard = selectedArchive
     ? getLeaderboard(
-        selectedArchive.data.familyMembers,
+        membersInGroup(selectedArchive.data.familyMembers, selectedGroup),
         selectedArchive.data.countdownResults,
         selectedArchive.data.hottest200Results
       )
@@ -41,6 +47,7 @@ export const Archive: React.FC = () => {
           onChange={(e) => {
             const archive = archives.find(a => a.id === e.target.value);
             setSelectedArchive(archive || null);
+            setSelectedGroupId('');
           }}
           className="p-3 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none text-lg font-semibold"
         >
@@ -56,7 +63,24 @@ export const Archive: React.FC = () => {
         <>
           {/* Leaderboard */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Final Leaderboard</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">Final Leaderboard</h2>
+              {archiveGroups.length > 0 && (
+                <select
+                  value={selectedGroup?.id || ''}
+                  onChange={(e) => setSelectedGroupId(e.target.value)}
+                  aria-label="Show group"
+                  className="p-2 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none font-semibold"
+                >
+                  <option value="">All members</option>
+                  {archiveGroups.map(group => (
+                    <option key={group.id} value={group.id}>
+                      {group.emoji ? `${group.emoji} ` : ''}{group.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
             <div className="space-y-3">
               {leaderboard.map((entry, index) => (
                 <div

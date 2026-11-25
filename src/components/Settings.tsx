@@ -883,7 +883,7 @@ export const Settings: React.FC = () => {
                 <p className="text-yellow-800 font-semibold text-sm mb-2"><Icon name="warning" /> Warning: This will permanently delete all current data!</p>
                 <ul className="text-yellow-700 text-xs space-y-1">
                   <li><Icon name="check" /> All data will be saved to the archive first</li>
-                  <li><Icon name="check" /> Songs, members, votes, and results will be cleared</li>
+                  <li><Icon name="check" /> Songs, members, groups, votes, and results will be cleared</li>
                   <li><Icon name="check" /> You'll start fresh for the next year</li>
                   <li><Icon name="check" /> Archived data can be viewed in the Archive tab</li>
                 </ul>

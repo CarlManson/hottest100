@@ -47,13 +47,17 @@ export function useGroupView() {
   const { groups, groupsAvailable, familyMembers } = useApp();
   const key = useSyncExternalStore(subscribe, () => selectedKey);
 
+  // A group with none of this season's members has nothing to show
+  const memberIds = new Set(familyMembers.map(m => m.id));
+  const activeGroups = groupsAvailable ? groups.filter(g => g.memberIds.some(id => memberIds.has(id))) : [];
+
   // A stale or unknown key falls back to everyone
-  const selectedGroup = groupsAvailable ? findGroup(groups, key) : null;
+  const selectedGroup = findGroup(activeGroups, key);
   const visibleMembers = membersInGroup(familyMembers, selectedGroup);
 
   const selectGroup = useCallback((group: Group | null) => {
     setSelectedKey(group ? groupSlug(group.name) : null);
   }, []);
 
-  return { groups: groupsAvailable ? groups : [], selectedGroup, selectGroup, visibleMembers };
+  return { groups: activeGroups, selectedGroup, selectGroup, visibleMembers };
 }
