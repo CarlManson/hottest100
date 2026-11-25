@@ -12,7 +12,7 @@ import { Settings } from './components/Settings';
 import { Archive } from './components/Archive';
 import { AlertsBar } from './components/AlertsBar';
 import { useResultNotifications } from './utils/useResultNotifications';
-import { brand, BROADCAST_YEAR } from './config/brand';
+import { brand } from './config/brand';
 
 type Tab = 'home' | 'tv' | 'dashboard' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings' | 'archive';
 
@@ -394,7 +394,7 @@ function AppContent() {
               <a href="https://axiom.com.au" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">
                 Axiom
               </a>{' '}
-              • {BROADCAST_YEAR}
+              • © {new Date().getFullYear()}
             </p>
             <div className="mt-4 space-y-2">
               {notifications.supported && !notifications.blocked && (
