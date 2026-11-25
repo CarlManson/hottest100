@@ -276,6 +276,12 @@ Dynamic, humorous commentary displayed on the home page during the countdown.
 - Hottest 200 (positions 200→102): No quips shown
 - Position 101 only: Shows grand finale quip when revealed (overall winner across both countdowns)
 
+### Installable App (PWA)
+- `vite.config.ts` (`appManifest` plugin) builds `/manifest.webmanifest` from `brand.ts` (name, tagline, surface colour) and `src/assets/brand/app-icon.png`, adds the iPhone home-screen meta tags, and writes `/sw.js` from `pwa/service-worker.js` with a per-build version and the app shell to precache
+- Service worker: network-first for the page, cache-first for hashed `/assets/`, never touches other origins (Supabase, album art, stream). Only registered in production builds (`src/pwa/install.ts`)
+- `src/pwa/install.ts` captures `beforeinstallprompt` at startup and exposes `useInstallMode()` (`'prompt' | 'ios' | 'none'`); `InstallBar.tsx` shows the Home bar and footer link, hidden once installed
+- Song alerts use `registration.showNotification` when a service worker exists (required on Android Chrome and iOS home-screen apps)
+
 ### Member Groups
 - Admin-only management in Settings → Groups (`GroupManager.tsx`); data loaded/saved in `AppContext` (`groups`, `saveGroup`, `removeGroup`, `groupsAvailable`)
 - `useGroupView()` (`src/hooks/useGroupView.ts`) is the single source for the selected group and `visibleMembers`; public views build their leaderboard from `visibleMembers`

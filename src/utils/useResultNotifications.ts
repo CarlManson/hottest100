@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CountdownResult, FamilyMember, Song } from '../types';
 import { WINNER_PICK_BONUS } from './scoring';
 import { getWinnerPickers, joinNames } from './winnerPick';
+import { brand } from '../config/brand';
 
 const STORAGE_KEY = 'song_alerts_enabled';
 const MEMBER_KEY = 'song_alerts_member_id';
@@ -66,6 +67,28 @@ export function winnerPickLine(batch: CountdownResult[], members: FamilyMember[]
     : 'Nobody called the winner';
 }
 
+/**
+ * Show an alert through the service worker when there is one. Android Chrome and iPhone home screen
+ * apps only allow it that way; desktop browsers without a service worker use the plain API.
+ */
+async function showNotification(title: string, options: NotificationOptions) {
+  const withIcon = { icon: options.icon ?? brand.images.appIcon, ...options };
+  try {
+    const registration = await navigator.serviceWorker?.getRegistration();
+    if (registration) {
+      await registration.showNotification(title, withIcon);
+      return;
+    }
+  } catch {
+    // Fall through to the plain API
+  }
+  try {
+    new Notification(title, withIcon);
+  } catch {
+    // Not allowed outside a service worker on this browser
+  }
+}
+
 export function useResultNotifications(
   songs: Song[],
   countdownResults: CountdownResult[],
@@ -88,7 +111,7 @@ export function useResultNotifications(
 
   const notify = useCallback((title: string, options: NotificationOptions) => {
     if (!enabled || !document.hidden) return;
-    new Notification(title, options);
+    void showNotification(title, options);
   }, [enabled]);
 
   const notifyStart = useCallback(() => {
