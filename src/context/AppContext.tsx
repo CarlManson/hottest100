@@ -614,6 +614,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await supabase.from('member_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('family_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await supabase.from('songs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    // Groups belong to a season, so they go with its members (memberships cascade)
+    if (groupsAvailable) {
+      await (supabase.from('groups' as never) as any).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    }
+    await loadGroups();
   };
 
   const archiveAndReset = async (year: number) => {
@@ -627,6 +632,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         countdownResults: state.countdownResults,
         hottest200Results: state.hottest200Results,
         profiles: state.profiles,
+        groups,
       },
     };
 

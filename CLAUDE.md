@@ -60,7 +60,7 @@ Five main tables (see `supabase-schema.sql`):
 - `member_profiles` - AI-generated profiles (label, music_taste_description, timestamps)
 - `archives` - Historical year data (year, archived_at, data as JSONB)
 - `app_settings` - Shared key/value settings (e.g. `countdown_date`)
-- `groups` / `group_members` - Optional member groups for filtered leaderboards (see `supabase-add-groups.sql`)
+- `groups` / `group_members` - Optional member groups for filtered leaderboards (see `supabase-add-groups.sql`). Groups belong to the current season: Archive & Reset saves them into the archive and clears them with the members.
 
 All tables use UUIDs as primary keys with foreign key constraints and ON DELETE CASCADE.
 
