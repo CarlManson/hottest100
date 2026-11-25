@@ -85,9 +85,20 @@
     }
 }
 
-.hero-banner--feature {
-    // Fill the first screen while the countdown timer is the only thing on the page
+// Fill the first screen while the countdown timer is the only thing on the page:
+// the hero stretches down to the footer, with no white gap below it
+.public-home:has(.hero-banner--feature) {
+    display: flex;
+    flex-direction: column;
     min-height: calc(100svh - 6rem);
+
+    .main-content:empty { display: none; }
+}
+
+main:has(.hero-banner--feature) + footer { margin-top: 0; }
+
+.hero-banner--feature {
+    flex: 1 0 auto;
     display: flex;
     align-items: center;
     margin-bottom: 0;
