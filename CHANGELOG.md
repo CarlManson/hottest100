@@ -13,6 +13,7 @@
 ### Added — groups
 - Member groups (e.g. The Fair Family, Work, Friends): admins create, rename, re-member and delete them in Settings → Groups; a member can be in several groups
 - Everyone can switch the home page, leaderboard page and detailed breakdown between "All members" and a group; podium, quips, awards, Crowd Favourites and score bumps follow the group (scores don't change)
+- The home page shows the selected group's name above the title (hidden for "All members")
 - The choice is remembered and kept in the link (`?group=the-fair-family`), so TV screens can be pointed at a group (`/?group=work#tv`); Settings has "Copy link" / "Copy TV link" for each group
 
 ### Changed — archive
