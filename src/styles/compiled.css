@@ -265,8 +265,48 @@ body {
   justify-content: center;
 }
 @media (max-width: 640px) {
-  .countdown-timer {
+  .countdown {
     margin-bottom: 3rem;
+  }
+}
+.countdown-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.countdown-login-text {
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.countdown-login-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  color: #ffffff;
+  background: var(--brand-primary);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: filter 0.15s, border-color 0.15s;
+}
+.countdown-login-button:hover {
+  filter: brightness(1.1);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+.countdown-login-button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .countdown-login-button {
+    width: 100%;
+    max-width: 20rem;
+    justify-content: center;
   }
 }
 .countdown-ticker {
@@ -294,6 +334,63 @@ body {
   .countdown-ticker:nth-child(4n) {
     display: none;
   }
+}
+
+.public-home:has(.hero-banner--feature) {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - 6rem);
+}
+.public-home:has(.hero-banner--feature) .main-content:empty {
+  display: none;
+}
+
+main:has(.hero-banner--feature) + footer {
+  margin-top: 0;
+}
+
+.hero-banner--feature {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+}
+.hero-banner--feature .hero-banner-content {
+  width: 100%;
+}
+.hero-banner--feature .countdown h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+@media (min-width: 641px) {
+  .hero-banner--feature .countdown h3 {
+    font-size: 2rem;
+  }
+}
+.hero-banner--feature .countdown-ticker {
+  padding: 1.25rem;
+}
+@media (min-width: 641px) {
+  .hero-banner--feature .countdown-ticker {
+    margin: 0 0.75rem;
+    padding: 1.5rem 2rem;
+  }
+  .hero-banner--feature .countdown-ticker .big-number {
+    font-size: 5.5rem;
+  }
+  .hero-banner--feature .countdown-ticker .small-text {
+    font-size: 1rem;
+  }
+}
+.hero-banner--feature .countdown-login {
+  margin-top: 2.5rem;
+}
+.hero-banner--feature .countdown-login-text {
+  font-size: 1.125rem;
+}
+.hero-banner--feature .countdown-login-button {
+  font-size: 1.125rem;
+  padding: 1rem 2.5rem;
 }
 
 .countdown-progress-wrapper {

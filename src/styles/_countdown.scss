@@ -17,8 +17,42 @@
         display: flex;
         align-items: center;
         justify-content: center;
+    }
 
-        @media (max-width:640px) { margin-bottom: 3rem; }
+    @media (max-width:640px) { margin-bottom: 3rem; }
+
+    // Login prompt for logged-out visitors, under the timer
+    &-login {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+
+        &-text {
+            font-weight: 600;
+            text-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
+        }
+
+        &-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.75rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            color: $white;
+            background: $orange;
+            border: 2px solid rgb(255 255 255 / 0.4);
+            box-shadow: 0 4px 12px rgb(0 0 0 / 0.3);
+            cursor: pointer;
+            transition: filter 0.15s, border-color 0.15s;
+
+            &:hover { filter: brightness(1.1); border-color: rgb(255 255 255 / 0.7); }
+            &:focus-visible { outline: 2px solid $white; outline-offset: 2px; }
+
+            @media (max-width:640px) { width: 100%; max-width: 20rem; justify-content: center; }
+        }
     }
 
     &-ticker {
@@ -48,6 +82,52 @@
         &:nth-child(4n) {
             @media (max-width:640px) { display: none; }
         }
+    }
+}
+
+// Fill the first screen while the countdown timer is the only thing on the page:
+// the hero stretches down to the footer, with no white gap below it
+.public-home:has(.hero-banner--feature) {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100svh - 6rem);
+
+    .main-content:empty { display: none; }
+}
+
+main:has(.hero-banner--feature) + footer { margin-top: 0; }
+
+.hero-banner--feature {
+    flex: 1 0 auto;
+    display: flex;
+    align-items: center;
+    margin-bottom: 0;
+
+    .hero-banner-content { width: 100%; }
+
+    .countdown {
+        h3 { font-size: 1.5rem; margin-bottom: 1.25rem; }
+
+        @media (min-width:641px) {
+            h3 { font-size: 2rem; }
+        }
+    }
+
+    .countdown-ticker {
+        padding: 1.25rem;
+
+        @media (min-width:641px) {
+            margin: 0 0.75rem;
+            padding: 1.5rem 2rem;
+            .big-number { font-size: 5.5rem; }
+            .small-text { font-size: 1rem; }
+        }
+    }
+
+    .countdown-login {
+        margin-top: 2.5rem;
+        &-text { font-size: 1.125rem; }
+        &-button { font-size: 1.125rem; padding: 1rem 2.5rem; }
     }
 }
 

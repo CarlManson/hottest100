@@ -302,7 +302,7 @@ function AppContent() {
 
         <main>
           {activeTab === 'home' && <AlertsBar notifications={notifications} />}
-          {activeTab === 'home' && <PublicHome showTvButton={!isAuthenticated} />}
+          {activeTab === 'home' && <PublicHome showTvButton={!isAuthenticated} onLoginClick={isAuthenticated ? undefined : () => setShowLoginModal(true)} />}
           {activeTab === 'tv' && <TVMode />}
           {activeTab === 'voting' && isAuthenticated && <VotingInterface />}
           {activeTab === 'countdown' && isAuthenticated && <CountdownEntry />}
