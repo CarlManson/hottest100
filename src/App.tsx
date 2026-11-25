@@ -11,6 +11,7 @@ import { Settings } from './components/Settings';
 import { Archive } from './components/Archive';
 import { AlertsBar } from './components/AlertsBar';
 import { useResultNotifications } from './utils/useResultNotifications';
+import { useGroupView } from './hooks/useGroupView';
 import { brand } from './config/brand';
 import { Icon } from './components/icons/Icon';
 
@@ -19,7 +20,9 @@ type Tab = 'home' | 'tv' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-br
 function AppContent() {
   const { archives, songs, countdownResults, hottest200Results } = useApp();
   // Single instance so each reveal notifies once, whichever page is open
-  const notifications = useResultNotifications(songs, countdownResults, hottest200Results);
+  // Alerts name the winner-pick hits from the group shown on this device
+  const { visibleMembers } = useGroupView();
+  const notifications = useResultNotifications(songs, countdownResults, hottest200Results, visibleMembers);
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);

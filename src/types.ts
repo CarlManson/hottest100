@@ -15,6 +15,8 @@ export interface FamilyMember {
   id: string;
   name: string;
   votes: Vote[];
+  /** The song this member reckons will finish #1 (any catalogue song, not only their top ten) */
+  winnerSongId?: string;
 }
 
 export interface CountdownResult {

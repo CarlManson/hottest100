@@ -6,6 +6,8 @@ import { LazyImage } from './LazyImage';
 import { useGroupView } from '../hooks/useGroupView';
 import { GroupMenu } from './GroupMenu';
 import { Icon } from './icons/Icon';
+import { WinnerPickBadge } from './WinnerPick';
+import { WINNER_PICK_BONUS, calculateWinnerBonus } from '../utils/scoring';
 
 export const Leaderboard: React.FC = () => {
   const {
@@ -128,6 +130,13 @@ export const Leaderboard: React.FC = () => {
                           ? `${getSongMatches(entry.member, countdownResults, hottest200Results, songs).length} matches`
                           : `${entry.member.votes.length} votes`}
                       </div>
+                      <WinnerPickBadge
+                        member={entry.member}
+                        songs={songs}
+                        countdownResults={countdownResults}
+                        hottest200Results={hottest200Results}
+                        className="mt-1"
+                      />
                       {maxPossibleScore > 0 && (
                         <div className="mt-1 sm:mt-2">
                           <div className="flex items-center gap-2">
@@ -167,10 +176,27 @@ export const Leaderboard: React.FC = () => {
           </h3>
           {!selectedMember ? (
             <p className="text-sm sm:text-base text-gray-500">Click on a member to see their matching songs</p>
-          ) : matches.length === 0 ? (
+          ) : matches.length === 0 && !calculateWinnerBonus(selectedMember, countdownResults) ? (
             <p className="text-sm sm:text-base text-gray-500">No matches yet</p>
           ) : (
             <div className="space-y-2 sm:space-y-3">
+              {calculateWinnerBonus(selectedMember, countdownResults) > 0 && (() => {
+                const song = songs.find((s) => s.id === selectedMember.winnerSongId);
+                return (
+                  <div className="winner-pick-match p-2 sm:p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm sm:text-base truncate"><Icon name="crown" /> Called the winner</div>
+                        <div className="text-xs sm:text-sm text-gray-600 truncate">{song ? `${song.title} · ${song.artist}` : ''}</div>
+                      </div>
+                      <div className="text-right ml-2">
+                        <div className="font-bold text-green-600 text-sm sm:text-base">+{WINNER_PICK_BONUS}</div>
+                        <div className="text-[10px] sm:text-xs text-gray-500">Bonus</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
               {matches.map(({ vote, result, song }) => {
                 if (!result || !song) return null;
 
@@ -222,6 +248,7 @@ export const Leaderboard: React.FC = () => {
           <li>• <strong>Before Hottest 200 is revealed:</strong> Hottest 100 songs score 1-100 points (Position #100 = 1 pt, #1 = 100 pts)</li>
           <li>• <strong>After Hottest 200 is revealed:</strong> Hottest 100 scores 101-200 points (Position #100 = 101 pts, #1 = 200 pts), Hottest 200 scores 1-100 points (Position #200 = 1 pt, #101 = 100 pts)</li>
           <li>• Only songs that appear in the countdown earn points</li>
+          <li>• <strong>Winner pick:</strong> +{WINNER_PICK_BONUS} points if the song you picked to win finishes #1 (it doesn't have to be in your top 10)</li>
           <li>• Efficiency % = Your score vs the max possible score from top 10 songs currently in the countdown</li>
         </ul>
       </div>

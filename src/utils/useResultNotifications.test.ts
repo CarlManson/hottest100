@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alertBatch } from './useResultNotifications';
+import { alertBatch, winnerPickLine } from './useResultNotifications';
 import type { CountdownResult } from '../types';
 
 // The countdown reveals #100 first, then #99, and so on
@@ -28,5 +28,22 @@ describe('alertBatch', () => {
 
   it('works for the Hottest 200 positions', () => {
     expect(alertBatch(4, revealed(5, 200))?.map(r => r.position)).toEqual([196, 197, 198, 199, 200]);
+  });
+});
+
+describe('winnerPickLine', () => {
+  const r = (songId: string, position: number) => ({ songId, position });
+  const m = (name: string, winnerSongId?: string) => ({ id: name, name, votes: [], winnerSongId });
+
+  it('names who called the #1 in the final alert', () => {
+    const results = [r('a', 1), r('b', 2)];
+    expect(winnerPickLine(results, [m('Sam', 'a'), m('Jo', 'b')], results)).toBe('Called the winner: Sam (+50)');
+  });
+
+  it('says nobody called it, and stays quiet with no picks or before #1', () => {
+    const results = [r('a', 1)];
+    expect(winnerPickLine(results, [m('Jo', 'b')], results)).toBe('Nobody called the winner');
+    expect(winnerPickLine(results, [m('Jo')], results)).toBeNull();
+    expect(winnerPickLine([r('a', 2)], [m('Sam', 'a')], [r('a', 2)])).toBeNull();
   });
 });

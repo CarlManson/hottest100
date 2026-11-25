@@ -13,6 +13,9 @@ interface AppContextType extends AppState {
   groups: Group[];
   /** False until supabase-add-groups.sql has been run */
   groupsAvailable: boolean;
+  /** False until supabase-add-winner-pick.sql has been run */
+  winnerPickAvailable: boolean;
+  setWinnerPick: (memberId: string, songId: string | null) => Promise<void>;
   saveGroup: (group: Omit<Group, 'id'> & { id?: string }) => Promise<void>;
   removeGroup: (groupId: string) => Promise<void>;
   addSong: (song: Omit<Song, 'id'>) => Promise<void>;
@@ -51,6 +54,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [archives, setArchives] = useState<Archive[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [groupsAvailable, setGroupsAvailable] = useState(false);
+  const [winnerPickAvailable, setWinnerPickAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isGeneratingProfiles, setIsGeneratingProfiles] = useState(false);
   const [profileError, setProfileError] = useState<string>('');
@@ -195,6 +199,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return;
     }
 
+    // Column missing until supabase-add-winner-pick.sql has been run: hide the feature
+    const { error: pickColumnError } = await (supabase
+      .from('family_members') as any)
+      .select('winner_song_id')
+      .limit(1);
+    setWinnerPickAvailable(!pickColumnError);
+
     // Get votes for all members
     const { data: votes, error: votesError } = await supabase
       .from('votes')
@@ -210,6 +221,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const familyMembers: FamilyMember[] = (members || []).map((member: any) => ({
       id: member.id,
       name: member.name,
+      winnerSongId: member.winner_song_id || undefined,
       votes: (votes || [])
         .filter((v: any) => v.family_member_id === member.id)
         .map((v: any) => ({
@@ -456,6 +468,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         console.error('Error adding votes:', votesError);
         throw votesError;
       }
+    }
+  };
+
+  const setWinnerPick = async (memberId: string, songId: string | null) => {
+    const { error } = await (supabase
+      .from('family_members') as any)
+      .update({ winner_song_id: songId })
+      .eq('id', memberId);
+
+    if (error) {
+      console.error('Error saving winner pick:', error);
+      throw error;
     }
   };
 
@@ -912,6 +936,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         archives,
         groups,
         groupsAvailable,
+        winnerPickAvailable,
+        setWinnerPick,
         saveGroup,
         removeGroup,
         addSong,

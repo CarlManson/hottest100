@@ -1,5 +1,6 @@
 import type { FamilyMember, Song, CountdownResult } from '../types';
 import type { IconName } from '../components/icons/Icon';
+import { WINNER_PICK_BONUS } from './scoring';
 
 export interface Award {
   id: string;
@@ -259,6 +260,23 @@ export function calculateAwards(
       });
     });
   }
+
+  // Called It - picked the #1 song as their winner pick (the +50 bonus)
+  const winnerSongId = countdownResults.find(r => r.position === 1)?.songId;
+  const winnerSong = songs.find(s => s.id === winnerSongId);
+  familyMembers
+    .filter(member => winnerSongId && member.winnerSongId === winnerSongId)
+    .forEach(member => {
+      awards.push({
+        id: `called-it-${member.id}`,
+        icon: 'crown',
+        title: 'Called It',
+        description: 'Picked the #1 song to win',
+        winnerId: member.id,
+        winnerName: member.name,
+        details: `${winnerSong ? `"${winnerSong.title}"` : 'The #1'} for +${WINNER_PICK_BONUS} bonus points`
+      });
+    });
 
   // 🔥 Hottest 200 specific awards
   if (hasHottest200 && hottest200Results.length >= 100) {

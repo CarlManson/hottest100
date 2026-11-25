@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { CountdownResult, Song } from '../types';
+import type { CountdownResult, FamilyMember, Song } from '../types';
+import { WINNER_PICK_BONUS } from './scoring';
+import { getWinnerPickers } from './winnerPick';
 
 const STORAGE_KEY = 'song_alerts_enabled';
 // Larger jumps are initial loads or bulk edits, not live reveals
@@ -35,10 +37,20 @@ export function alertBatch(previousCount: number, results: CountdownResult[]): C
   return [...results].sort((a, b) => a.position - b.position).slice(0, ALERT_EVERY);
 }
 
+/** Extra alert line once #1 is in, saying who called the winner (null if nobody had a pick) */
+export function winnerPickLine(batch: CountdownResult[], members: FamilyMember[], countdownResults: CountdownResult[]): string | null {
+  if (!batch.some(r => r.position === 1) || !members.some(m => m.winnerSongId)) return null;
+  const pickers = getWinnerPickers(members, countdownResults);
+  return pickers.length > 0
+    ? `Called the winner: ${pickers.join(', ')} (+${WINNER_PICK_BONUS})`
+    : 'Nobody called the winner';
+}
+
 export function useResultNotifications(
   songs: Song[],
   countdownResults: CountdownResult[],
-  hottest200Results: CountdownResult[]
+  hottest200Results: CountdownResult[],
+  members: FamilyMember[] = []
 ) {
   const supported = typeof window !== 'undefined' && 'Notification' in window;
   const [enabled, setEnabled] = useState(
@@ -67,6 +79,8 @@ export function useResultNotifications(
         return song ? [`#${result.position} ${song.title} - ${song.artist}`] : [];
       });
       if (lines.length === 0) return;
+      const bonusLine = i === 0 ? winnerPickLine(batch, members, countdownResults) : null;
+      if (bonusLine) lines.push(bonusLine);
       const newest = batch[0].position;
       const oldest = batch[batch.length - 1].position;
       new Notification(`Songs #${oldest} to #${newest} are in`, {
@@ -75,7 +89,7 @@ export function useResultNotifications(
         tag: `results-${newest}`,
       });
     });
-  }, [countdownResults, hottest200Results, songs, enabled]);
+  }, [countdownResults, hottest200Results, songs, members, enabled]);
 
   const toggle = useCallback(async () => {
     if (!supported) return;

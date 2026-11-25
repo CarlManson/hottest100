@@ -159,3 +159,7 @@ CREATE POLICY "Allow all operations on groups" ON groups FOR ALL USING (true) WI
 CREATE POLICY "Allow all operations on group_members" ON group_members FOR ALL USING (true) WITH CHECK (true);
 ALTER PUBLICATION supabase_realtime ADD TABLE groups;
 ALTER PUBLICATION supabase_realtime ADD TABLE group_members;
+
+-- Winner pick: the song each member reckons will finish #1 (50 point bonus)
+ALTER TABLE family_members
+  ADD COLUMN winner_song_id UUID REFERENCES songs(id) ON DELETE SET NULL;

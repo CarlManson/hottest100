@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import type { FamilyMember } from '../types';
+import type { FamilyMember, Song } from '../types';
 import { LazyImage } from './LazyImage';
 import { useCountdown } from '../hooks/useCountdownSettings';
 import { Icon } from './icons/Icon';
@@ -19,7 +19,9 @@ export const VotingInterface: React.FC = () => {
     isGeneratingProfiles,
     canRegenerateLabel,
     canRegenerateMusicTaste,
-    getProfileForMember
+    getProfileForMember,
+    winnerPickAvailable,
+    setWinnerPick,
   } = useApp();
   const [newMemberName, setNewMemberName] = useState('');
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
@@ -162,6 +164,16 @@ export const VotingInterface: React.FC = () => {
     }
   };
 
+  const handleWinnerPick = (songId: string) => {
+    if (!selectedMember || votesLocked) return;
+    const winnerSongId = selectedMember.winnerSongId === songId ? undefined : songId;
+    setWinnerPick(selectedMember.id, winnerSongId ?? null);
+    setSelectedMember({ ...selectedMember, winnerSongId });
+  };
+
+  const winnerPickSong = (member: FamilyMember) =>
+    member.winnerSongId ? songs.find((s) => s.id === member.winnerSongId) : undefined;
+
   const filteredSongs = songs.filter(
     (song) =>
       song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -225,6 +237,9 @@ export const VotingInterface: React.FC = () => {
                 }`}
               >
                 {member.name} ({member.votes.length}/10)
+                {winnerPickAvailable && member.winnerSongId && (
+                  <span className="ml-1"><Icon name="crown" title="Winner picked" /></span>
+                )}
               </button>
               <button
                 onClick={() => handleStartEdit(member)}
@@ -294,6 +309,13 @@ export const VotingInterface: React.FC = () => {
                     {isSelected && (
                       <span className="text-green-600 font-bold text-lg sm:text-xl flex-shrink-0"><Icon name="check" /></span>
                     )}
+                    {winnerPickAvailable && (
+                      <WinnerPickButton
+                        picked={selectedMember.winnerSongId === song.id}
+                        disabled={votesLocked}
+                        onClick={() => handleWinnerPick(song.id)}
+                      />
+                    )}
                   </div>
                 );
               })}
@@ -334,6 +356,14 @@ export const VotingInterface: React.FC = () => {
                           )}
                         </div>
                       </div>
+                      {winnerPickAvailable && (
+                        <WinnerPickButton
+                          dark
+                          picked={selectedMember.winnerSongId === vote.songId}
+                          disabled={votesLocked}
+                          onClick={() => handleWinnerPick(vote.songId)}
+                        />
+                      )}
                       {!votesLocked && (
                         <button
                           onClick={() => handleToggleSong(vote.songId)}
@@ -345,6 +375,50 @@ export const VotingInterface: React.FC = () => {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {winnerPickAvailable && (
+              <div className="winner-pick-slot mt-4 sm:mt-6 pt-4 border-t border-gray-700">
+                <h4 className="text-sm sm:text-base font-semibold text-white mb-1">
+                  <Icon name="crown" /> Winner pick <span className="text-yellow-400">+50</span>
+                </h4>
+                {(() => {
+                  const pick = winnerPickSong(selectedMember);
+                  if (!pick) {
+                    return (
+                      <p className="text-gray-400 text-xs sm:text-sm">
+                        {votesLocked
+                          ? 'No winner picked.'
+                          : 'Tap the crown on any song they reckon will be #1. It doesn\'t have to be in their top 10.'}
+                      </p>
+                    );
+                  }
+                  return (
+                    <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-800 rounded-lg border border-yellow-500/60">
+                      {pick.thumbnail && (
+                        <LazyImage
+                          src={pick.thumbnail}
+                          alt={`${pick.title} artwork`}
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-xs sm:text-sm truncate text-white">{pick.title}</div>
+                        <div className="text-[10px] sm:text-xs text-gray-400 truncate">{pick.artist}</div>
+                      </div>
+                      {!votesLocked && (
+                        <button
+                          onClick={() => handleWinnerPick(pick.id)}
+                          className="text-red-400 hover:text-red-300 px-1 sm:px-2 text-lg sm:text-xl"
+                          title="Clear winner pick"
+                        >
+                          <Icon name="close" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
@@ -414,6 +488,7 @@ export const VotingInterface: React.FC = () => {
                         })}
                       </div>
                     )}
+                    {winnerPickAvailable && <WinnerPickSummary song={winnerPickSong(member)} />}
                     <button
                       onClick={() => handleEditVotes(member)}
                       className="w-full bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition font-semibold text-sm"
@@ -474,6 +549,7 @@ export const VotingInterface: React.FC = () => {
                     })}
                   </div>
                 )}
+                {winnerPickAvailable && <WinnerPickSummary song={winnerPickSong(member)} />}
                 <button
                   onClick={() => handleEditVotes(member)}
                   className="w-full mt-3 sm:mt-4 bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition font-semibold text-sm sm:text-base"
@@ -622,3 +698,41 @@ export const VotingInterface: React.FC = () => {
     </div>
   );
 };
+
+const WinnerPickButton: React.FC<{
+  picked: boolean;
+  disabled: boolean;
+  dark?: boolean;
+  onClick: () => void;
+}> = ({ picked, disabled, dark, onClick }) => {
+  if (disabled && !picked) return null;
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!disabled) onClick();
+      }}
+      disabled={disabled}
+      aria-pressed={picked}
+      title={picked ? 'Winner pick (tap to clear)' : 'Pick to win #1 (+50)'}
+      className={`winner-pick-button flex-shrink-0 rounded-full p-1 transition text-lg sm:text-xl ${
+        picked
+          ? 'text-yellow-500 bg-yellow-100'
+          : dark
+          ? 'text-gray-500 hover:text-yellow-400 opacity-70 hover:opacity-100'
+          : 'text-gray-400 hover:text-yellow-500 opacity-60 hover:opacity-100'
+      } ${disabled ? 'cursor-default' : ''}`}
+    >
+      <Icon name="crown" />
+    </button>
+  );
+};
+
+const WinnerPickSummary: React.FC<{ song?: Song }> = ({ song }) => (
+  <div className="winner-pick-summary mt-3 flex items-center gap-1.5 text-xs sm:text-sm text-gray-700 bg-yellow-50 border border-yellow-200 rounded-lg px-2 py-1.5">
+    <Icon name="crown" />
+    <span className="font-semibold flex-shrink-0">Winner pick:</span>
+    <span className="truncate">{song ? `${song.title} · ${song.artist}` : 'none yet'}</span>
+  </div>
+);

@@ -14,6 +14,9 @@ import { useScoreBumps } from '../hooks/useScoreBumps';
 import { getHeatStage, getTvIntensity } from '../utils/heat';
 import { TvAtmosphere, RehearsalControls } from './TvEffects';
 import { Icon } from './icons/Icon';
+import { WinnerPickBadge } from './WinnerPick';
+import { WINNER_PICK_BONUS } from '../utils/scoring';
+import { getTippedSongs, getWinnerPickers, joinNames } from '../utils/winnerPick';
 
 // TV Mode - Simplified view for large screens
 export const TVMode: React.FC = () => {
@@ -91,6 +94,18 @@ export const TVMode: React.FC = () => {
 
   // Determine which countdown to feature
   const hasHottest200Started = hottest200Results.length > 0;
+
+  // Winner pick bonus: who's still in the running before #1, who called it after
+  const tippedSongs = useMemo(
+    () => getTippedSongs(visibleMembers, songs, countdownResults, hottest200Results),
+    [visibleMembers, songs, countdownResults, hottest200Results]
+  );
+  const anyWinnerPicks = tippedSongs.length > 0;
+  const aliveTips = tippedSongs.filter(t => t.status === 'alive');
+  const winnerPickers = getWinnerPickers(visibleMembers, countdownResults);
+  const justKnockedOut = !numberOneSong && revealKey
+    ? tippedSongs.find(t => t.song.id === revealKey && t.status === 'out')
+    : undefined;
 
   // Get current highest song from active countdown
   let currentHighestResult;
@@ -289,6 +304,18 @@ export const TVMode: React.FC = () => {
                   />
                 ) : null}
 
+                {/* Winner pick result, once #1 is in */}
+                {numberOneSong && !hasHottest200Started && anyWinnerPicks && (
+                  <div className="tv-winner-callout song-reveal mt-4 rounded-xl bg-yellow-400 text-gray-900 p-4 text-center shadow-lg">
+                    <div className="text-3xl font-black"><Icon name="crown" /> {winnerPickers.length > 0 ? 'Called it!' : 'Nobody called it!'}</div>
+                    <div className="text-xl font-semibold mt-1">
+                      {winnerPickers.length > 0
+                        ? `${joinNames(winnerPickers)} ${winnerPickers.length === 1 ? 'picks' : 'pick'} up +${WINNER_PICK_BONUS} bonus points`
+                        : `Not one winner pick landed. The ${WINNER_PICK_BONUS} bonus points stay in the bank.`}
+                    </div>
+                  </div>
+                )}
+
                 {/* Song Commentary Quip */}
                 {countdownQuip && (
                   <div className="mt-4">
@@ -328,6 +355,27 @@ export const TVMode: React.FC = () => {
                       <div className="commentary-quip__content">
                         "{podiumQuip}"
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Winner picks still in the running for the bonus */}
+                {!numberOneSong && !hasHottest200Started && anyWinnerPicks && (
+                  <div className="tv-tipped mt-6 rounded-xl bg-black/30 p-4 text-white">
+                    <div className="text-lg font-bold mb-2">
+                      <Icon name="crown" /> Tipped to win · {aliveTips.length} still alive for +{WINNER_PICK_BONUS}
+                    </div>
+                    {justKnockedOut && (
+                      <div key={justKnockedOut.song.id} className="tv-tipped-knockout song-reveal mb-2 text-base font-semibold text-yellow-300">
+                        That was {joinNames(justKnockedOut.names)}'s winner pick. Out at #{justKnockedOut.position}.
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {aliveTips.map(t => (
+                        <span key={t.song.id} className="rounded-full bg-white/15 px-3 py-1 text-sm">
+                          <strong>{t.song.title}</strong> · {t.names.join(', ')}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -452,6 +500,13 @@ export const TVMode: React.FC = () => {
                           {matchCount} of {entry.member.votes.length} pick{matchCount !== 1 ? 's' : ''}
                         </div>
                         </div>
+                        <WinnerPickBadge
+                          member={entry.member}
+                          songs={songs}
+                          countdownResults={countdownResults}
+                          hottest200Results={hottest200Results}
+                          className="mt-1 text-sm"
+                        />
                         
         
                       </div>

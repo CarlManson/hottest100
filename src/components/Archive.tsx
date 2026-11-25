@@ -101,6 +101,9 @@ export const Archive: React.FC = () => {
                       <div className="font-bold text-lg">{entry.member.name}</div>
                       <div className="text-sm text-gray-600">
                         {entry.member.votes.length} pick{entry.member.votes.length !== 1 ? 's' : ''}
+                        {entry.bonus > 0 && (
+                          <span className="ml-2 text-green-700 font-semibold"><Icon name="crown" /> Called the winner +{entry.bonus}</span>
+                        )}
                       </div>
                     </div>
                   </div>
