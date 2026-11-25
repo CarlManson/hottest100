@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateScore, getLeaderboard } from './scoring';
+import { calculateScore, getLeaderboard, calculateWinnerBonus, calculateMaxPossibleScore, WINNER_PICK_BONUS } from './scoring';
 import type { CountdownResult, FamilyMember } from '../types';
 
 const member = (id: string, songIds: string[]): FamilyMember => ({
@@ -48,5 +48,51 @@ describe('getLeaderboard', () => {
 
     const after = getLeaderboard([fewBig, manySmall], results100, h100([['other', 200]]));
     expect(after.map(e => e.member.id)).toEqual(['manySmall', 'fewBig']);
+  });
+});
+
+describe('winner pick bonus', () => {
+  const withPick = (id: string, songIds: string[], winnerSongId?: string): FamilyMember => ({
+    ...member(id, songIds),
+    winnerSongId,
+  });
+
+  it('adds nothing until #1 is entered', () => {
+    const results = h100([['a', 2], ['b', 3]]);
+    expect(calculateScore(withPick('m', [], 'a'), results, [])).toBe(0);
+  });
+
+  it('adds 50 when the pick is #1, even outside the top ten', () => {
+    const results = h100([['a', 1], ['b', 2]]);
+    expect(calculateScore(withPick('m', ['b'], 'a'), results, [])).toBe(99 + WINNER_PICK_BONUS);
+    expect(calculateWinnerBonus(withPick('m', ['b'], 'a'), results)).toBe(50);
+  });
+
+  it('stacks with the normal #1 points when the pick is also in the top ten', () => {
+    const results = h100([['a', 1]]);
+    expect(calculateScore(withPick('m', ['a'], 'a'), results, [])).toBe(100 + 50);
+  });
+
+  it('stays a flat 50 in Hottest 200 mode', () => {
+    const results100 = h100([['a', 1]]);
+    const results200 = h100([['c', 200]]);
+    expect(calculateScore(withPick('m', ['a'], 'a'), results100, results200)).toBe(200 + 50);
+  });
+
+  it('gives nothing for a wrong pick or no pick (e.g. old archives)', () => {
+    const results = h100([['a', 1], ['b', 2]]);
+    expect(calculateScore(withPick('m', [], 'b'), results, [])).toBe(0);
+    expect(calculateScore(member('m', ['a']), results, [])).toBe(100);
+  });
+
+  it('includes the bonus in the max possible score once #1 is in', () => {
+    expect(calculateMaxPossibleScore(h100([['a', 2]]), [])).toBe(99);
+    expect(calculateMaxPossibleScore(h100([['a', 1]]), [])).toBe(150);
+  });
+
+  it('reports the bonus on the leaderboard and ties members who end level', () => {
+    const results = h100([['a', 1], ['b', 51]]);
+    const board = getLeaderboard([withPick('x', ['b'], 'a'), withPick('y', ['b'], 'a')], results, []);
+    expect(board.map(e => [e.score, e.bonus])).toEqual([[100, 50], [100, 50]]);
   });
 });

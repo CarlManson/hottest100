@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alertBatch, newResults, picksInResults } from './useResultNotifications';
+import { alertBatch, newResults, picksInResults, winnerPickLine } from './useResultNotifications';
 import type { CountdownResult, FamilyMember } from '../types';
 
 // The countdown reveals #100 first, then #99, and so on
@@ -57,5 +57,22 @@ describe('picksInResults', () => {
 
   it('returns nothing without a member', () => {
     expect(picksInResults(undefined, revealed(3))).toEqual([]);
+  });
+});
+
+describe('winnerPickLine', () => {
+  const r = (songId: string, position: number) => ({ songId, position });
+  const m = (name: string, winnerSongId?: string): FamilyMember => ({ id: name, name, votes: [], winnerSongId });
+
+  it('names who called the #1 in the final alert', () => {
+    const results = [r('a', 1), r('b', 2)];
+    expect(winnerPickLine(results, [m('Sam', 'a'), m('Jo', 'b'), m('Alex', 'a')], results)).toBe('Called the winner: Sam and Alex (+50)');
+  });
+
+  it('says nobody called it, and stays quiet with no picks or before #1', () => {
+    const results = [r('a', 1)];
+    expect(winnerPickLine(results, [m('Jo', 'b')], results)).toBe('Nobody called the winner');
+    expect(winnerPickLine(results, [m('Jo')], results)).toBeNull();
+    expect(winnerPickLine([r('a', 2)], [m('Sam', 'a')], [r('a', 2)])).toBeNull();
   });
 });

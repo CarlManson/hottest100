@@ -81,6 +81,7 @@ Implemented in `src/utils/scoring.ts`:
 - **Hottest 200**: Position 200 = 1 point, Position 101 = 100 points
   - Formula: `201 - position`
 - Only songs that appear in countdown earn points (vote ranking doesn't affect points)
+- **Winner pick bonus**: each member can pick one catalogue song to finish #1 (`family_members.winner_song_id`, see `supabase-add-winner-pick.sql`). If it does, `calculateScore` adds a flat `WINNER_PICK_BONUS` (50), with or without the Hottest 200, and whether or not the song is in their top 10. Picks lock with the votes when the countdown timer ends (or the first result is entered). Status helpers live in `src/utils/winnerPick.ts`; features hide themselves until the column exists (`winnerPickAvailable`).
 
 ### Type Definitions
 Core types in `src/types.ts`:

@@ -13,6 +13,7 @@ import { CurrentSongCard } from './CurrentSongCard';
 import { useCountdown } from '../hooks/useCountdownSettings';
 import { CountdownProgressWidget } from './CountdownProgressWidget';
 import { MostPickedSongs } from './MostPickedSongs';
+import { TippedToWin, WinnerPickBadge } from './WinnerPick';
 import { LiveStreamPlayer } from './LiveStreamPlayer';
 import { useScoreBumps } from '../hooks/useScoreBumps';
 import { useGroupView } from '../hooks/useGroupView';
@@ -27,7 +28,7 @@ interface PublicHomeProps {
 }
 
 export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onLoginClick }) => {
-  const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember } = useApp();
+  const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember, winnerPickAvailable } = useApp();
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
   const countdown = useCountdown();
   const countdownStarted = countdown.isStarted;
@@ -337,6 +338,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
             {/* Conditional Layout: Podium + Leaderboard OR Countdown + Leaderboard OR just Leaderboard */}
             {currentHighestResult && currentHighestSong ? (
               // Featured song is showing above, so show podium + leaderboard side by side on md+
+              <>
               <div className="podium-leaderboard-layout grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-10">
                 {/* Podium Visualization (Top 3) + Commentary */}
                 <div className="podium-section">
@@ -406,6 +408,13 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
                             <div className="member-stats text-xs sm:text-sm text-gray-600">
                               {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
                             </div>
+                            <WinnerPickBadge
+                              member={entry.member}
+                              songs={songs}
+                              countdownResults={countdownResults}
+                              hottest200Results={hottest200Results}
+                              className="mt-1"
+                            />
                             {maxPossibleScore > 0 && (
                               <div className="efficiency-bar-container mt-1">
                                 <div className="efficiency-bar-wrapper flex items-center gap-2">
@@ -441,6 +450,15 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
                   </div>
                 </div>
               </div>
+                {!hasHottest200Started && (
+                  <TippedToWin
+                    songs={songs}
+                    familyMembers={visibleMembers}
+                    countdownResults={countdownResults}
+                    hottest200Results={hottest200Results}
+                  />
+                )}
+              </>
             ) : totalResults > 0 ? (
               // No featured song, show podium + countdown + leaderboard
               <>
@@ -525,6 +543,13 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
                             <div className="member-stats text-xs sm:text-sm text-gray-600">
                               {matchCount} match{matchCount !== 1 ? 'es' : ''} • {entry.member.votes.length}/10 votes
                             </div>
+                            <WinnerPickBadge
+                              member={entry.member}
+                              songs={songs}
+                              countdownResults={countdownResults}
+                              hottest200Results={hottest200Results}
+                              className="mt-1"
+                            />
                             {maxPossibleScore > 0 && (
                               <div className="efficiency-bar-container mt-1">
                                 <div className="efficiency-bar-wrapper flex items-center gap-2">
@@ -560,6 +585,14 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
                   </div>
                 </div>
                 </div>
+                {!hasHottest200Started && (
+                  <TippedToWin
+                    songs={songs}
+                    familyMembers={visibleMembers}
+                    countdownResults={countdownResults}
+                    hottest200Results={hottest200Results}
+                  />
+                )}
               </>
             ) : (
               // No countdown results yet, just show member votes
@@ -577,6 +610,10 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
                           Position #100 gets you <span className="font-bold text-primary-600">1 point</span>, and if one of your picks somehow nabs the #1 spot,
                           that's a whopping <span className="font-bold text-primary-600">100 points</span>. The higher the song, the more points you bag.
                         </p>
+                        {winnerPickAvailable && <p>
+                          <strong>Bonus round:</strong> pick the song you reckon takes out #1. It doesn't have to be in your top 10.
+                          Call it right and you bag an extra <span className="font-bold text-primary-600">50 points</span>.
+                        </p>}
                         <p className="text-gray-600 italic">
                           Good luck to all you legends. Stay hydrated, keep the snacks coming, and may your picks absolutely smash it.
                         </p>
@@ -627,6 +664,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
                           </div>
                           <div className="prediction-member-stats text-xs sm:text-sm text-gray-600">
                             {entry.member.votes.length}/10 predictions submitted
+                            {entry.member.winnerSongId && <> · <Icon name="crown" title="Winner picked" /></>}
                           </div>
                         </div>
                         {entry.member.votes.length === 10 && (
@@ -639,6 +677,12 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
               </div>
 
               <MostPickedSongs songs={songs} familyMembers={visibleMembers} />
+              <TippedToWin
+                songs={songs}
+                familyMembers={visibleMembers}
+                countdownResults={countdownResults}
+                hottest200Results={hottest200Results}
+              />
               </>
             )}
           </div>

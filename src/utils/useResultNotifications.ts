@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CountdownResult, FamilyMember, Song } from '../types';
+import { WINNER_PICK_BONUS } from './scoring';
+import { getWinnerPickers, joinNames } from './winnerPick';
 
 const STORAGE_KEY = 'song_alerts_enabled';
 const MEMBER_KEY = 'song_alerts_member_id';
@@ -53,6 +55,15 @@ export function picksInResults(member: FamilyMember | undefined, added: Countdow
     const vote = member.votes.find(v => v.songId === result.songId);
     return vote ? [{ result, rank: vote.rank }] : [];
   });
+}
+
+/** Extra alert line once #1 is in, saying who called the winner (null if nobody had a pick) */
+export function winnerPickLine(batch: CountdownResult[], members: FamilyMember[], countdownResults: CountdownResult[]): string | null {
+  if (!batch.some(r => r.position === 1) || !members.some(m => m.winnerSongId)) return null;
+  const pickers = getWinnerPickers(members, countdownResults);
+  return pickers.length > 0
+    ? `Called the winner: ${joinNames(pickers)} (+${WINNER_PICK_BONUS})`
+    : 'Nobody called the winner';
 }
 
 export function useResultNotifications(
@@ -139,6 +150,8 @@ export function useResultNotifications(
       if (!batch) return;
       const lines = batch.map(songLine).filter((line): line is string => line !== null);
       if (lines.length === 0) return;
+      const bonusLine = i === 0 ? winnerPickLine(batch, familyMembers, countdownResults) : null;
+      if (bonusLine) lines.push(bonusLine);
       const newest = batch[0].position;
       const oldest = batch[batch.length - 1].position;
       notify(`Songs #${oldest} to #${newest} are in`, {
@@ -147,7 +160,7 @@ export function useResultNotifications(
         tag: `results-${newest}`,
       });
     });
-  }, [countdownResults, hottest200Results, songs, member, notify, notifyStart, ready]);
+  }, [countdownResults, hottest200Results, songs, familyMembers, member, notify, notifyStart, ready]);
 
   const setMemberId = useCallback((id: string | null) => {
     setMemberIdState(id);

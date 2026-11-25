@@ -1,5 +1,21 @@
 import type { FamilyMember, CountdownResult, Song } from '../types';
 
+/** Flat bonus for picking the song that finishes #1 */
+export const WINNER_PICK_BONUS = 50;
+
+/** The song at #1, once it has been entered */
+export const getWinningSongId = (countdownResults: CountdownResult[]): string | undefined =>
+  countdownResults.find((r) => r.position === 1)?.songId;
+
+/** WINNER_PICK_BONUS if the member's winner pick is the #1 song, else 0 */
+export const calculateWinnerBonus = (
+  member: FamilyMember,
+  countdownResults: CountdownResult[]
+): number => {
+  const winner = getWinningSongId(countdownResults);
+  return winner && member.winnerSongId === winner ? WINNER_PICK_BONUS : 0;
+};
+
 export const calculateScore = (
   member: FamilyMember,
   countdownResults: CountdownResult[],
@@ -35,7 +51,7 @@ export const calculateScore = (
     });
   }
 
-  return score;
+  return score + calculateWinnerBonus(member, countdownResults);
 };
 
 export const getLeaderboard = (
@@ -47,6 +63,7 @@ export const getLeaderboard = (
     .map((member) => ({
       member,
       score: calculateScore(member, countdownResults, hottest200Results),
+      bonus: calculateWinnerBonus(member, countdownResults),
     }))
     .sort((a, b) => b.score - a.score);
 };
@@ -101,8 +118,9 @@ export const calculateMaxPossibleScore = (
   // Sort in descending order and take top 10
   const top10Points = songPoints.sort((a, b) => b - a).slice(0, 10);
 
-  // Sum the top 10 scores
-  return top10Points.reduce((sum, points) => sum + points, 0);
+  // Sum the top 10 scores, plus the bonus a perfect picker would also have called
+  const winnerBonus = getWinningSongId(countdownResults) ? WINNER_PICK_BONUS : 0;
+  return top10Points.reduce((sum, points) => sum + points, 0) + winnerBonus;
 };
 
 /**

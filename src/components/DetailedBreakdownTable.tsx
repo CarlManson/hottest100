@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { getLeaderboard } from '../utils/scoring';
+import { getLeaderboard, WINNER_PICK_BONUS } from '../utils/scoring';
+import { getWinnerPickStatus } from '../utils/winnerPick';
 import { useGroupView } from '../hooks/useGroupView';
 
 type BreakdownTab = 'hottest200' | 'hottest100' | 'positions101to200';
@@ -52,10 +53,14 @@ export const DetailedBreakdownTable: React.FC = () => {
         const pts = getSongScore(vote.songId);
         if (pts !== null) score += pts;
       }
+      // The #1 bonus belongs to the Hottest 100, so it's left out of the 101-200 view
+      if (activeTab !== 'positions101to200') score += entry.bonus;
       scores.set(entry.member.id, score);
     }
     return scores;
   }, [leaderboard, activeTab, hasHottest200]);
+
+  const showWinnerPicks = visibleMembers.some(m => m.winnerSongId);
 
   // Sort leaderboard by filtered scores
   const sortedLeaderboard = useMemo(() => {
@@ -107,6 +112,11 @@ export const DetailedBreakdownTable: React.FC = () => {
                     Pick #{rank}
                   </th>
                 ))}
+                {showWinnerPicks && (
+                  <th className="px-2 sm:px-3 py-2 sm:py-3 text-center font-bold whitespace-nowrap min-w-[120px] sm:min-w-[150px]">
+                    Winner pick
+                  </th>
+                )}
                 <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-bold whitespace-nowrap bg-primary-600">
                   Total
                 </th>
@@ -198,6 +208,30 @@ export const DetailedBreakdownTable: React.FC = () => {
                         </td>
                       );
                     })}
+
+                    {showWinnerPicks && (() => {
+                      const song = songs.find(s => s.id === entry.member.winnerSongId);
+                      const status = getWinnerPickStatus(entry.member.winnerSongId, countdownResults, hottest200Results);
+                      return (
+                        <td className={`winner-pick-cell px-2 sm:px-3 py-2 sm:py-3 text-center ${status === 'won' ? 'bg-green-100' : ''}`}>
+                          {song ? (
+                            <>
+                              <div className={`font-semibold text-[10px] sm:text-xs truncate max-w-[120px] sm:max-w-[150px] mx-auto ${status === 'out' ? 'line-through text-gray-400' : ''}`}>
+                                {song.title}
+                              </div>
+                              <div className="text-[9px] sm:text-[10px] text-gray-600 truncate max-w-[120px] sm:max-w-[150px] mx-auto">
+                                {song.artist}
+                              </div>
+                              {status === 'won' && activeTab !== 'positions101to200' && (
+                                <div className="mt-1 text-xs sm:text-sm font-bold text-green-700">+{WINNER_PICK_BONUS} pts</div>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </td>
+                      );
+                    })()}
 
                     {/* Total score column */}
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-center font-black text-base sm:text-xl text-primary-600 bg-primary-50">

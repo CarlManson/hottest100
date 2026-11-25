@@ -49,3 +49,11 @@ describe('calculateAwards', () => {
     expect(awards.find(a => a.id === 'so-close')?.winnerId).toBe('near');
   });
 });
+
+describe('Called It award', () => {
+  it('goes to everyone whose winner pick finished #1', () => {
+    const picker = (id: string, winnerSongId: string): FamilyMember => ({ ...member(id, []), winnerSongId });
+    const awards = calculateAwards([picker('a', 's1'), picker('b', 's1'), picker('c', 's2')], songs, hottest100);
+    expect(awards.filter(a => a.title === 'Called It').map(a => a.winnerId)).toEqual(['a', 'b']);
+  });
+});
