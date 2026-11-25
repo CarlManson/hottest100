@@ -175,7 +175,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
           <div className={`hero-banner-grid grid grid-cols-1 ${hasBannerRightContent ? 'xl:grid-cols-2' : ''} gap-8 lg:gap-12 items-center`}>
             {/* Title and Progress */}
             <div className={`hero-title-section text-white ${hasBannerRightContent ? 'text-center xl:text-left' : 'text-center'}`}>
-              <GroupMenu variant="hero" className="hero-group-name mb-2 sm:mb-3" />
+              <GroupMenu variant="hero" className="hero-group-name mb-3 sm:mb-4" />
               <h1 className="hero-title text-2xl sm:text-5xl lg:text-6xl 2xl:text-7xl font-black mb-4 drop-shadow-lg">
                 {hasHottest200Started ? 'Triple J Hottest 200 Tracker' : 'Triple J Hottest 100 Tracker'}
               </h1>

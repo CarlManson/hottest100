@@ -38,7 +38,7 @@ export const GroupMenu: React.FC<GroupMenuProps> = ({ variant = 'hero', classNam
 
   const buttonClass =
     variant === 'hero'
-      ? 'group-menu-button text-base sm:text-2xl 2xl:text-3xl font-bold uppercase tracking-wide text-white/90 drop-shadow-md bg-white/15 hover:bg-white/25 border-2 border-white/40 hover:border-white/60 backdrop-blur-sm'
+      ? 'group-menu-button text-sm sm:text-base font-medium text-white/85 hover:text-white bg-white/10 hover:bg-white/20 border border-white/25 hover:border-white/40 backdrop-blur-sm'
       : 'group-menu-button text-sm sm:text-base font-semibold text-gray-800 bg-white ring-1 ring-gray-200 hover:ring-primary-300';
 
   const choose = (group: (typeof groups)[number] | null) => {
@@ -58,7 +58,7 @@ export const GroupMenu: React.FC<GroupMenuProps> = ({ variant = 'hero', classNam
         onClick={() => setOpen(o => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`${buttonClass} inline-flex items-center gap-2 rounded-full px-4 py-1 transition`}
+        className={`${buttonClass} inline-flex items-center gap-1.5 rounded-full px-3 py-1 transition`}
       >
         {label}
         <svg className={`w-[0.7em] h-[0.7em] transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
