@@ -224,6 +224,9 @@ function AppContent() {
                       Archive
                     </button>
                   )}
+                  <a href="#tv" className="menu-link nav-tv-link text-center" onClick={() => setMobileMenuOpen(false)}>
+                    📺 TV Mode
+                  </a>
                 </div>
               )}
 
@@ -282,6 +285,10 @@ function AppContent() {
                     Archive
                   </button>
                 )}
+                {/* TV Mode - pinned to the far right */}
+                <a href="#tv" className="menu-link nav-tv-link ml-auto whitespace-nowrap">
+                  📺 TV Mode
+                </a>
               </div>
             </div>
           </nav>
@@ -289,7 +296,7 @@ function AppContent() {
 
         <main>
           {activeTab === 'home' && <AlertsBar notifications={notifications} />}
-          {activeTab === 'home' && <PublicHome />}
+          {activeTab === 'home' && <PublicHome showTvButton={!isAuthenticated} />}
           {activeTab === 'tv' && <TVMode />}
           {activeTab === 'dashboard' && isAuthenticated && <Dashboard onNavigate={setActiveTab} />}
           {activeTab === 'voting' && isAuthenticated && <VotingInterface />}
