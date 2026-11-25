@@ -282,6 +282,11 @@ Dynamic, humorous commentary displayed on the home page during the countdown.
 - Selection is shared across components, stored in localStorage and the `?group=<slug>` URL param (TV mode reads it on load)
 - Group features hide themselves when the tables don't exist (`groupsAvailable === false`)
 
+### Showing TV Mode on a TV
+- **Cast**: `TvScreenControls.tsx` adds Cast / Full screen / "Show on your TV" buttons to TV mode (they fade when idle). `src/utils/cast.ts` loads Google's Cast sender SDK only when `brand.castAppId` (or `VITE_CAST_APP_ID`) is set and the browser is Chrome/Edge. The receiver is `public/cast-receiver.html`, registered in the Google Cast developer console as a Custom Receiver; it iframes `/?receiver=cast#tv` and takes the group over the `urn:x-cast:au.fairest100.tv` channel. `?receiver=cast` hides the on-screen controls.
+- **fairest100.au/tv**: `tv/index.html` is a second Vite entry. Modern browsers redirect to `/#tv`; old smart-TV browsers stay on a self-contained ES5 leaderboard that polls Supabase REST every 15s (no WebSockets, no Tailwind). It repeats the scoring rules from `scoring.ts`, so change both together. `?lite` / `?full` force a view; `?group=` works.
+- **PWA**: `public/manifest.webmanifest` + `public/icons/` make the site installable (no service worker, so nothing is cached stale). TV mode also holds a screen wake lock (`useWakeLock`) for AirPlay mirroring from a phone.
+
 ### Archive System
 Preserves completed years' data and allows viewing historical results.
 

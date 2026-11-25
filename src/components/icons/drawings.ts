@@ -237,6 +237,14 @@ export const ICONS = {
     mark: "<path d=\"M12 11v6\"/>",
     ink: "<circle cx=\"12\" cy=\"7.4\" r=\"1.4\"/>",
   },
+  "cast": {
+    line: "<path d=\"M2.5 8V6.5a2.5 2.5 0 0 1 2.5-2.5h14a2.5 2.5 0 0 1 2.5 2.5v11a2.5 2.5 0 0 1-2.5 2.5h-6\"/><path d=\"M2.5 12.5a7.5 7.5 0 0 1 7.5 7.5M2.5 16.3a3.7 3.7 0 0 1 3.7 3.7\"/>",
+    ink: "<circle cx=\"3\" cy=\"19.5\" r=\"1.4\"/>",
+  },
+  "fullscreen": {
+    line: "<path d=\"M3 9V4.5A1.5 1.5 0 0 1 4.5 3H9M15 3h4.5A1.5 1.5 0 0 1 21 4.5V9M21 15v4.5a1.5 1.5 0 0 1-1.5 1.5H15M9 21H4.5A1.5 1.5 0 0 1 3 19.5V15\"/>",
+    tint: [[null, "<rect x=\"7\" y=\"7\" width=\"10\" height=\"10\" rx=\"1.5\"/>"]],
+  },
 } satisfies Record<string, IconDrawing>;
 
 export type IconName = keyof typeof ICONS;
