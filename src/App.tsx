@@ -219,10 +219,10 @@ function AppContent() {
                   {hasArchives && (
                     <button
                       onClick={() => handleTabClick('archive')}
-                      className={`w-full text-left px-4 py-3 font-bold transition ${
+                      className={`menu-link ${
                         activeTab === 'archive'
-                          ? 'bg-primary-500 text-white'
-                          : 'text-gray-700 hover:bg-primary-100'
+                          ? 'active'
+                          : ''
                       }`}
                     >
                       Archive
@@ -277,22 +277,24 @@ function AppContent() {
                 >
                   Leaderboard
                 </button>
-                {hasArchives && (
-                  <button
-                    onClick={() => handleTabClick('archive')}
-                    className={`px-6 py-4 font-bold transition whitespace-nowrap rounded-t-lg ${
-                      activeTab === 'archive'
-                        ? 'bg-primary-500 text-white'
-                        : 'text-gray-700 hover:bg-primary-100'
-                    }`}
-                  >
-                    Archive
-                  </button>
-                )}
-                {/* TV Mode - pinned to the far right */}
-                <a href="#tv" className="menu-link nav-tv-link ml-auto whitespace-nowrap">
-                  <Icon name="tv" /> TV Mode
-                </a>
+                {/* Archive + TV Mode - pinned to the far right */}
+                <div className="nav-right ml-auto flex items-center gap-2">
+                  {hasArchives && (
+                    <button
+                      onClick={() => handleTabClick('archive')}
+                      className={`menu-link ${
+                        activeTab === 'archive'
+                          ? 'active'
+                          : ''
+                      }`}
+                    >
+                      Archive
+                    </button>
+                  )}
+                  <a href="#tv" className="menu-link nav-tv-link whitespace-nowrap">
+                    <Icon name="tv" /> TV Mode
+                  </a>
+                </div>
               </div>
             </div>
           </nav>
