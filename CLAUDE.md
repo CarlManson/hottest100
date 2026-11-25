@@ -67,8 +67,7 @@ All tables use UUIDs as primary keys with foreign key constraints and ON DELETE 
 ### Component Structure
 Single-page app with tab navigation:
 - `App.tsx` - Root component with tab navigation
-- `PublicHome.tsx` - Public-facing dashboard with podium quips and live leaderboard
-- `Dashboard.tsx` - Admin dashboard with stats, leaderboard preview, recent results
+- `PublicHome.tsx` - Home page (public and logged-in landing page) with podium quips and live leaderboard
 - `Settings.tsx` - Tabbed interface (AI Prompts, Songs, Data) for all administrative functions
 - `VotingInterface.tsx` - Add members, select member, rank their top 10
 - `CountdownEntry.tsx` - Enter actual countdown results (separate tabs for 100 vs 200)
@@ -249,7 +248,7 @@ supabase functions deploy generate-profile
 - App fully functional without this feature
 
 ### Podium Quips System
-Dynamic, humorous commentary displayed on the Dashboard during the countdown.
+Dynamic, humorous commentary displayed on the home page during the countdown.
 
 **Implementation:**
 - **Location**: `src/data/podiumQuips.ts`

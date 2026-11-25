@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { AppProvider, useApp } from './context/AppContext';
-import { Dashboard } from './components/Dashboard';
 import { PublicHome } from './components/PublicHome';
 import { TVMode } from './components/TVMode';
 import { VotingInterface } from './components/VotingInterface';
@@ -14,7 +13,7 @@ import { AlertsBar } from './components/AlertsBar';
 import { useResultNotifications } from './utils/useResultNotifications';
 import { brand } from './config/brand';
 
-type Tab = 'home' | 'tv' | 'dashboard' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings' | 'archive';
+type Tab = 'home' | 'tv' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings' | 'archive';
 
 function AppContent() {
   const { archives, songs, countdownResults, hottest200Results } = useApp();
@@ -33,7 +32,12 @@ function AppContent() {
   // Get tab from URL hash
   const getTabFromHash = (): Tab => {
     const hash = window.location.hash.slice(1);
-    const validTabs: Tab[] = ['home', 'tv', 'dashboard', 'voting', 'countdown', 'leaderboard', 'detailed-breakdown', 'settings', 'archive'];
+    // The old Dashboard page was retired; send old #dashboard links to home
+    if (hash === 'dashboard') {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#home`);
+      return 'home';
+    }
+    const validTabs: Tab[] = ['home', 'tv', 'voting', 'countdown', 'leaderboard', 'detailed-breakdown', 'settings', 'archive'];
     return validTabs.includes(hash as Tab) ? (hash as Tab) : 'home';
   };
 
@@ -83,8 +87,8 @@ function AppContent() {
     // Set both localStorage and cookie with 7-day expiration
     localStorage.setItem('hottest100_auth', 'true');
     Cookies.set('hottest100_session', 'authenticated', { expires: 7 });
-    setActiveTab('dashboard');
-    updateHash('dashboard');
+    setActiveTab('home');
+    updateHash('home');
   };
 
   const handleLogout = () => {
@@ -162,7 +166,6 @@ function AppContent() {
               {/* Mobile current tab label - hidden since menu is now in header */}
               {/* <div className="md:hidden py-3 text-center">
                 <span className="font-bold text-gray-800">
-                  {activeTab === 'dashboard' && 'Dashboard'}
                   {activeTab === 'voting' && 'Family Votes'}
                   {activeTab === 'countdown' && 'Countdown'}
                   {activeTab === 'leaderboard' && 'Leaderboard'}
@@ -298,7 +301,6 @@ function AppContent() {
           {activeTab === 'home' && <AlertsBar notifications={notifications} />}
           {activeTab === 'home' && <PublicHome showTvButton={!isAuthenticated} />}
           {activeTab === 'tv' && <TVMode />}
-          {activeTab === 'dashboard' && isAuthenticated && <Dashboard onNavigate={setActiveTab} />}
           {activeTab === 'voting' && isAuthenticated && <VotingInterface />}
           {activeTab === 'countdown' && isAuthenticated && <CountdownEntry />}
           {activeTab === 'leaderboard' && isAuthenticated && <Leaderboard />}

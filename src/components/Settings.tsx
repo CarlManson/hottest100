@@ -604,7 +604,7 @@ export const Settings: React.FC = () => {
             ) : (
               <div className="text-center py-4">
                 <p className="text-gray-600">
-                  No countdown date is set. Set a date above to enable the countdown timer on the dashboard.
+                  No countdown date is set. Set a date above to enable the countdown timer on the home page.
                 </p>
               </div>
             )}
@@ -614,7 +614,7 @@ export const Settings: React.FC = () => {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="font-bold text-blue-900 mb-2 text-sm sm:text-base">ℹ️ About the Countdown Timer</h3>
             <ul className="text-xs sm:text-sm text-blue-800 space-y-1">
-              <li>• The countdown timer appears on the home page, Dashboard and TV mode</li>
+              <li>• The countdown timer appears on the home page and TV mode</li>
               <li>• Once the countdown reaches zero, the timer hides and votes lock</li>
               <li>• The date is saved for everyone who visits the site (needs supabase-add-app-settings.sql)</li>
               <li>• Recent countdowns started at 9:00 AM AWST on the fourth Saturday of January</li>
