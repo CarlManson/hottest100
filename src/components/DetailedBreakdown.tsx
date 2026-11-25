@@ -1,5 +1,6 @@
 import React from 'react';
 import { DetailedBreakdownTable } from './DetailedBreakdownTable';
+import { Icon } from './icons/Icon';
 
 export const DetailedBreakdown: React.FC = () => {
   return (
@@ -9,7 +10,7 @@ export const DetailedBreakdown: React.FC = () => {
           href="#leaderboard"
           className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 underline inline-block mb-3"
         >
-          ← Back to Leaderboard
+          <Icon name="arrow-left" /> Back to Leaderboard
         </a>
         <h2 className="text-xl sm:text-3xl font-bold mb-2">Detailed Vote Breakdown</h2>
         <p className="text-xs sm:text-sm text-gray-600">

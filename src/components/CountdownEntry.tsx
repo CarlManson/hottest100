@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { LazyImage } from './LazyImage';
 import type { CountdownResult } from '../types';
+import { Icon } from './icons/Icon';
 
 interface UndoAction {
   type: 'add' | 'remove';
@@ -313,7 +314,7 @@ export const CountdownEntry: React.FC = () => {
                     }`}
                     title={`Undo ${lastAction.type === 'add' ? 'add' : 'remove'}`}
                   >
-                    ↩ Undo
+                    <Icon name="undo" /> Undo
                   </button>
                 )}
                 {currentResults.length > 0 && (
@@ -409,7 +410,7 @@ export const CountdownEntry: React.FC = () => {
                               : 'text-red-400 hover:text-red-300'
                           }`}
                         >
-                          ✕
+                          <Icon name="close" />
                         </button>
                       </div>
                     );

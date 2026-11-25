@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { GroupManager } from './GroupManager';
 import type { Song } from '../types';
 import { useCountdownSettings, useCountdown, formatDateForInput, parseDateFromInput } from '../hooks/useCountdownSettings';
+import { Icon } from './icons/Icon';
 
 const DEFAULT_LABEL_PROMPT = `You're a cheeky Aussie music critic analyzing someone's Hottest 100 picks. Be funny, playful, and engaging.
 
@@ -241,7 +242,7 @@ export const Settings: React.FC = () => {
             }
 
             const dupMsg = duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : '';
-            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!${dupMsg}`);
+            setImportProgress(`Successfully imported ${newSongs.length} songs!${dupMsg}`);
             setTimeout(() => {
               setImportText('');
               setImportProgress('');
@@ -257,7 +258,7 @@ export const Settings: React.FC = () => {
           try {
             await addSongs(newSongs);
             const dupMsg = duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : '';
-            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!${dupMsg}`);
+            setImportProgress(`Successfully imported ${newSongs.length} songs!${dupMsg}`);
             setTimeout(() => {
               setImportText('');
               setImportProgress('');
@@ -307,7 +308,7 @@ export const Settings: React.FC = () => {
             await addSongs(newSongs);
             setImportText('');
             const dupMsg = duplicateCount > 0 ? ` (${duplicateCount} duplicates skipped)` : '';
-            setImportProgress(`✅ Successfully imported ${newSongs.length} songs!${dupMsg}`);
+            setImportProgress(`Successfully imported ${newSongs.length} songs!${dupMsg}`);
             setTimeout(() => setImportProgress(''), 3000);
           } catch (err) {
             setError('Failed to import songs. Please try again.');
@@ -382,7 +383,7 @@ export const Settings: React.FC = () => {
       .join('\n');
     try {
       await navigator.clipboard.writeText(text);
-      setPlaylistMessage('✅ Copied! Paste into a playlist import tool to build it in Spotify/Apple Music.');
+      setPlaylistMessage('Copied! Paste into a playlist import tool to build it in Spotify/Apple Music.');
     } catch {
       setPlaylistMessage('Could not access the clipboard — use the CSV download instead.');
     }
@@ -451,7 +452,7 @@ export const Settings: React.FC = () => {
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
-          📅 Event
+          <Icon name="calendar" /> Event
         </button>
         <button
           onClick={() => setActiveTab('groups')}
@@ -461,7 +462,7 @@ export const Settings: React.FC = () => {
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
-          👥 Groups
+          <Icon name="people" /> Groups
         </button>
         <button
           onClick={() => setActiveTab('ai')}
@@ -471,7 +472,7 @@ export const Settings: React.FC = () => {
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
-          🤖 AI Prompts
+          <Icon name="robot" /> AI Prompts
         </button>
         <button
           onClick={() => setActiveTab('songs')}
@@ -481,7 +482,7 @@ export const Settings: React.FC = () => {
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
-          🎵 Songs
+          <Icon name="music" /> Songs
         </button>
         <button
           onClick={() => setActiveTab('data')}
@@ -491,7 +492,7 @@ export const Settings: React.FC = () => {
               : 'text-gray-600 hover:text-gray-800'
           }`}
         >
-          💾 Data
+          <Icon name="save" /> Data
         </button>
       </div>
 
@@ -543,14 +544,14 @@ export const Settings: React.FC = () => {
                   disabled={!countdownDateInput}
                   className="px-6 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold rounded-lg hover:from-primary-600 hover:to-secondary-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  💾 Save Countdown Date
+                  <Icon name="save" /> Save Countdown Date
                 </button>
                 {isCountdownEnabled && (
                   <button
                     onClick={handleClearCountdownDate}
                     className="px-6 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition"
                   >
-                    🗑️ Disable Countdown
+                    <Icon name="trash" /> Disable Countdown
                   </button>
                 )}
               </div>
@@ -560,7 +561,7 @@ export const Settings: React.FC = () => {
           {/* Current Status */}
           <div className={`rounded-lg shadow-md p-4 sm:p-6 ${isCountdownEnabled ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800' : 'bg-gray-100'}`}>
             <h2 className={`text-lg sm:text-xl font-bold mb-4 ${isCountdownEnabled ? 'text-white' : 'text-gray-800'}`}>
-              {isCountdownEnabled ? '⏰ Countdown Status' : '⏰ Countdown Disabled'}
+              <Icon name="alarm" /> {isCountdownEnabled ? 'Countdown Status' : 'Countdown Disabled'}
             </h2>
 
             {isCountdownEnabled && countdownDate ? (
@@ -612,7 +613,7 @@ export const Settings: React.FC = () => {
 
           {/* Info Section */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-bold text-blue-900 mb-2 text-sm sm:text-base">ℹ️ About the Countdown Timer</h3>
+            <h3 className="font-bold text-blue-900 mb-2 text-sm sm:text-base"><Icon name="info" /> About the Countdown Timer</h3>
             <ul className="text-xs sm:text-sm text-blue-800 space-y-1">
               <li>• The countdown timer appears on the home page and TV mode</li>
               <li>• Once the countdown reaches zero, the timer hides and votes lock</li>
@@ -632,7 +633,7 @@ export const Settings: React.FC = () => {
             <div className="mb-4">
               <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Nickname/Label Prompt</h2>
               <p className="text-xs sm:text-sm text-gray-600">
-                This prompt generates member labels (2-3 word creative descriptions) and is used by the 🏷️ Re/generate Nickname button. Available variables:
+                This prompt generates member labels (2-3 word creative descriptions) and is used by the Re/generate Nickname button. Available variables:
                 <code className="bg-gray-100 px-1 rounded text-xs">{'{memberName}'}</code>,
                 <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{picks}'}</code>,
                 <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{existingLabels}'}</code>
@@ -651,7 +652,7 @@ export const Settings: React.FC = () => {
             <div className="mb-4">
               <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Music Taste Profile Prompt</h2>
               <p className="text-xs sm:text-sm text-gray-600">
-                This prompt generates music taste descriptions (3-4 sentence analysis) and is used by the ✨ Re/generate Profile button. Available variables:
+                This prompt generates music taste descriptions (3-4 sentence analysis) and is used by the Re/generate Profile button. Available variables:
                 <code className="bg-gray-100 px-1 rounded text-xs">{'{memberName}'}</code>,
                 <code className="bg-gray-100 px-1 rounded text-xs ml-1">{'{picks}'}</code>
               </p>
@@ -672,13 +673,13 @@ export const Settings: React.FC = () => {
                 onClick={handleSave}
                 className="px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold rounded-lg hover:from-primary-600 hover:to-secondary-600 transition text-sm sm:text-base"
               >
-                💾 Save Prompts
+                <Icon name="save" /> Save Prompts
               </button>
               <button
                 onClick={handleResetToDefaults}
                 className="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition text-sm sm:text-base"
               >
-                ↺ Reset to Defaults
+                <Icon name="refresh" /> Reset to Defaults
               </button>
               {hasActiveRateLimit && (
                 <button
@@ -686,7 +687,7 @@ export const Settings: React.FC = () => {
                   disabled={isGeneratingProfiles}
                   className="px-4 py-2 bg-purple-500 text-white font-bold rounded-lg hover:bg-purple-600 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                 >
-                  🔓 Reset Rate Limit
+                  <Icon name="unlock" /> Reset Rate Limit
                 </button>
               )}
             </div>
@@ -694,7 +695,7 @@ export const Settings: React.FC = () => {
 
           {/* Info Section */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-bold text-blue-900 mb-2 text-sm sm:text-base">ℹ️ About Prompt Customization</h3>
+            <h3 className="font-bold text-blue-900 mb-2 text-sm sm:text-base"><Icon name="info" /> About Prompt Customization</h3>
             <ul className="text-xs sm:text-sm text-blue-800 space-y-1">
               <li>• These prompts show what the AI currently uses to generate profiles</li>
               <li>• Prompts are stored locally in your browser for reference</li>
@@ -707,7 +708,7 @@ export const Settings: React.FC = () => {
 
           {/* Advanced Usage Section */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h3 className="font-bold text-yellow-900 mb-2 text-sm sm:text-base">⚙️ To Apply Custom Prompts</h3>
+            <h3 className="font-bold text-yellow-900 mb-2 text-sm sm:text-base"><Icon name="gear" /> To Apply Custom Prompts</h3>
             <ol className="text-xs sm:text-sm text-yellow-800 space-y-1 list-decimal list-inside">
               <li>Edit prompts here and save them as reference</li>
               <li>Open <code className="bg-yellow-100 px-1 rounded">supabase/functions/generate-profile/index.ts</code></li>
@@ -742,7 +743,7 @@ export const Settings: React.FC = () => {
               disabled={importing}
               className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-6 py-2 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition font-bold disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {importing ? 'Importing...' : '📥 Import Songs'}
+              {importing ? 'Importing...' : <><Icon name="download" /> Import Songs</>}
             </button>
           </div>
 
@@ -786,14 +787,14 @@ export const Settings: React.FC = () => {
                   onChange={(e) => setManualIsAustralian(e.target.checked)}
                   className="w-5 h-5 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
                 />
-                <span className="text-gray-700 font-medium">Australian Artist 🦘</span>
+                <span className="text-gray-700 font-medium">Australian Artist <Icon name="kangaroo" /></span>
               </label>
             </div>
             <button
               onClick={handleAddManual}
               className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-6 py-2 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition font-bold"
             >
-              ➕ Add Song
+              <Icon name="add" /> Add Song
             </button>
           </div>
 
@@ -879,14 +880,14 @@ export const Settings: React.FC = () => {
               </p>
 
               <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-4">
-                <p className="text-yellow-800 font-semibold text-sm mb-2">⚠️ Warning: This will permanently delete all current data!</p>
+                <p className="text-yellow-800 font-semibold text-sm mb-2"><Icon name="warning" /> Warning: This will permanently delete all current data!</p>
                 <ul className="text-yellow-700 text-xs space-y-1">
-                  <li>✓ All data will be saved to the archive first</li>
-                  <li>✓ Songs, members, votes, and results will be cleared</li>
-                  <li>✓ You'll start fresh for the next year</li>
-                  <li>✓ Archived data can be viewed in the Archive tab</li>
+                  <li><Icon name="check" /> All data will be saved to the archive first</li>
+                  <li><Icon name="check" /> Songs, members, votes, and results will be cleared</li>
+                  <li><Icon name="check" /> You'll start fresh for the next year</li>
+                  <li><Icon name="check" /> Archived data can be viewed in the Archive tab</li>
                 </ul>
-                <p className="text-yellow-800 text-xs mt-2 font-semibold">💡 Tip: Export your data first if you want an extra backup!</p>
+                <p className="text-yellow-800 text-xs mt-2 font-semibold"><Icon name="idea" /> Tip: Export your data first if you want an extra backup!</p>
               </div>
 
               <div className="mb-4">
@@ -917,10 +918,10 @@ export const Settings: React.FC = () => {
                   } text-white px-6 py-2 rounded-lg transition font-bold disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {archiving
-                    ? '🔄 Archiving...'
+                    ? <><Icon name="refresh" /> Archiving...</>
                     : showArchiveConfirm
-                    ? `⚠️ CONFIRM: Archive ${archiveYear} & Delete All Data`
-                    : `📚 Archive ${archiveYear} & Reset`}
+                    ? <><Icon name="warning" /> CONFIRM: Archive {archiveYear} &amp; Delete All Data</>
+                    : <><Icon name="archive" /> Archive {archiveYear} &amp; Reset</>}
                 </button>
                 {showArchiveConfirm && !archiving && (
                   <button
@@ -944,7 +945,7 @@ export const Settings: React.FC = () => {
               onClick={handleExport}
               className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-6 py-2 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition font-bold"
             >
-              📦 Export All Data
+              <Icon name="box" /> Export All Data
             </button>
           </div>
 
@@ -960,13 +961,13 @@ export const Settings: React.FC = () => {
                   onClick={handleCopyPlaylist}
                   className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-bold"
                 >
-                  🎧 Copy as text
+                  <Icon name="headphones" /> Copy as text
                 </button>
                 <button
                   onClick={handleDownloadPlaylistCsv}
                   className="bg-gray-700 text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition font-bold"
                 >
-                  ⬇️ Download CSV
+                  <Icon name="download" /> Download CSV
                 </button>
               </div>
               {playlistMessage && <p className="text-sm text-gray-700 mt-3">{playlistMessage}</p>}
@@ -987,12 +988,12 @@ export const Settings: React.FC = () => {
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              {showConfirm ? '⚠️ Click Again to Confirm' : '🗑️ Clear All Data'}
+              {showConfirm ? <><Icon name="warning" /> Click Again to Confirm</> : <><Icon name="trash" /> Clear All Data</>}
             </button>
             {showConfirm && (
               <div className="mt-3">
                 <p className="text-sm text-red-600 font-semibold">
-                  ⚠️ Warning: This will permanently delete everything!
+                  <Icon name="warning" /> Warning: This will permanently delete everything!
                 </p>
                 <button
                   onClick={() => setShowConfirm(false)}

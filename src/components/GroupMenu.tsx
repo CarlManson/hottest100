@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useGroupView } from '../hooks/useGroupView';
+import { Icon } from './icons/Icon';
 
 interface GroupMenuProps {
   /** "hero" sits on the dark banner; "light" sits on a white page */
@@ -75,7 +76,7 @@ export const GroupMenu: React.FC<GroupMenuProps> = ({ variant = 'hero', classNam
           <p className="px-4 pt-3 pb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Show leaderboard for</p>
           <button role="menuitemradio" aria-checked={!selectedGroup} onClick={() => choose(null)} className={item(!selectedGroup)}>
             <span>All members</span>
-            {!selectedGroup && <span aria-hidden="true">✓</span>}
+            {!selectedGroup && <Icon name="check" />}
           </button>
           {groups.map(group => {
             const active = selectedGroup?.id === group.id;
@@ -86,7 +87,7 @@ export const GroupMenu: React.FC<GroupMenuProps> = ({ variant = 'hero', classNam
                   {group.name}
                   <span className="ml-1.5 opacity-60">{group.memberIds.length}</span>
                 </span>
-                {active && <span aria-hidden="true">✓</span>}
+                {active && <Icon name="check" />}
               </button>
             );
           })}

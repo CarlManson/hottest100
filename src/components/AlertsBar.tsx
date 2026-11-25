@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { useResultNotifications } from '../utils/useResultNotifications';
+import { Icon } from './icons/Icon';
 
 const DISMISS_KEY = 'song_alerts_bar_dismissed';
 
@@ -43,7 +44,7 @@ export const AlertsBar: React.FC<AlertsBarProps> = ({ notifications }) => {
   return (
     <div role="region" aria-label="Song alerts" className="alerts-bar bg-surface text-white">
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-3 text-sm">
-        <span aria-hidden="true">🔔</span>
+        <Icon name="bell" />
         <p className="flex-1 min-w-0">
           {enabled
             ? 'Alerts on — we’ll ping you when each song drops.'
@@ -62,7 +63,7 @@ export const AlertsBar: React.FC<AlertsBarProps> = ({ notifications }) => {
           className="alerts-bar-dismiss shrink-0 w-7 h-7 rounded-full hover:bg-white/10 transition"
           aria-label="Dismiss"
         >
-          ✕
+          <Icon name="close" />
         </button>
       </div>
     </div>

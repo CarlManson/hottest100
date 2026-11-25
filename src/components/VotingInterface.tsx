@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import type { FamilyMember } from '../types';
 import { LazyImage } from './LazyImage';
 import { useCountdown } from '../hooks/useCountdownSettings';
+import { Icon } from './icons/Icon';
 
 export const VotingInterface: React.FC = () => {
   const {
@@ -179,8 +180,8 @@ export const VotingInterface: React.FC = () => {
         }`}>
           <p className="text-sm font-semibold text-gray-800">
             {votesLocked
-              ? '🔒 Votes are locked — the countdown has started.'
-              : '⚠️ Votes unlocked for corrections. Changes affect live scores.'}
+              ? <><Icon name="lock" /> Votes are locked — the countdown has started.</>
+              : <><Icon name="unlock" /> Votes unlocked for corrections. Changes affect live scores.</>}
           </p>
           <button
             onClick={() => setLockOverridden(!lockOverridden)}
@@ -230,14 +231,14 @@ export const VotingInterface: React.FC = () => {
                 className="text-blue-600 hover:text-blue-800 font-bold text-sm sm:text-base"
                 title="Manage Member"
               >
-                ✎
+                <Icon name="edit" />
               </button>
               <button
                 onClick={() => handleDeleteMember(member)}
                 className="text-red-600 hover:text-red-800 font-bold text-lg sm:text-xl"
                 title="Delete"
               >
-                ✕
+                <Icon name="close" />
               </button>
             </div>
           ))}
@@ -291,7 +292,7 @@ export const VotingInterface: React.FC = () => {
                       </div>
                     </div>
                     {isSelected && (
-                      <span className="text-green-600 font-bold text-lg sm:text-xl flex-shrink-0">✓</span>
+                      <span className="text-green-600 font-bold text-lg sm:text-xl flex-shrink-0"><Icon name="check" /></span>
                     )}
                   </div>
                 );
@@ -338,7 +339,7 @@ export const VotingInterface: React.FC = () => {
                           onClick={() => handleToggleSong(vote.songId)}
                           className="text-red-400 hover:text-red-300 px-1 sm:px-2 text-lg sm:text-xl"
                         >
-                          ✕
+                          <Icon name="close" />
                         </button>
                       )}
                     </div>
@@ -569,12 +570,12 @@ export const VotingInterface: React.FC = () => {
                         onClick={handleGenerateNickname}
                         className="w-full px-4 py-2 rounded-lg font-semibold text-sm transition bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600"
                       >
-                        🏷️ Re/generate Nickname
+                        <Icon name="tag" /> Re/generate Nickname
                       </button>
                     )}
                     {!canGenerateLabel && !isGeneratingProfiles && (
                       <p className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
-                        🏷️ Nickname cooldown active (24h since last generation)
+                        <Icon name="tag" /> Nickname cooldown active (24h since last generation)
                       </p>
                     )}
 
@@ -583,12 +584,12 @@ export const VotingInterface: React.FC = () => {
                         onClick={handleGenerateProfile}
                         className="w-full px-4 py-2 rounded-lg font-semibold text-sm transition bg-gradient-to-r from-purple-500 to-secondary-500 text-white hover:from-purple-600 hover:to-secondary-600"
                       >
-                        ✨ Re/generate Profile
+                        <Icon name="sparkle" /> Re/generate Profile
                       </button>
                     )}
                     {!canGenerateProfile && !isGeneratingProfiles && (
                       <p className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
-                        ✨ Profile cooldown active (24h since last generation)
+                        <Icon name="sparkle" /> Profile cooldown active (24h since last generation)
                       </p>
                     )}
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from './icons/Icon';
 
 interface CountdownQuipProps {
   quip: string;
@@ -17,7 +18,7 @@ export const CountdownQuip: React.FC<CountdownQuipProps> = ({ quip }) => {
         <div className="commentary-quip__content">
           {/* Commentator icon */}
           <div className="commentary-quip__icon">
-            📢
+            <Icon name="megaphone" />
           </div>
 
           {/* Quote text */}

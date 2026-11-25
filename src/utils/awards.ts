@@ -1,8 +1,9 @@
 import type { FamilyMember, Song, CountdownResult } from '../types';
+import type { IconName } from '../components/icons/Icon';
 
 export interface Award {
   id: string;
-  emoji: string;
+  icon: IconName;
   title: string;
   description: string;
   winnerId: string;
@@ -60,7 +61,7 @@ export function calculateAwards(
       const song = getSong(numberOneResult.songId);
       awards.push({
         id: 'oracle',
-        emoji: '🔮',
+        icon: 'crystal-ball',
         title: 'The Oracle',
         description: 'Predicted the #1 song',
         winnerId: oracle.id,
@@ -86,7 +87,7 @@ export function calculateAwards(
     if (trueBlue) {
       awards.push({
         id: 'true-blue',
-        emoji: '🦘',
+        icon: 'kangaroo',
         title: 'True Blue',
         description: 'Most Aussie artists in the countdown',
         winnerId: trueBlue.member.id,
@@ -118,7 +119,7 @@ export function calculateAwards(
       const song = vote ? getSong(vote.songId) : null;
       awards.push({
         id: 'diamond',
-        emoji: '💎',
+        icon: 'diamond',
         title: 'Diamond in the Rough',
         description: 'Picked the deepest cut',
         winnerId: diamond.member.id,
@@ -150,7 +151,7 @@ export function calculateAwards(
     if (sharpshooter) {
       awards.push({
         id: 'sharpshooter',
-        emoji: '🎯',
+        icon: 'target',
         title: 'Sharpshooter',
         description: 'Best prediction accuracy',
         winnerId: sharpshooter.member.id,
@@ -173,7 +174,7 @@ export function calculateAwards(
     if (riskTaker && riskTaker.misses >= 3) {
       awards.push({
         id: 'risk-taker',
-        emoji: '🎲',
+        icon: 'dice',
         title: 'Risk Taker',
         description: 'Boldest predictions',
         winnerId: riskTaker.member.id,
@@ -199,7 +200,7 @@ export function calculateAwards(
       if (soClose) {
         awards.push({
           id: 'so-close',
-          emoji: '😢',
+          icon: 'so-close',
           title: 'So Close',
           description: 'Most picks that just missed the 100',
           winnerId: soClose.member.id,
@@ -223,7 +224,7 @@ export function calculateAwards(
       if (soClose && soClose.misses >= 3) {
         awards.push({
           id: 'so-close',
-          emoji: '😢',
+          icon: 'so-close',
           title: 'So Close',
           description: 'Most heartbreaking misses',
           winnerId: soClose.member.id,
@@ -249,7 +250,7 @@ export function calculateAwards(
         : '10/10 songs in the Hottest 100!';
       awards.push({
         id: `perfect-${member.id}`,
-        emoji: '🏆',
+        icon: 'trophy',
         title: 'Perfect 10',
         description: 'All picks made the countdown',
         winnerId: member.id,
@@ -273,7 +274,7 @@ export function calculateAwards(
       if (deepDiver && deepDiver.count >= 2) {
         awards.push({
           id: 'deep-diver',
-          emoji: '🌟',
+          icon: 'star',
           title: 'Deep Diver',
           description: 'Most picks in the 101-200',
           winnerId: deepDiver.member.id,
@@ -293,7 +294,7 @@ export function calculateAwards(
       const dominator = totalMatchScores[0];
       awards.push({
         id: 'total-domination',
-        emoji: '💯',
+        icon: 'perfect-100',
         title: 'Total Domination',
         description: 'Most picks in the entire Hottest 200',
         winnerId: dominator.member.id,
