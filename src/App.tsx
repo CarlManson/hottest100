@@ -277,22 +277,24 @@ function AppContent() {
                 >
                   Leaderboard
                 </button>
-                {hasArchives && (
-                  <button
-                    onClick={() => handleTabClick('archive')}
-                    className={`menu-link ${
-                      activeTab === 'archive'
-                        ? 'active'
-                        : ''
-                    }`}
-                  >
-                    Archive
-                  </button>
-                )}
-                {/* TV Mode - pinned to the far right */}
-                <a href="#tv" className="menu-link nav-tv-link ml-auto whitespace-nowrap">
-                  <Icon name="tv" /> TV Mode
-                </a>
+                {/* Archive + TV Mode - pinned to the far right */}
+                <div className="nav-right ml-auto flex items-center gap-2">
+                  {hasArchives && (
+                    <button
+                      onClick={() => handleTabClick('archive')}
+                      className={`menu-link ${
+                        activeTab === 'archive'
+                          ? 'active'
+                          : ''
+                      }`}
+                    >
+                      Archive
+                    </button>
+                  )}
+                  <a href="#tv" className="menu-link nav-tv-link whitespace-nowrap">
+                    <Icon name="tv" /> TV Mode
+                  </a>
+                </div>
               </div>
             </div>
           </nav>

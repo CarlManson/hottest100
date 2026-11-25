@@ -29,11 +29,25 @@
         }
     }
 
+    // TV Mode: shaped like the active tab, but white
+    .desktop-menu, .mobile-menu {
+        .menu-link.nav-tv-link {
+            color: $menu-bg;
+            background-color: $white;
+            font-weight: 600;
+
+            &:hover {
+                color: $menu-bg;
+                background-color: color-mix(in srgb, #{$white} 85%, #{$menu-bg});
+            }
+        }
+    }
+
     .desktop-menu {
         gap: 0;
 
         .menu-link {
-            &.active {
+            &.active, &.nav-tv-link {
                 border-radius: $menu-border-radius;
                 margin-top: $menu-border-radius * -1;
                 margin-bottom: $menu-border-radius * -1;
