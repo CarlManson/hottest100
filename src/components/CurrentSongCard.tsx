@@ -2,6 +2,7 @@ import React from 'react';
 import type { Song } from '../types';
 import { getPositionAdjective } from '../data/positionAdjectives';
 import { COUNTDOWN_YEAR } from '../config/brand';
+import { Icon } from './icons/Icon';
 
 export interface CurrentSongCardProps {
   /** The song to display */
@@ -71,13 +72,13 @@ export const CurrentSongCard: React.FC<CurrentSongCardProps> = ({
         {/* Crown Badge - Only for #1 song on homepage variant */}
         {isNumberOne && variant === 'home' && (
           <div className="absolute top-4 left-4 text-5xl sm:text-6xl drop-shadow-xl">
-            👑
+            <Icon name="crown" size="1.1em" />
           </div>
         )}
 
         {/* Position Badge */}
         <div className={`song-card-number absolute top-4 ${isNumberOne && variant === 'home' ? 'right-4' : 'left-4'} text-white font-black text-4xl sm:text-5xl w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center shadow-xl border-4 border-white`}>
-          {isNumberOne && variant === 'tv' ? '👑' : isNumberOne ? position : position}
+          {isNumberOne && variant === 'tv' ? <Icon name="crown" size="0.9em" /> : position}
         </div>
 
         {/* Song Info - Bottom Overlay */}

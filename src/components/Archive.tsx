@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboard } from '../utils/scoring';
 import type { Archive as ArchiveType } from '../types';
+import { Icon } from './icons/Icon';
 
 export const Archive: React.FC = () => {
   const { archives } = useApp();
@@ -112,7 +113,7 @@ export const Archive: React.FC = () => {
                             <div className="text-sm text-gray-600 truncate">{song.artist}</div>
                           </div>
                           {song.isAustralian && (
-                            <span className="text-sm bg-primary-500 px-2 py-0.5 rounded-full text-white">🦘</span>
+                            <span className="text-sm bg-primary-500 px-2 py-0.5 rounded-full text-white"><Icon name="kangaroo" title="Australian artist" /></span>
                           )}
                         </div>
                       );
@@ -143,7 +144,7 @@ export const Archive: React.FC = () => {
                             <div className="text-sm text-gray-600 truncate">{song.artist}</div>
                           </div>
                           {song.isAustralian && (
-                            <span className="text-sm bg-primary-500 px-2 py-0.5 rounded-full text-white">🦘</span>
+                            <span className="text-sm bg-primary-500 px-2 py-0.5 rounded-full text-white"><Icon name="kangaroo" title="Australian artist" /></span>
                           )}
                         </div>
                       );

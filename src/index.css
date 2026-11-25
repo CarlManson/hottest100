@@ -32,3 +32,15 @@
   --color-tertiary-500: var(--brand-tertiary);
   --color-surface: var(--brand-surface);
 }
+
+/* Fairest 100 icon set (src/components/icons). Icons take the text colour;
+   --icon-print is the off-register fill behind them. */
+.icon {
+  display: inline-block;
+  flex: none;
+  vertical-align: -0.22em;
+  overflow: visible;
+}
+:root { --icon-print: #ff6fae; }
+/* On white-text buttons and dark panels, print in translucent white so it reads on any colour. */
+.text-white .icon { --icon-print: rgb(255 255 255 / 0.35); }

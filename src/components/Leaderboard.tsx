@@ -5,6 +5,7 @@ import type { MemberProfile, FamilyMember } from '../types';
 import { LazyImage } from './LazyImage';
 import { useGroupView } from '../hooks/useGroupView';
 import { GroupMenu } from './GroupMenu';
+import { Icon } from './icons/Icon';
 
 export const Leaderboard: React.FC = () => {
   const {
@@ -60,7 +61,7 @@ export const Leaderboard: React.FC = () => {
               href="#detailed-breakdown"
               className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 underline inline-block mt-2"
             >
-              View detailed vote breakdown →
+              View detailed vote breakdown <Icon name="arrow-right" />
             </a>
             <div className="mt-3"><GroupMenu variant="light" /></div>
           </div>

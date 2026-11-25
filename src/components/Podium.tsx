@@ -1,5 +1,6 @@
 import React from 'react';
 import type { FamilyMember } from '../types';
+import { Icon, type IconName } from './icons/Icon';
 
 interface LeaderboardEntry {
   member: FamilyMember;
@@ -37,7 +38,7 @@ export const Podium: React.FC<PodiumProps> = ({ entries, isComplete: _isComplete
   // Medal and styling configs
   const rankConfig = {
     1: {
-      medal: '🥇',
+      medal: 'medal-1' as IconName,
       medalSize: 'text-5xl sm:text-7xl 2xl:text-8xl',
       nameSize: 'text-base sm:text-xl 2xl:text-2xl',
       scoreSize: 'text-3xl sm:text-5xl 2xl:text-6xl',
@@ -48,7 +49,7 @@ export const Podium: React.FC<PodiumProps> = ({ entries, isComplete: _isComplete
       shadow: 'shadow-xl',
     },
     2: {
-      medal: '🥈',
+      medal: 'medal-2' as IconName,
       medalSize: 'text-4xl sm:text-6xl 2xl:text-7xl',
       nameSize: 'text-sm sm:text-lg 2xl:text-xl',
       scoreSize: 'text-2xl sm:text-4xl 2xl:text-5xl',
@@ -59,7 +60,7 @@ export const Podium: React.FC<PodiumProps> = ({ entries, isComplete: _isComplete
       shadow: 'shadow-lg',
     },
     3: {
-      medal: '🥉',
+      medal: 'medal-3' as IconName,
       medalSize: 'text-4xl sm:text-6xl 2xl:text-7xl',
       nameSize: 'text-sm sm:text-lg 2xl:text-xl',
       scoreSize: 'text-2xl sm:text-4xl 2xl:text-5xl',
@@ -93,7 +94,7 @@ export const Podium: React.FC<PodiumProps> = ({ entries, isComplete: _isComplete
           <div key={position.rank} className={`flex flex-col items-center ${config.containerWidth}`}>
             {/* Medal */}
             <div className={`${config.medalSize} mb-2 medal`}>
-              {config.medal}
+              <Icon name={config.medal} size="1.1em" />
             </div>
 
             {/* Name(s) */}

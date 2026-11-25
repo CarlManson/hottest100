@@ -1,5 +1,6 @@
 import React from 'react';
 import type { HeatStage } from '../utils/heat';
+import { Icon } from './icons/Icon';
 
 // Deterministic pseudo-random so particles don't jump around between renders
 const rand = (seed: number) => {
@@ -74,7 +75,7 @@ export const RehearsalControls: React.FC<RehearsalControlsProps> = ({
     <button onClick={() => setPlaying(!playing)} className="px-3 py-1 rounded bg-white/20 hover:bg-white/30 font-bold w-20">
       {playing ? 'Pause' : 'Play'}
     </button>
-    <button onClick={() => setStep(Math.min(totalSteps, step + 1))} className="px-2 py-1 rounded bg-white/10 hover:bg-white/20" aria-label="Next song">▶</button>
+    <button onClick={() => setStep(Math.min(totalSteps, step + 1))} className="px-2 py-1 rounded bg-white/10 hover:bg-white/20" aria-label="Next song"><Icon name="play" /></button>
     <input
       type="range"
       min={0}

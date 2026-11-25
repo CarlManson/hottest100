@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import type { FamilyMember, Song } from '../types';
+import { Icon } from './icons/Icon';
 
 interface MostPickedSongsProps {
   songs: Song[];
@@ -30,7 +31,7 @@ export const MostPickedSongs: React.FC<MostPickedSongsProps> = ({ songs, familyM
 
   return (
     <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 border-2 border-primary-200 mt-6">
-      <h3 className="text-xl sm:text-2xl font-bold mb-1 text-gray-800">🔥 Crowd Favourites</h3>
+      <h3 className="text-xl sm:text-2xl font-bold mb-1 text-gray-800"><Icon name="fire" /> Crowd Favourites</h3>
       <p className="text-xs sm:text-sm text-gray-600 mb-4">The songs picked by the most people in the group</p>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
         {ranked.map(({ song, names }, index) => (

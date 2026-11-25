@@ -12,6 +12,7 @@ import { Archive } from './components/Archive';
 import { AlertsBar } from './components/AlertsBar';
 import { useResultNotifications } from './utils/useResultNotifications';
 import { brand } from './config/brand';
+import { Icon } from './components/icons/Icon';
 
 type Tab = 'home' | 'tv' | 'voting' | 'countdown' | 'leaderboard' | 'detailed-breakdown' | 'settings' | 'archive';
 
@@ -228,7 +229,7 @@ function AppContent() {
                     </button>
                   )}
                   <a href="#tv" className="menu-link nav-tv-link text-center" onClick={() => setMobileMenuOpen(false)}>
-                    📺 TV Mode
+                    <Icon name="tv" /> TV Mode
                   </a>
                 </div>
               )}
@@ -290,7 +291,7 @@ function AppContent() {
                 )}
                 {/* TV Mode - pinned to the far right */}
                 <a href="#tv" className="menu-link nav-tv-link ml-auto whitespace-nowrap">
-                  📺 TV Mode
+                  <Icon name="tv" /> TV Mode
                 </a>
               </div>
             </div>

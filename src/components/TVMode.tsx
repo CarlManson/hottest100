@@ -13,6 +13,7 @@ import { useNewArrivals } from '../hooks/useNewArrivals';
 import { useScoreBumps } from '../hooks/useScoreBumps';
 import { getHeatStage, getTvIntensity } from '../utils/heat';
 import { TvAtmosphere, RehearsalControls } from './TvEffects';
+import { Icon } from './icons/Icon';
 
 // TV Mode - Simplified view for large screens
 export const TVMode: React.FC = () => {
@@ -166,7 +167,7 @@ export const TVMode: React.FC = () => {
   if (isPreCountdownModeBase) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <a href="#home" className="home-link">← Back to Home</a>
+        <a href="#home" className="home-link"><Icon name="arrow-left" /> Back to Home</a>
 
         {/* Hidden marker element for CSS :has() detection */}
         {songs.length > 0 && <span data-has-songs hidden />}
@@ -221,7 +222,7 @@ export const TVMode: React.FC = () => {
                           {member.votes.length}/10 picks
                         </div>
                         {member.votes.length === 10 && (
-                          <div className="text-green-400 text-sm mt-1">✓ Ready</div>
+                          <div className="text-green-400 text-sm mt-1"><Icon name="check" /> Ready</div>
                         )}
                       </div>
                     );

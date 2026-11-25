@@ -17,6 +17,7 @@ import { LiveStreamPlayer } from './LiveStreamPlayer';
 import { useScoreBumps } from '../hooks/useScoreBumps';
 import { useGroupView } from '../hooks/useGroupView';
 import { GroupMenu } from './GroupMenu';
+import { Icon } from './icons/Icon';
 
 interface PublicHomeProps {
   /** Show the hero TV Mode button. Logged-in users get it in the navbar instead. */
@@ -217,7 +218,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
                     href="#tv"
                     className="hero-tv-button hidden lg:inline-block bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-lg transition border-2 border-white/40 hover:border-white/60 shadow-lg"
                   >
-                    📺 TV Mode
+                    <Icon name="tv" /> TV Mode
                   </a>
                 )}
                 <LiveStreamPlayer />
@@ -347,7 +348,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
                         onClick={() => setShowDetailedBreakdown(true)}
                         className="detailed-breakdown-button bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
                       >
-                        📊 Detailed Breakdown
+                        <Icon name="chart" /> Detailed Breakdown
                       </button>
                     )}
                   </div>
@@ -466,7 +467,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
                         onClick={() => setShowDetailedBreakdown(true)}
                         className="detailed-breakdown-button bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition shadow-md hover:shadow-lg"
                       >
-                        📊 Detailed Breakdown
+                        <Icon name="chart" /> Detailed Breakdown
                       </button>
                     )}
                   </div>
@@ -614,7 +615,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
                           </div>
                         </div>
                         {entry.member.votes.length === 10 && (
-                          <div className="prediction-complete-check text-green-600 text-xl">✓</div>
+                          <div className="prediction-complete-check text-green-600 text-xl"><Icon name="check" /></div>
                         )}
                       </div>
                     );
@@ -633,7 +634,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
           <div className="awards-section mb-12">
             <div className="awards-header text-center mb-6">
               <h2 className="awards-title text-2xl sm:text-4xl font-black mb-2 bg-gradient-to-r from-yellow-600 via-primary-600 to-secondary-600 bg-clip-text text-transparent">
-                🏆 {isHottest200Complete ? 'Hottest 200' : 'Hottest 100'} Awards 🏆
+                <span className="text-yellow-600"><Icon name="trophy" /></span> {isHottest200Complete ? 'Hottest 200' : 'Hottest 100'} Awards <span className="text-yellow-600"><Icon name="trophy" /></span>
               </h2>
               <p className="awards-subtitle text-gray-600 text-xs sm:text-sm">Celebrating our champions!</p>
             </div>
@@ -645,7 +646,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
                 >
                   <div className="award-card-content text-center">
                     <div className='award-label flex sm:block items-start gap-3 sm:gap-0 mb-2 sm:mb-0 w-fit mx-auto'>
-                      <div className="award-emoji text-3xl sm:text-4xl sm:mb-2 flex-shrink-0">{award.emoji}</div>
+                      <div className="award-emoji text-3xl sm:text-4xl sm:mb-2 flex-shrink-0"><Icon name={award.icon} size="1.1em" /></div>
                       <div className="award-text flex-1 min-w-0 text-left sm:text-center">
                         <h4 className="award-name font-black text-sm sm:text-lg text-gray-800 mb-1 sm:mb-2">
                           {award.title}
@@ -680,7 +681,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true }) =
         )}
         {leaderboard.length === 0 && !selectedGroup && (
           <div className="empty-state text-center py-20">
-            <div className="empty-state-icon text-6xl mb-4">🎵</div>
+            <div className="empty-state-icon text-6xl mb-4"><Icon name="music" /></div>
             <h2 className="empty-state-title text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
               Get Started!
             </h2>
