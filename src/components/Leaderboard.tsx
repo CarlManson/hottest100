@@ -4,7 +4,7 @@ import { getLeaderboard, getSongMatches, calculateMaxPossibleScore, calculateEff
 import type { MemberProfile, FamilyMember } from '../types';
 import { LazyImage } from './LazyImage';
 import { useGroupView } from '../hooks/useGroupView';
-import { GroupSwitcher } from './GroupSwitcher';
+import { GroupMenu } from './GroupMenu';
 
 export const Leaderboard: React.FC = () => {
   const {
@@ -62,7 +62,7 @@ export const Leaderboard: React.FC = () => {
             >
               View detailed vote breakdown →
             </a>
-            <GroupSwitcher className="mt-3" />
+            <div className="mt-3"><GroupMenu variant="light" /></div>
           </div>
         </div>
         {profileError && (
