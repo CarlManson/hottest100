@@ -40,6 +40,7 @@ export const TVMode: React.FC = () => {
   }, []);
 
   const { visibleMembers, selectedGroup } = useGroupView();
+  const membersWithPicks = visibleMembers.filter((m) => m.votes.length > 0 || !!m.winnerSongId);
 
   // On a Chromecast the page is the TV itself: no on-screen controls, nothing to keep awake
   const onCastReceiver = useMemo(() => isCastReceiver(), []);
@@ -228,13 +229,14 @@ export const TVMode: React.FC = () => {
             </div>
 
             {/* Participants List */}
-            {visibleMembers.length > 0 && (
+            {/* Only mates who've picked something, and only once there are songs to pick from */}
+            {songs.length > 0 && membersWithPicks.length > 0 && (
               <div className="participants-section">
                 <h3 className="text-2xl font-bold text-white mb-6 drop-shadow-lg">
                   Predictions Submitted
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {visibleMembers.map((member) => {
+                  {membersWithPicks.map((member) => {
                     const profile = getProfileForMember(member.id);
                     return (
                       <div

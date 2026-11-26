@@ -44,6 +44,9 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
   // Before anyone has voted (or there are no songs to vote for) these sections have nothing to show
   const hasSongsToPick = songs.length > 0;
   const hasPredictions = visibleMembers.some((m) => m.votes.length > 0 || !!m.winnerSongId);
+  // Before results, the section below only has the welcome (needs songs), the "It's happening" note or predictions.
+  // Leave it out entirely when none apply, so the countdown hero can meet the footer.
+  const hasLeaderboardContent = totalResults > 0 || countdownStarted || hasSongsToPick || hasPredictions;
 
   // Calculate ranks with tie handling
   const getRank = useMemo(() => {
@@ -337,7 +340,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
         )}
 
         {/* Leader Podium - Visual representation of top 3 */}
-        {leaderboard.length > 0 && (
+        {leaderboard.length > 0 && hasLeaderboardContent && (
           <div className="leaderboard-section mb-12">
 
             {/* Conditional Layout: Podium + Leaderboard OR Countdown + Leaderboard OR just Leaderboard */}
