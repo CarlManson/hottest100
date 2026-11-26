@@ -1,16 +1,20 @@
 import React, { useState, useSyncExternalStore } from 'react';
 import { brand } from '../config/brand';
 import { Icon } from './icons/Icon';
-import { installPromptStore, isInstalledApp, isIos, promptInstall } from '../utils/installPrompt';
+import { installPromptStore, isAndroid, isInstalledApp, isIos, promptInstall } from '../utils/installPrompt';
 
-type InstallMode = 'prompt' | 'ios' | 'none';
+type InstallMode = 'prompt' | 'ios' | 'android' | 'none';
 
-/** 'prompt' when the browser offers its own install dialog, 'ios' for Safari's Share menu, else 'none' */
+/**
+ * 'prompt' when the browser offers its own install dialog, 'ios' for Safari's Share menu,
+ * 'android' for the browser menu (Chrome holds back its dialog until the site has had some use), else 'none'
+ */
 function useInstallMode(): InstallMode {
   const canPrompt = useSyncExternalStore(installPromptStore.subscribe, installPromptStore.getSnapshot);
   if (isInstalledApp()) return 'none';
   if (canPrompt) return 'prompt';
-  return isIos() ? 'ios' : 'none';
+  if (isIos()) return 'ios';
+  return isAndroid() ? 'android' : 'none';
 }
 
 const DISMISS_KEY = 'install_bar_dismissed';
@@ -47,6 +51,13 @@ export const IosInstallSteps: React.FC = () => (
   <>Tap Share <ShareGlyph /> in Safari, then <strong>Add to Home Screen</strong>.</>
 );
 
+export const AndroidInstallSteps: React.FC = () => (
+  <>Tap the menu <strong aria-label="menu">⋮</strong> in your browser, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.</>
+);
+
+const ManualSteps: React.FC<{ mode: InstallMode }> = ({ mode }) =>
+  mode === 'ios' ? <IosInstallSteps /> : <AndroidInstallSteps />;
+
 /** Dismissible prompt to add the site to the home screen as an app */
 export const InstallBar: React.FC = () => {
   const mode = useInstallMode();
@@ -67,9 +78,9 @@ export const InstallBar: React.FC = () => {
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
         <img src={brand.images.appIcon} alt="" className="install-bar-icon w-7 h-7 rounded-md shrink-0" />
         <p className="install-bar-message flex-1 min-w-[12rem]">
-          {mode === 'ios'
-            ? <>Get {brand.appName} on your home screen. <IosInstallSteps /></>
-            : <>Get {brand.appName} on your home screen. It opens full screen, like an app.</>}
+          {mode === 'prompt'
+            ? <>Get {brand.appName} on your home screen. It opens full screen, like an app.</>
+            : <>Get {brand.appName} on your home screen. <ManualSteps mode={mode} /></>}
         </p>
         {mode === 'prompt' && (
           <button
@@ -102,11 +113,11 @@ export const FooterInstall: React.FC = () => {
       <button
         onClick={() => (mode === 'prompt' ? void promptInstall() : setShowSteps(!showSteps))}
         className="text-white/90 hover:text-white underline font-medium"
-        aria-expanded={mode === 'ios' ? showSteps : undefined}
+        aria-expanded={mode === 'prompt' ? undefined : showSteps}
       >
         Install the app
       </button>
-      {showSteps && <p className="mt-1 text-white/90 text-xs"><IosInstallSteps /></p>}
+      {showSteps && mode !== 'prompt' && <p className="mt-1 text-white/90 text-xs"><ManualSteps mode={mode} /></p>}
     </div>
   );
 };
