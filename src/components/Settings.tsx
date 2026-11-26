@@ -611,7 +611,7 @@ export const Settings: React.FC = () => {
                     Counting down to: {countdownDate.toLocaleString()}
                   </p>
                   <p className="pre-countdown-links text-white/80 text-center text-xs sm:text-sm mt-3">
-                    Countdown and Leaderboard are in the menu for testing until then:{' '}
+                    {isAdmin ? 'Countdown and Leaderboard are in your menu for testing until then:' : 'Countdown and Leaderboard are hidden from the Host menu until then. Open them for testing:'}{' '}
                     <a href="#countdown" className="underline font-semibold text-white">Countdown</a>
                     {' · '}
                     <a href="#leaderboard" className="underline font-semibold text-white">Leaderboard</a>
