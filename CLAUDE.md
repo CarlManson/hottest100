@@ -168,6 +168,8 @@ See `PublicHome.tsx` for complete class reference. Custom SCSS can target these 
 ### Countdown Entry
 Two separate lists (Hottest 100 vs 200) stored in same table, differentiated by `type` column. Position number determines which list automatically.
 
+The Countdown and Leaderboard menu links stay hidden until the countdown is underway (`useCountdownDateReached()` or any result entered). `#countdown` / `#leaderboard` still open for logged-in users (Settings → Event links to them for testing), and `PreCountdownNotice` explains why they're not in the menu.
+
 ### Real-time Updates
 Supabase channels (`*-channel`) subscribe to all operations (`event: '*'`) on respective tables. On any change, relevant load function re-fetches data, triggering React re-renders across all connected clients.
 
