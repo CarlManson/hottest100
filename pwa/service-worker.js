@@ -70,6 +70,8 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  // fairest100.au/tv (old smart-TV page) and the Chromecast receiver always come straight from the network
+  if (url.pathname === '/tv' || url.pathname.startsWith('/tv/') || url.pathname === '/cast-receiver.html') return;
 
   if (request.mode === 'navigate') {
     event.respondWith(networkFirstPage(request));

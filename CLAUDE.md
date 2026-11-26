@@ -277,9 +277,9 @@ Dynamic, humorous commentary displayed on the home page during the countdown.
 - Position 101 only: Shows grand finale quip when revealed (overall winner across both countdowns)
 
 ### Installable App (PWA)
-- `vite.config.ts` (`appManifest` plugin) builds `/manifest.webmanifest` from `brand.ts` (name, tagline, surface colour) and `src/assets/brand/app-icon.png`, adds the iPhone home-screen meta tags, and writes `/sw.js` from `pwa/service-worker.js` with a per-build version and the app shell to precache
-- Service worker: network-first for the page, cache-first for hashed `/assets/`, never touches other origins (Supabase, album art, stream). Only registered in production builds (`src/pwa/install.ts`)
-- `src/pwa/install.ts` captures `beforeinstallprompt` at startup and exposes `useInstallMode()` (`'prompt' | 'ios' | 'none'`); `InstallBar.tsx` shows the Home bar and footer link, hidden once installed
+- Manifest and icons: `public/manifest.webmanifest` + `public/icons/`; iPhone meta tags in `index.html`
+- `src/utils/installPrompt.ts` is the single `beforeinstallprompt` handler (`installPromptStore`, `promptInstall`, `isInstalledApp`, `isIos`). `InstallBar.tsx` (Home bar + footer link) and TV mode's Install button both use it
+- Service worker: `pwa/service-worker.js`, written to `/sw.js` by the `serviceWorker` plugin in `vite.config.ts` with a per-build version and the main entry's shell to precache. Network-first for the page, cache-first for hashed `/assets/`, never touches other origins (Supabase, album art, stream), `/tv/` or `/cast-receiver.html`. Registered in production builds only (`src/pwa/registerServiceWorker.ts`)
 - Song alerts use `registration.showNotification` when a service worker exists (required on Android Chrome and iOS home-screen apps)
 
 ### Member Groups
@@ -287,6 +287,11 @@ Dynamic, humorous commentary displayed on the home page during the countdown.
 - `useGroupView()` (`src/hooks/useGroupView.ts`) is the single source for the selected group and `visibleMembers`; public views build their leaderboard from `visibleMembers`
 - Selection is shared across components, stored in localStorage and the `?group=<slug>` URL param (TV mode reads it on load)
 - Group features hide themselves when the tables don't exist (`groupsAvailable === false`)
+
+### Showing TV Mode on a TV
+- **Cast**: `TvScreenControls.tsx` adds Cast / Full screen / "Show on your TV" buttons to TV mode (they fade when idle). `src/utils/cast.ts` loads Google's Cast sender SDK only when `brand.castAppId` (or `VITE_CAST_APP_ID`) is set and the browser is Chrome/Edge. The receiver is `public/cast-receiver.html`, registered in the Google Cast developer console as a Custom Receiver; it iframes `/?receiver=cast#tv` and takes the group over the `urn:x-cast:au.fairest100.tv` channel. `?receiver=cast` hides the on-screen controls.
+- **fairest100.au/tv**: `tv/index.html` is a second Vite entry. Modern browsers redirect to `/#tv`; old smart-TV browsers stay on a self-contained ES5 leaderboard that polls Supabase REST every 15s (no WebSockets, no Tailwind). It repeats the scoring rules from `scoring.ts`, so change both together. `?lite` / `?full` force a view; `?group=` works.
+- **PWA**: `public/manifest.webmanifest` + `public/icons/` make the site installable (see Installable App above for the service worker). TV mode also holds a screen wake lock (`useWakeLock`) for AirPlay mirroring from a phone.
 
 ### Archive System
 Preserves completed years' data and allows viewing historical results.

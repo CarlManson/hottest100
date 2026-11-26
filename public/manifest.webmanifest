@@ -1,0 +1,25 @@
+{
+  "name": "Fairest 100",
+  "short_name": "Fairest 100",
+  "description": "Triple J Hottest 100 predictions tracker",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#292e47",
+  "theme_color": "#292e47",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "TV Mode",
+      "short_name": "TV Mode",
+      "description": "Open the big-screen countdown view",
+      "url": "/#tv",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

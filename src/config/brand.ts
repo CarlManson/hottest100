@@ -39,6 +39,10 @@ export const brand = {
 
   // Optional live radio stream for the "Listen live" button. Leave unset to hide it.
   streamUrl: (import.meta.env.VITE_STREAM_URL as string | undefined) || undefined,
+
+  // Google Cast receiver app ID for the "Cast" button in TV mode (from the Cast developer console,
+  // pointing at /cast-receiver.html). Not a secret. Leave null to hide the button.
+  castAppId: (import.meta.env.VITE_CAST_APP_ID as string | undefined) || ('535FEFDA' as string | null),
 };
 
 export const COUNTDOWN_YEAR = brand.countdownYear;

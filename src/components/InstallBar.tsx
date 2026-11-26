@@ -1,7 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useSyncExternalStore } from 'react';
 import { brand } from '../config/brand';
-import { promptInstall, useInstallMode } from '../pwa/install';
 import { Icon } from './icons/Icon';
+import { installPromptStore, isInstalledApp, isIos, promptInstall } from '../utils/installPrompt';
+
+type InstallMode = 'prompt' | 'ios' | 'none';
+
+/** 'prompt' when the browser offers its own install dialog, 'ios' for Safari's Share menu, else 'none' */
+function useInstallMode(): InstallMode {
+  const canPrompt = useSyncExternalStore(installPromptStore.subscribe, installPromptStore.getSnapshot);
+  if (isInstalledApp()) return 'none';
+  if (canPrompt) return 'prompt';
+  return isIos() ? 'ios' : 'none';
+}
 
 const DISMISS_KEY = 'install_bar_dismissed';
 

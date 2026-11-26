@@ -226,3 +226,110 @@
     }
 
 }
+// Cast / full screen / "Show on your TV" controls, bottom-right of TV mode
+.tv-screen-controls {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    max-width: calc(100vw - 2rem);
+    transition: opacity 0.6s ease;
+
+    // Clear of the rehearsal controls
+    &.is-raised { bottom: 5rem; }
+
+    &.is-idle {
+        opacity: 0;
+
+        &:hover, &:focus-within { opacity: 1; }
+    }
+}
+
+.tv-screen-controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.tv-control-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.4em 0.9em;
+    border-radius: 999px;
+    border: 1px solid rgb(255 255 255 / 0.5);
+    background: rgb(41 46 71 / 0.75);
+    backdrop-filter: blur(8px);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover, &:focus-visible {
+        background: white;
+        color: var(--brand-surface);
+    }
+
+    &.is-active {
+        background: var(--brand-primary);
+        border-color: var(--brand-primary);
+        color: white;
+    }
+}
+
+.tv-help-panel {
+    position: relative;
+    width: 24rem;
+    max-width: 100%;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+    padding: 1.25rem 1.25rem 0.5rem;
+    border-radius: 1rem;
+    background: rgb(41 46 71 / 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(255 255 255 / 0.25);
+    color: white;
+    box-shadow: 0 20px 40px rgb(0 0 0 / 0.4);
+
+    h3 {
+        font-size: 1.25rem;
+        font-weight: 800;
+        margin-bottom: 0.75rem;
+        padding-right: 2rem;
+    }
+
+    section { margin-bottom: 1rem; }
+
+    h4 {
+        font-weight: 700;
+        color: var(--brand-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    p {
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: rgb(255 255 255 / 0.85);
+    }
+
+    .tv-install-button { margin-top: 0.5rem; }
+}
+
+.tv-help-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.25rem;
+    border-radius: 999px;
+    color: white;
+    opacity: 0.7;
+    cursor: pointer;
+
+    &:hover, &:focus-visible { opacity: 1; background: rgb(255 255 255 / 0.15); }
+}

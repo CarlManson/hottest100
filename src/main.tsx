@@ -4,10 +4,11 @@ import './index.css'
 import './styles/compiled.css'
 import App from './App.tsx'
 import { applyBrand } from './config/brand'
-import { setupInstallableApp } from './pwa/install'
+import './utils/installPrompt'
+import { registerServiceWorker } from './pwa/registerServiceWorker'
 
 applyBrand()
-setupInstallableApp()
+registerServiceWorker()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
