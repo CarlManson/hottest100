@@ -306,7 +306,7 @@ function AppContent() {
         <main>
           {activeTab === 'home' && <AlertsBar notifications={notifications} members={familyMembers} />}
           {activeTab === 'home' && <InstallBar />}
-          {activeTab === 'home' && <PublicHome showTvButton={!isAuthenticated} onLoginClick={isAuthenticated ? undefined : () => setShowLoginModal(true)} />}
+          {activeTab === 'home' && <PublicHome showTvButton={!isAuthenticated} onLoginClick={isAuthenticated ? undefined : () => setShowLoginModal(true)} onVoteClick={() => handleTabClick('voting')} />}
           {activeTab === 'tv' && <TVMode />}
           {activeTab === 'voting' && isAuthenticated && <VotingInterface />}
           {activeTab === 'countdown' && isAuthenticated && <CountdownEntry />}
