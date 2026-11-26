@@ -2,7 +2,7 @@
 
 A beautiful, real-time web app for tracking your mates' predictions for the Triple J Hottest 100 countdown. Built with love for friends and music! 🔥
 
-**Live Features:** Real-time sync, multi-device support, beautiful mobile-optimized UI
+**Live Features:** Real-time sync, multi-device support, installable app, TV mode with Cast, beautiful mobile-optimized UI
 **Tech Stack:** React 18, TypeScript, Tailwind CSS v4, Supabase
 **Status:** Production-ready and fully tested
 
@@ -31,8 +31,9 @@ Every year, mates across Australia gather to listen to the Triple J Hottest 100.
    - Follow [SUPABASE_SETUP.md](SUPABASE_SETUP.md)
 3. **Deploy to Netlify or Vercel** (drag & drop, 2 minutes)
    - Follow [DEPLOYMENT.md](DEPLOYMENT.md)
-4. **Share with your mates** and start voting!
-5. **Optional**: Set up AI profiles (requires Anthropic API key - see AI Member Profiles section below)
+4. **Create your logins**: add an Admin (and optionally a Host) user in Supabase Auth, then run `supabase-add-roles.sql` and `supabase-lock-writes.sql` (see Logins & Roles below)
+5. **Share with your mates** and start voting!
+6. **Optional**: Set up AI profiles (requires Anthropic API key - see AI Member Profiles section below)
 
 ### What You'll Need
 
@@ -60,19 +61,25 @@ Perfect for first-time forkers:
 ## ✨ Features
 
 ### For Users
-- **Authentication**: Secure username/password login for your group
-- **Home**: Live leaderboard with countdown progress widget (also where you land after logging in)
+- **Admin and Host logins**: Real Supabase Auth logins with two roles, enforced in the database (see Logins & Roles below). Visitors can watch everything without logging in
+- **Home**: Live leaderboard with countdown progress widget (also where you land after logging in). Before the countdown it shows a big countdown timer
 - **Hero Display**: Featured #1 song as large square tile with podium
+- **Pick the Winner**: Each mate picks one song to finish #1 for a +50 point bonus
+- **Parties**: Split your mates into parties (family, work, friends) and switch the home page, leaderboard and TV mode between them. Each party gets its own shareable link
+- **TV Mode**: A full-screen leaderboard for the telly that builds in intensity through the broadcast, with Cast, full screen and a "Show on your TV" guide. Old smart TVs can open `/tv` for a lightweight version
+- **Installable App**: Add it to your phone's home screen and it opens like an app, even on bad signal
+- **Song Alerts**: Opt-in alerts on phones and tablets every 10 songs, when your picks come in, and when the countdown starts (tap the bell next to the menu)
 - **AI Member Profiles**: Claude AI-powered personality labels and music taste analysis with cheeky Aussie commentary (requires Anthropic API key)
 - **Awards System**: Hottest 100 awards and achievements
 - **Mobile Optimized**: Beautiful responsive UI on phones, tablets, and desktop
 - **Song Management**: Import songs via JSON, CSV, or manual entry
 - **Member Management**: Rename and delete mates with confirmation
-- **Voting Interface**: Everyone picks their top 10 songs with dark theme
+- **Mates & Picks**: Everyone picks their top 10 songs and their winner; parties are managed on the same page
 - **Countdown Entry**: Enter results as they're announced (supports Hottest 100 & 200)
 - **Detailed Breakdown**: Comprehensive scoring table showing all vote matches
 - **Live Scoring**: Watch scores update in real-time across all devices
 - **Multi-Device**: Vote on phone, view on TV, enter on laptop
+- **Custom Look**: Event branding in `src/config/brand.ts`, a custom Riso-style icon set, and an app icon you can upload in Settings → Style
 
 ### For Developers
 - **TypeScript**: Full type safety
@@ -88,15 +95,19 @@ Perfect for first-time forkers:
 ## 🎮 How to Use
 
 ### Setup (Before Hottest 100)
-1. **Login**: Use your group's shared username/password
-2. **Add Songs**: Import the ~100-200 eligible songs
-3. **Add Mates**: Create profiles for everyone playing
-4. **Vote**: Each person picks their top 10 songs
-5. **Optional - AI Profiles**: Generate AI nicknames/profiles for members (click ✎ next to member name - see AI Member Profiles section)
+1. **Log in**: Admin or Host, from the menu or the Log in button on Home
+2. **Set the date**: Settings → Event sets the countdown date for everyone
+3. **Add Songs** (Admin): Import the ~100-200 eligible songs
+4. **Add Mates**: Create profiles for everyone playing on Mates & Picks
+5. **Vote**: Each person picks their top 10 songs and one song to win
+6. **Optional - Parties**: Once you have more than two mates, group them into parties on Mates & Picks
+7. **Optional - AI Profiles**: Generate AI nicknames/profiles for members (click ✎ next to member name - see AI Member Profiles section)
+
+Votes and winner picks lock automatically when the countdown starts or the first result is entered.
 
 ### During the Countdown
 1. **Enter Results**: One person enters positions as announced
-2. **Watch Live**: Everyone sees the leaderboard update instantly
+2. **Watch Live**: Everyone sees the leaderboard update instantly, on Home, in TV mode or in the installed app
 3. **Celebrate**: Winner gets bragging rights for the year!
 
 ---
@@ -113,7 +124,26 @@ Perfect for first-time forkers:
 - Position #150 = **51 points**
 - Position #101 = **100 points**
 
+### Winner pick bonus
+- Pick the song that finishes **#1** and get a flat **+50 points**, whether or not it's in your top 10
+
 **Note:** You only score points if your song appears in the countdown. Your ranking (1-10) is just for your reference.
+
+---
+
+## 🔐 Logins & Roles
+
+Logins are real Supabase Auth users (email + password). Turn sign-ups off and create the users by hand in the Supabase dashboard. The login box takes a username: `host` becomes `host@fairest100.au` (change `LOGIN_EMAIL_DOMAIN` in `src/context/AuthContext.tsx`), or type a full email.
+
+| Role | Can do |
+|------|--------|
+| **Visitor** (not logged in) | Home, TV mode, song alerts, install the app |
+| **Host** (one shared login) | Mates & Picks (mates, picks, parties, AI nicknames/profiles), Countdown results, Leaderboard, Archive, and the countdown date in Settings → Event |
+| **Admin** | Everything, including songs, archives and all settings |
+
+Roles live in the `user_roles` table. Row-level security (`supabase-lock-writes.sql`) lets everyone read but only a signed-in role write. `supabase-unlock-writes.sql` is the emergency undo.
+
+For the Host, Countdown and Leaderboard stay out of the menu until the countdown starts; the Admin always sees them.
 
 ---
 
@@ -128,7 +158,7 @@ The app includes AI-powered member profiles that analyze music taste with cheeky
 
 ### How to Use
 
-1. **Access**: Click the **✎ (edit)** button next to any member name on the Voting page
+1. **Access**: Log in as Admin or Host and click the **✎ (edit)** button next to any member name on the Mates & Picks page
 2. **Choose Generation Type**:
    - **🏷️ Re/generate Nickname**: Generates creative label only (e.g., "Pub Rock Warrior")
    - **✨ Re/generate Profile**: Generates music taste description only (3-4 sentence analysis)
@@ -160,6 +190,8 @@ supabase secrets set ANTHROPIC_API_KEY=your_anthropic_api_key_here
 supabase functions deploy generate-profile
 ```
 
+The function checks the caller's login, so only a signed-in Admin or Host can spend API credit.
+
 Detailed instructions are in [supabase/functions/README.md](supabase/functions/README.md)
 
 ### Cost & Usage
@@ -183,11 +215,11 @@ cd hottest100
 # Install dependencies
 npm install
 
-# Create .env file with your Supabase and authentication credentials
+# Create .env file with your Supabase credentials
 cp .env.example .env
 # Edit .env and add:
 # - Supabase URL and anonymous key
-# - Authentication username/password for your group
+# - Optional: VITE_STREAM_URL (Listen live button), VITE_CAST_APP_ID (Cast button)
 
 # Run development server
 npm run dev
@@ -201,7 +233,10 @@ Open http://localhost:5173
 npm run build       # Creates dist/ folder
 npm run preview     # Test production build locally
 npm run lint        # Check for issues
+npm test            # Scoring and awards tests (Vitest)
 ```
+
+The production build also writes the service worker (`/sw.js`) and the `/tv` page for old smart TVs.
 
 ### Tech Stack Details
 
@@ -266,9 +301,10 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 - **Backups**: Automatic daily backups (7-day retention on free tier)
 
 ### Privacy & Security
-- **Authentication**: Username/password login (shared credentials for your group)
-- **Session Management**: 7-day authentication state in localStorage and cookies
-- **Security Note**: Suitable for small group sharing; not enterprise-grade but protects against casual access
+- **Authentication**: Supabase Auth logins with Admin and Host roles; no passwords in the site's code
+- **Database rules**: Row-level security lets anyone read but only a signed-in role write
+- **Session Management**: Supabase keeps the session in localStorage and refreshes it
+- **Song alerts**: The "which mate are you" pick is saved on that device only
 - No analytics or tracking
 - No ads or external scripts
 - Your group's data stays in your Supabase project
