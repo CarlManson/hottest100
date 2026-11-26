@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Fairest 100 TV</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #292e47; overflow: hidden; }
+    iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; }
+  </style>
+  <!-- Google Cast receiver: the TV runs Fairest 100's TV mode itself, so the phone that started casting is free. -->
+  <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+</head>
+<body>
+  <iframe id="tv" title="Fairest 100 TV mode" src="/?receiver=cast#tv"></iframe>
+  <script>
+    (function () {
+      var NAMESPACE = 'urn:x-cast:au.fairest100.tv';
+      var frame = document.getElementById('tv');
+      var currentGroup = null;
+
+      function show(group) {
+        if (group === currentGroup) return;
+        currentGroup = group;
+        var params = new URLSearchParams({ receiver: 'cast' });
+        if (group) params.set('group', group);
+        frame.src = '/?' + params.toString() + '#tv';
+      }
+
+      var context = cast.framework.CastReceiverContext.getInstance();
+      context.addCustomMessageListener(NAMESPACE, function (event) {
+        var data = event.data || {};
+        show(typeof data.group === 'string' && data.group ? data.group : null);
+      });
+
+      var options = new cast.framework.CastReceiverOptions();
+      // Nothing is "playing", so stop the TV from closing the app after a few idle minutes.
+      options.disableIdleTimeout = true;
+      // No video or audio here: skip loading the media player libraries.
+      options.skipPlayersLoad = true;
+      options.customNamespaces = {};
+      options.customNamespaces[NAMESPACE] = cast.framework.system.MessageType.JSON;
+      context.start(options);
+    })();
+  </script>
+</body>
+</html>

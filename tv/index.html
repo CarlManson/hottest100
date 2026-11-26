@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#292e47" />
+  <title>Fairest 100 TV</title>
+  <!--
+    fairest100.au/tv: the short address to type on a TV.
+    Modern browsers go straight to the full TV mode (/#tv). Old smart-TV browsers stay here and get a
+    lightweight leaderboard written in plain ES5 with no build step, no WebSockets and no modern CSS,
+    which refreshes itself every few seconds.
+    Add ?lite to force this view, or ?full to force the full TV mode.
+  -->
+  <script>
+    (function () {
+      var search = window.location.search || '';
+      function has(name) { return new RegExp('[?&]' + name + '(=|&|$)').test(search); }
+      var modern = false;
+      try {
+        modern = !!(window.CSS && CSS.supports &&
+          CSS.supports('color', 'color-mix(in srgb, red, blue)') &&
+          CSS.supports('selector(:has(a))') &&
+          'noModule' in document.createElement('script'));
+      } catch (e) { modern = false; }
+      if (has('full') || (modern && !has('lite'))) {
+        var rest = search.replace(/[?&](full|lite)(=[^&]*)?/g, '').replace(/^&/, '?');
+        if (rest === '?') rest = '';
+        window.location.replace('/' + rest + '#tv');
+      }
+    })();
+  </script>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background: #292e47;
+      color: #ffffff;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+    .wrap { padding: 2.5vh 3vw; }
+    .top { overflow: hidden; margin-bottom: 2vh; }
+    .brand { float: left; font-size: 4.5vh; font-weight: bold; color: #f97316; }
+    .progress-text { float: right; font-size: 3.2vh; color: #cbd5e1; line-height: 6vh; }
+    .bar { height: 1.2vh; background: #3d4466; border-radius: 1vh; overflow: hidden; margin-bottom: 3vh; }
+    .bar-fill { height: 100%; width: 0; background: #f97316; }
+    .cols { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .cols > tbody > tr > td { vertical-align: top; }
+    .left { width: 38%; padding-right: 3vw; }
+    .label { font-size: 2.6vh; text-transform: uppercase; letter-spacing: 0.15em; color: #94a3b8; margin-bottom: 1vh; }
+    .now { background: #353b5c; border-radius: 1.5vh; padding: 2.5vh 2vw; margin-bottom: 3vh; }
+    .now-pos { font-size: 9vh; font-weight: bold; color: #f97316; line-height: 1; }
+    .now-title { font-size: 4.6vh; font-weight: bold; margin-top: 1.5vh; line-height: 1.15; }
+    .now-artist { font-size: 3.4vh; color: #cbd5e1; margin-top: 0.8vh; }
+    .now-pickers { font-size: 2.8vh; color: #fde68a; margin-top: 1.5vh; }
+    .recent { font-size: 2.8vh; color: #e2e8f0; }
+    .recent div { padding: 0.6vh 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .recent b { color: #f97316; display: inline-block; min-width: 3em; }
+    .board { width: 100%; border-collapse: collapse; }
+    .board td { padding: 0.35em 0.5em; border-bottom: 1px solid #3d4466; white-space: nowrap; overflow: hidden; }
+    .board .rank { width: 2.4em; text-align: center; font-weight: bold; color: #94a3b8; }
+    .board .name { font-weight: bold; max-width: 1px; text-overflow: ellipsis; }
+    .board .hits { width: 6em; color: #94a3b8; font-size: 0.75em; text-align: right; }
+    .board .score { width: 4em; text-align: right; font-weight: bold; color: #f97316; }
+    .board tr.r1 .rank { color: #facc15; }
+    .board tr.r2 .rank { color: #e5e7eb; }
+    .board tr.r3 .rank { color: #fb923c; }
+    .waiting { font-size: 5vh; font-weight: bold; margin-top: 4vh; }
+    .status { position: fixed; right: 2vw; bottom: 1.5vh; font-size: 2vh; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand" id="brand">Fairest 100</div>
+      <div class="progress-text" id="progress">Loading…</div>
+    </div>
+    <div class="bar"><div class="bar-fill" id="bar"></div></div>
+    <table class="cols"><tbody><tr>
+      <td class="left">
+        <div id="now"></div>
+        <div class="label" id="recent-label"></div>
+        <div class="recent" id="recent"></div>
+      </td>
+      <td>
+        <div class="label" id="board-label">Leaderboard</div>
+        <table class="board" id="board"><tbody></tbody></table>
+      </td>
+    </tr></tbody></table>
+  </div>
+  <div class="status" id="status"></div>
+
+  <script>
+    (function () {
+      var SUPABASE_URL = '%VITE_SUPABASE_URL%';
+      var SUPABASE_KEY = '%VITE_SUPABASE_ANON_KEY%';
+      var REFRESH_MS = 15000;
+      // Reload the whole page now and then: old TV browsers leak memory over a long countdown
+      var RELOAD_MS = 2 * 60 * 60 * 1000;
+      var WINNER_PICK_BONUS = 50;
+
+      var groupKey = (function () {
+        var m = /[?&]group=([^&]*)/.exec(window.location.search || '');
+        return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
+      })();
+
+      function $(id) { return document.getElementById(id); }
+
+      function esc(text) {
+        return String(text == null ? '' : text)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function slug(name) {
+        var s = String(name).toLowerCase();
+        if (s.normalize) s = s.normalize('NFKD');
+        return s.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      }
+
+      function get(path, done) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', SUPABASE_URL + '/rest/v1/' + path, true);
+        xhr.setRequestHeader('apikey', SUPABASE_KEY);
+        xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
+        xhr.timeout = 12000;
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState !== 4) return;
+          if (xhr.status >= 200 && xhr.status < 300) {
+            var data = null;
+            try { data = JSON.parse(xhr.responseText); } catch (e) { data = null; }
+            done(data ? null : 'bad response', data);
+          } else {
+            done('HTTP ' + xhr.status, null);
+          }
+        };
+        xhr.ontimeout = function () { done('timeout', null); };
+        xhr.send();
+      }
+
+      // Fetch several tables in parallel; optional ones (groups) may fail without stopping the rest
+      function loadAll(done) {
+        var paths = {
+          songs: 'songs?select=id,title,artist',
+          members: 'family_members?select=*&order=name.asc',
+          votes: 'votes?select=family_member_id,song_id',
+          results: 'countdown_results?select=song_id,position,type&order=position.asc'
+        };
+        if (groupKey) {
+          paths.groups = 'groups?select=id,name';
+          paths.groupMembers = 'group_members?select=group_id,family_member_id';
+        }
+        var out = {}, pending = 0, failed = null, key;
+        for (key in paths) if (paths.hasOwnProperty(key)) pending++;
+        for (key in paths) {
+          if (!paths.hasOwnProperty(key)) continue;
+          (function (k) {
+            get(paths[k], function (err, data) {
+              if (err && k !== 'groups' && k !== 'groupMembers') failed = err;
+              out[k] = data || [];
+              pending--;
+              if (pending === 0) done(failed, out);
+            });
+          })(key);
+        }
+      }
+
+      function compute(d) {
+        var songs = {}, i, j;
+        for (i = 0; i < d.songs.length; i++) songs[d.songs[i].id] = d.songs[i];
+
+        var h100 = [], h200 = [];
+        for (i = 0; i < d.results.length; i++) {
+          if (d.results[i].type === 'hottest100') h100.push(d.results[i]); else h200.push(d.results[i]);
+        }
+        var has200 = h200.length > 0;
+        var points = {};
+        for (i = 0; i < h100.length; i++) points[h100[i].song_id] = has200 ? 101 + (100 - h100[i].position) : 1 + (100 - h100[i].position);
+        for (i = 0; i < h200.length; i++) points[h200[i].song_id] = 201 - h200[i].position;
+        var winner = null;
+        for (i = 0; i < h100.length; i++) if (h100[i].position === 1) winner = h100[i].song_id;
+
+        var members = d.members, group = null;
+        if (groupKey && d.groups) {
+          for (i = 0; i < d.groups.length; i++) {
+            if (slug(d.groups[i].name) === groupKey || d.groups[i].id === groupKey) group = d.groups[i];
+          }
+          if (group) {
+            var inGroup = {};
+            for (i = 0; i < d.groupMembers.length; i++) {
+              if (d.groupMembers[i].group_id === group.id) inGroup[d.groupMembers[i].family_member_id] = true;
+            }
+            members = [];
+            for (i = 0; i < d.members.length; i++) if (inGroup[d.members[i].id]) members.push(d.members[i]);
+          }
+        }
+
+        var memberIds = {};
+        for (i = 0; i < members.length; i++) memberIds[members[i].id] = i;
+        var board = [];
+        for (i = 0; i < members.length; i++) {
+          board.push({ name: members[i].name, score: 0, hits: 0, picks: 0, picksBySong: {} });
+        }
+        for (j = 0; j < d.votes.length; j++) {
+          var v = d.votes[j], idx = memberIds[v.family_member_id];
+          if (idx === undefined) continue;
+          board[idx].picks++;
+          board[idx].picksBySong[v.song_id] = true;
+          if (points[v.song_id] !== undefined) { board[idx].score += points[v.song_id]; board[idx].hits++; }
+        }
+        for (i = 0; i < members.length; i++) {
+          if (winner && members[i].winner_song_id === winner) board[i].score += WINNER_PICK_BONUS;
+        }
+        board.sort(function (a, b) { return b.score - a.score || (a.name < b.name ? -1 : 1); });
+
+        var active = has200 ? h200 : h100; // sorted by position ascending
+        return { songs: songs, h100: h100, h200: h200, has200: has200, active: active, board: board, group: group };
+      }
+
+      function render(s) {
+        var total = s.h100.length + s.h200.length;
+        var outOf = s.has200 ? 200 : 100;
+        var done = s.has200 ? total : s.h100.length;
+        $('progress').innerHTML = done + ' / ' + outOf + ' songs';
+        $('bar').style.width = Math.round(done / outOf * 100) + '%';
+        $('board-label').innerHTML = s.group ? esc(s.group.name) : 'Leaderboard';
+
+        // Latest song: the lowest position revealed so far
+        var latest = s.active.length ? s.active[0] : null;
+        if (latest && s.songs[latest.song_id]) {
+          var song = s.songs[latest.song_id];
+          var pickers = [];
+          for (var p = 0; p < s.board.length; p++) if (s.board[p].picksBySong[latest.song_id]) pickers.push(s.board[p].name);
+          $('now').innerHTML =
+            '<div class="label">Just in</div>' +
+            '<div class="now"><div class="now-pos">#' + latest.position + '</div>' +
+            '<div class="now-title">' + esc(song.title) + '</div>' +
+            '<div class="now-artist">' + esc(song.artist) + '</div>' +
+            (pickers.length ? '<div class="now-pickers">Picked by ' + esc(pickers.join(', ')) + '</div>' : '') +
+            '</div>';
+        } else {
+          $('now').innerHTML = '<div class="waiting">Waiting for the countdown to start…</div>';
+        }
+
+        var recentHtml = '';
+        for (var r = 1; r < s.active.length && r < 7; r++) {
+          var rs = s.songs[s.active[r].song_id];
+          if (rs) recentHtml += '<div><b>#' + s.active[r].position + '</b>' + esc(rs.title) + ' · ' + esc(rs.artist) + '</div>';
+        }
+        $('recent-label').innerHTML = recentHtml ? 'Earlier' : '';
+        $('recent').innerHTML = recentHtml;
+
+        // Size rows so the whole leaderboard fits on screen
+        var count = Math.max(s.board.length, 1);
+        var available = (window.innerHeight || 720) * 0.66;
+        var fontPx = Math.max(14, Math.min((window.innerHeight || 720) * 0.05, available / count / 1.75));
+        var rows = '', rank = 0, lastScore = null;
+        for (var i = 0; i < s.board.length; i++) {
+          var e = s.board[i];
+          if (e.score !== lastScore) { rank = i + 1; lastScore = e.score; }
+          rows += '<tr class="r' + (e.score > 0 ? rank : 0) + '">' +
+            '<td class="rank">' + (e.score > 0 ? rank : '–') + '</td>' +
+            '<td class="name">' + esc(e.name) + '</td>' +
+            '<td class="hits">' + e.hits + ' of ' + e.picks + '</td>' +
+            '<td class="score">' + e.score + '</td></tr>';
+        }
+        var board = $('board');
+        board.style.fontSize = Math.round(fontPx) + 'px';
+        board.tBodies[0].innerHTML = rows;
+      }
+
+      var lastOk = 0;
+      function refresh() {
+        loadAll(function (err, data) {
+          if (err) {
+            $('status').innerHTML = lastOk ? 'Reconnecting…' : 'Can’t reach Fairest 100 yet. Retrying…';
+          } else {
+            lastOk = new Date().getTime();
+            $('status').innerHTML = '';
+            try { render(compute(data)); } catch (e) { $('status').innerHTML = 'Something went wrong. Retrying…'; }
+          }
+          setTimeout(refresh, REFRESH_MS);
+        });
+      }
+
+      if (SUPABASE_URL.charAt(0) === '%') {
+        $('progress').innerHTML = '';
+        $('now').innerHTML = '<div class="waiting">This page needs the Supabase settings at build time.</div>';
+        return;
+      }
+      refresh();
+      setTimeout(function () { window.location.reload(); }, RELOAD_MS);
+    })();
+  </script>
+</body>
+</html>

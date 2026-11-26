@@ -17,6 +17,10 @@ import { Icon } from './icons/Icon';
 import { WinnerPickBadge } from './WinnerPick';
 import { WINNER_PICK_BONUS } from '../utils/scoring';
 import { getTippedSongs, getWinnerPickers, joinNames } from '../utils/winnerPick';
+import { TvScreenControls } from './TvScreenControls';
+import { useWakeLock } from '../hooks/useWakeLock';
+import { isCastReceiver } from '../utils/cast';
+import { groupSlug } from '../utils/groups';
 
 // TV Mode - Simplified view for large screens
 export const TVMode: React.FC = () => {
@@ -36,6 +40,13 @@ export const TVMode: React.FC = () => {
   }, []);
 
   const { visibleMembers, selectedGroup } = useGroupView();
+
+  // On a Chromecast the page is the TV itself: no on-screen controls, nothing to keep awake
+  const onCastReceiver = useMemo(() => isCastReceiver(), []);
+  useWakeLock(!onCastReceiver);
+  const screenControls = onCastReceiver ? null : (
+    <TvScreenControls groupKey={selectedGroup ? groupSlug(selectedGroup.name) : null} raised={rehearsal.active} />
+  );
   const leaderboard = getLeaderboard(visibleMembers, countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
   const { bumps, bumpId } = useScoreBumps(leaderboard);
@@ -182,7 +193,8 @@ export const TVMode: React.FC = () => {
   if (isPreCountdownModeBase) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <a href="#home" className="home-link"><Icon name="arrow-left" /> Back to Home</a>
+        {!onCastReceiver && <a href="#home" className="home-link"><Icon name="arrow-left" /> Back to Home</a>}
+        {screenControls}
 
         {/* Hidden marker element for CSS :has() detection */}
         {songs.length > 0 && <span data-has-songs hidden />}
@@ -253,7 +265,7 @@ export const TVMode: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      
+      {screenControls}
 
       <TvAtmosphere stage={heatStage} revealKey={revealKey} />
       {rehearsal.active && (
