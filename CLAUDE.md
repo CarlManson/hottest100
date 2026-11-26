@@ -26,22 +26,17 @@ npm run lint      # Run ESLint
 2. Add Supabase credentials:
    - `VITE_SUPABASE_URL` - Supabase project URL
    - `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key
-3. Set authentication credentials:
-   - `VITE_AUTH_USERNAME` - Username for admin access (choose something unique to your group)
-   - `VITE_AUTH_PASSWORD` - Strong password (recommend using a password generator)
-4. Run `supabase-schema.sql` in Supabase SQL Editor to create tables
+3. Run `supabase-schema.sql` in Supabase SQL Editor to create tables
+4. Set up logins (see Logins & Roles below): create the users, run `supabase-add-roles.sql`, then `supabase-lock-writes.sql`
 
-### Security & Sharing
-**Authentication**: The app uses client-side username/password authentication stored in environment variables. This is suitable for small group sharing where one set of credentials is shared among trusted users.
-
-**For sharing with other Triple J fans:**
-- Each group should set up their own Supabase project
-- Choose a unique, non-obvious username
-- Use a strong, randomly-generated password
-- This approach protects against casual brute force attempts
-- **Note**: This is not enterprise-grade security, but appropriate for a small group prediction tracker
-
-**Session Management**: Authentication state is stored in both localStorage and cookies with a 7-day expiration.
+### Logins & Roles
+- Real Supabase Auth logins (email + password, sign-ups off, users created by hand in the dashboard). The login box takes a username; a bare `host` becomes `host@fairest100.au` (`LOGIN_EMAIL_DOMAIN` in `src/context/AuthContext.tsx`), or a full email works too.
+- Roles live in `user_roles` (`admin` | `host`); `app_role()` returns the signed-in user's role. `useAuth()` exposes `role`, `isAdmin`, `isSignedIn`.
+- **Admin**: everything. **Host** (one shared login): Mates & Picks (add, edit, delete mates, picks, AI nicknames/profiles), Parties, Countdown results, Leaderboard, Archive viewing, and Settings → Event (countdown date) only.
+- Enforced by RLS (`supabase-lock-writes.sql`): everyone can read every table (Home, TV, /tv polling, realtime); writes need a role. Songs, archives and other settings are Admin only; Host may write `app_settings` only for `countdown_date`. `supabase-unlock-writes.sql` is the emergency undo.
+- The `generate-profile` edge function checks `app_role()` from the caller's token, so only a signed-in Admin/Host can spend API credit. `profileGenerator.ts` sends the session token via `authHeader()`.
+- Countdown and Leaderboard are always in the menu (everyone logged in is Admin or Host); `PreCountdownNotice` notes when it's a test run before the countdown starts.
+- Supabase keeps the session in localStorage and refreshes it. The old `hottest100_auth` flag and cookie are cleared on load.
 
 ## Architecture
 
@@ -168,7 +163,7 @@ See `PublicHome.tsx` for complete class reference. Custom SCSS can target these 
 ### Countdown Entry
 Two separate lists (Hottest 100 vs 200) stored in same table, differentiated by `type` column. Position number determines which list automatically.
 
-The Countdown and Leaderboard menu links stay hidden until the countdown is underway (`useCountdownDateReached()` or any result entered). `#countdown` / `#leaderboard` still open for logged-in users (Settings → Event links to them for testing), and `PreCountdownNotice` explains why they're not in the menu.
+Countdown and Leaderboard are only for logged-in users (Admin/Host) and are always in their menu. Before the countdown starts, `PreCountdownNotice` says the page is a test run.
 
 ### Real-time Updates
 Supabase channels (`*-channel`) subscribe to all operations (`event: '*'`) on respective tables. On any change, relevant load function re-fetches data, triggering React re-renders across all connected clients.

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { AppIconSetting } from './AppIconSetting';
 import type { Song } from '../types';
@@ -54,7 +55,8 @@ export const Settings: React.FC = () => {
     getNextAvailableRegenerationTime
   } = useApp();
 
-  // Tab state
+  // Hosts only get the Event tab; the rest is for the Admin
+  const { isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('event');
 
   // Countdown settings
@@ -439,7 +441,9 @@ export const Settings: React.FC = () => {
     <div className="max-w-6xl mx-auto p-3 sm:p-6">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Settings</h1>
-        <p className="text-sm sm:text-base text-gray-600">Manage AI prompts, songs, and data</p>
+        <p className="text-sm sm:text-base text-gray-600">
+          {isAdmin ? 'Manage the event, style, AI prompts, songs, and data' : 'Set the countdown date. Songs, style and data are looked after by the Admin.'}
+        </p>
       </div>
 
       {/* Tab Navigation */}
@@ -454,6 +458,7 @@ export const Settings: React.FC = () => {
         >
           <Icon name="calendar" /> Event
         </button>
+        {isAdmin && (<>
         <button
           onClick={() => setActiveTab('style')}
           className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
@@ -494,6 +499,7 @@ export const Settings: React.FC = () => {
         >
           <Icon name="save" /> Data
         </button>
+        </>)}
       </div>
 
       {saveMessage && (
@@ -605,7 +611,7 @@ export const Settings: React.FC = () => {
                     Counting down to: {countdownDate.toLocaleString()}
                   </p>
                   <p className="pre-countdown-links text-white/80 text-center text-xs sm:text-sm mt-3">
-                    Countdown and Leaderboard are hidden from the menu until then. Open them for testing:{' '}
+                    Countdown and Leaderboard are in the menu for testing until then:{' '}
                     <a href="#countdown" className="underline font-semibold text-white">Countdown</a>
                     {' · '}
                     <a href="#leaderboard" className="underline font-semibold text-white">Leaderboard</a>
