@@ -13,7 +13,7 @@ import { Archive } from './components/Archive';
 import { AlertsBar, AlertsMemberSelect, ALERTS_SUMMARY } from './components/AlertsBar';
 import { InstallBar, FooterInstall } from './components/InstallBar';
 import { useResultNotifications } from './utils/useResultNotifications';
-import { useCountdownSettings } from './hooks/useCountdownSettings';
+import { useCountdownSettings, useCountdownDateReached } from './hooks/useCountdownSettings';
 import { brand } from './config/brand';
 import { Icon } from './components/icons/Icon';
 
@@ -25,7 +25,7 @@ function AppContent() {
   const { countdownDate } = useCountdownSettings();
   const notifications = useResultNotifications(songs, countdownResults, hottest200Results, familyMembers, countdownDate, !loading);
   const [activeTab, setActiveTab] = useState<Tab>('home');
-  const { ready: authReady, role, isSignedIn: isAuthenticated, signIn, signOut } = useAuth();
+  const { ready: authReady, role, isAdmin, isSignedIn: isAuthenticated, signIn, signOut } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [username, setUsername] = useState('');
@@ -34,6 +34,14 @@ function AppContent() {
   const [signingIn, setSigningIn] = useState(false);
 
   const hasArchives = archives.length > 0;
+
+  // The Admin always sees Countdown and Leaderboard. For the Host they stay out of the menu
+  // until the countdown starts (date reached or first result entered); #countdown and
+  // #leaderboard still open for testing, and Settings → Event links to them.
+  const countdownDateReached = useCountdownDateReached();
+  const countdownUnderway = countdownDateReached || countdownResults.length > 0 || hottest200Results.length > 0;
+  const showCountdownTab = isAdmin || countdownUnderway || activeTab === 'countdown';
+  const showLeaderboardTab = isAdmin || countdownUnderway || activeTab === 'leaderboard' || activeTab === 'detailed-breakdown';
 
   // Get tab from URL hash
   const getTabFromHash = (): Tab => {
@@ -197,6 +205,7 @@ function AppContent() {
                   </button>
                   <button
                     onClick={() => handleTabClick('countdown')}
+                    hidden={!showCountdownTab}
                                         className={`menu-link ${
                       activeTab === 'countdown'
                         ? 'active'
@@ -207,6 +216,7 @@ function AppContent() {
                   </button>
                   <button
                     onClick={() => handleTabClick('leaderboard')}
+                    hidden={!showLeaderboardTab}
                                         className={`menu-link ${
                       activeTab === 'leaderboard'
                         ? 'active'
@@ -258,6 +268,7 @@ function AppContent() {
                 </button>
                 <button
                   onClick={() => handleTabClick('countdown')}
+                  hidden={!showCountdownTab}
                                     className={`menu-link ${
                     activeTab === 'countdown'
                       ? 'active'
@@ -268,6 +279,7 @@ function AppContent() {
                 </button>
                 <button
                   onClick={() => handleTabClick('leaderboard')}
+                  hidden={!showLeaderboardTab}
                                     className={`menu-link ${
                     activeTab === 'leaderboard'
                       ? 'active'
