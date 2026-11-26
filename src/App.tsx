@@ -138,27 +138,16 @@ function AppContent() {
           <div className="max-w-7xl mx-auto px-6 py-6 relative">
             <img
               className="logo cursor-pointer"
-<<<<<<< HEAD
               style={showAlerts ? { width: 'calc(100% - 110px)' } : undefined}
-=======
-              style={showAlerts && isAuthenticated ? { width: 'calc(100% - 110px)' } : undefined}
->>>>>>> origin/claude/project-thread-sniczj
               src={brand.images.logo}
               alt={`${brand.appName} logo`}
               onClick={() => handleTabClick('home')}
             />
             {/* Banner right - hidden on mobile, shown on desktop */}
             {brand.images.mascot && <img className="banner-right hidden md:block pointer-events-none" src={brand.images.mascot} alt="" />}
-<<<<<<< HEAD
             {/* Mobile buttons: song alerts and the menu, vertically centred */}
             <div className="header-buttons absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
               {showAlerts && <AlertsBellButton notifications={notifications} onClick={() => { setMobileMenuOpen(false); setAlertsOpen(true); }} />}
-=======
-            {/* Mobile buttons: song alerts, plus the menu when logged in; vertically centred */}
-            <div className="header-buttons absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              {showAlerts && <AlertsBellButton notifications={notifications} onClick={() => { setMobileMenuOpen(false); setAlertsOpen(true); }} />}
-              {isAuthenticated && (
->>>>>>> origin/claude/project-thread-sniczj
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden p-2 rounded-lg bg-white/20 hover:bg-white/30 transition"
@@ -180,10 +169,6 @@ function AppContent() {
                   )}
                 </svg>
               </button>
-<<<<<<< HEAD
-=======
-              )}
->>>>>>> origin/claude/project-thread-sniczj
             </div>
           </div>
         </header>
@@ -456,10 +441,7 @@ function AppContent() {
             </p>
             <div className="mt-4 space-y-2">
               <FooterInstall />
-<<<<<<< HEAD
               {/* Settings and Log in / Log out live in the menu; desktop visitors have no menu, so they keep a footer link */}
-=======
->>>>>>> origin/claude/project-thread-sniczj
               {isAuthenticated ? (
                 role && <p className="footer-role text-white/80">Logged in as {ROLE_LABELS[role]}</p>
               ) : (
