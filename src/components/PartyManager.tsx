@@ -7,7 +7,7 @@ type Draft = { id?: string; name: string; emoji: string; memberIds: string[] };
 
 const emptyDraft: Draft = { name: '', emoji: '', memberIds: [] };
 
-/** Party management on the Mates page (the `voting` tab) (stored in the `groups` tables) */
+/** Party management on the Mates & Picks page (stored in the `groups` tables) */
 export const PartyManager: React.FC = () => {
   const { groups, groupsAvailable, familyMembers, saveGroup, removeGroup } = useApp();
   const [draft, setDraft] = useState<Draft | null>(null);

@@ -185,7 +185,7 @@ export const VotingInterface: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6">
-      <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 hidden sm:block">Mates &amp; votes</h2>
+      <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-6 hidden sm:block">Mates &amp; Picks</h2>
 
       {countdownUnderway && (
         <div className={`rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-2 ${

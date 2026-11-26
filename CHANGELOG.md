@@ -11,8 +11,8 @@
 - Optional: set `VITE_STREAM_URL` to show the "Listen live" button
 
 ### Changed — groups are now Parties
-- The Votes menu item is now **Mates**, since that page holds mates, their picks and parties
-- "Groups" are called **Parties** everywhere on screen, and they're managed on the Mates page (formerly Votes), below the list of mates instead of in Settings (the Settings → Groups tab is gone). Database tables, links (`?group=`) and existing parties are unchanged
+- The Votes menu item is now **Mates & Picks**, since that page holds mates, their picks and parties
+- "Groups" are called **Parties** everywhere on screen, and they're managed on the Mates & Picks page (formerly Votes), below the list of mates instead of in Settings (the Settings → Groups tab is gone). Database tables, links (`?group=`) and existing parties are unchanged
 
 ### Added — installable app
 - The site can be installed to a phone's home screen and opens full screen like an app (iPhone: Share → Add to Home Screen; Android/desktop Chrome: Install). No app stores involved
