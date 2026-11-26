@@ -345,7 +345,7 @@ body {
   display: none;
 }
 
-main:has(.hero-banner--feature) + footer {
+main:has(.hero-banner--feature) ~ footer {
   margin-top: 0;
 }
 

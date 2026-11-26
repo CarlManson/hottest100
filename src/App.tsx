@@ -138,17 +138,16 @@ function AppContent() {
           <div className="max-w-7xl mx-auto px-6 py-6 relative">
             <img
               className="logo cursor-pointer"
-              style={showAlerts && isAuthenticated ? { width: 'calc(100% - 110px)' } : undefined}
+              style={showAlerts ? { width: 'calc(100% - 110px)' } : undefined}
               src={brand.images.logo}
               alt={`${brand.appName} logo`}
               onClick={() => handleTabClick('home')}
             />
             {/* Banner right - hidden on mobile, shown on desktop */}
             {brand.images.mascot && <img className="banner-right hidden md:block pointer-events-none" src={brand.images.mascot} alt="" />}
-            {/* Mobile buttons: song alerts, plus the menu when logged in; vertically centred */}
+            {/* Mobile buttons: song alerts and the menu, vertically centred */}
             <div className="header-buttons absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
               {showAlerts && <AlertsBellButton notifications={notifications} onClick={() => { setMobileMenuOpen(false); setAlertsOpen(true); }} />}
-              {isAuthenticated && (
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden p-2 rounded-lg bg-white/20 hover:bg-white/30 transition"
@@ -170,14 +169,13 @@ function AppContent() {
                   )}
                 </svg>
               </button>
-              )}
             </div>
           </div>
         </header>
         )}
 
         {/* Hide nav menu for TV mode */}
-        {activeTab !== 'tv' && isAuthenticated && (
+        {activeTab !== 'tv' && (isAuthenticated || mobileMenuOpen) && (
           <nav id="main-menu" className="sticky top-0 z-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
               {/* Mobile current tab label - hidden since menu is now in header */}
@@ -191,68 +189,70 @@ function AppContent() {
 
               {/* Mobile Dropdown Menu */}
               {mobileMenuOpen && (
-                <div className="mobile-menu md:hidden mobile-menu">
+                <div className="mobile-menu md:hidden">
                   <button
                     onClick={() => handleTabClick('home')}
-                    className={`menu-link ${
-                      activeTab === 'home'
-                        ? 'active'
-                        : ''
-                    }`}
+                    className={`menu-link ${activeTab === 'home' ? 'active' : ''}`}
                   >
                     Home
                   </button>
-                  <button
-                    onClick={() => handleTabClick('voting')}
-                    className={`menu-link ${
-                      activeTab === 'voting'
-                        ? 'active'
-                        : ''
-                    }`}
-                  >
-                    Mates &amp; Picks
-                  </button>
-                  <button
-                    onClick={() => handleTabClick('countdown')}
-                    hidden={!showCountdownTab}
-                                        className={`menu-link ${
-                      activeTab === 'countdown'
-                        ? 'active'
-                        : ''
-                    }`}
-                  >
-                    Countdown
-                  </button>
-                  <button
-                    onClick={() => handleTabClick('leaderboard')}
-                    hidden={!showLeaderboardTab}
-                                        className={`menu-link ${
-                      activeTab === 'leaderboard'
-                        ? 'active'
-                        : ''
-                    }`}
-                  >
-                    Leaderboard
-                  </button>
-                  {hasArchives && (
-                    <button
-                      onClick={() => handleTabClick('archive')}
-                      className={`menu-link ${
-                        activeTab === 'archive'
-                          ? 'active'
-                          : ''
-                      }`}
-                    >
-                      Archive
-                    </button>
+                  {isAuthenticated && (
+                    <>
+                      <button
+                        onClick={() => handleTabClick('voting')}
+                        className={`menu-link ${activeTab === 'voting' ? 'active' : ''}`}
+                      >
+                        Votes
+                      </button>
+                      <button
+                        onClick={() => handleTabClick('countdown')}
+                        hidden={!showCountdownTab}
+                        className={`menu-link ${activeTab === 'countdown' ? 'active' : ''}`}
+                      >
+                        Countdown
+                      </button>
+                      <button
+                        onClick={() => handleTabClick('leaderboard')}
+                        hidden={!showLeaderboardTab}
+                        className={`menu-link ${activeTab === 'leaderboard' ? 'active' : ''}`}
+                      >
+                        Leaderboard
+                      </button>
+                      {hasArchives && (
+                        <button
+                          onClick={() => handleTabClick('archive')}
+                          className={`menu-link ${activeTab === 'archive' ? 'active' : ''}`}
+                        >
+                          Archive
+                        </button>
+                      )}
+                    </>
                   )}
                   <a href="#tv" className="menu-link nav-tv-link text-center" onClick={() => setMobileMenuOpen(false)}>
                     <Icon name="tv" /> TV Mode
                   </a>
+                  {isAuthenticated && (
+                    <button
+                      onClick={() => handleTabClick('settings')}
+                      className={`menu-link ${activeTab === 'settings' ? 'active' : ''}`}
+                    >
+                      Settings
+                    </button>
+                  )}
+                  {isAuthenticated ? (
+                    <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="menu-link menu-auth">
+                      Log out{role ? ` (${ROLE_LABELS[role]})` : ''}
+                    </button>
+                  ) : (
+                    <button onClick={() => { setMobileMenuOpen(false); setShowLoginModal(true); }} className="menu-link menu-auth">
+                      Log in
+                    </button>
+                  )}
                 </div>
               )}
 
               {/* Desktop Menu */}
+              {isAuthenticated && (
               <div className="desktop-menu hidden md:flex gap-2">
                 <button
                   onClick={() => handleTabClick('home')}
@@ -314,8 +314,18 @@ function AppContent() {
                   <a href="#tv" className="menu-link nav-tv-link whitespace-nowrap">
                     <Icon name="tv" /> TV Mode
                   </a>
+                  <button
+                    onClick={() => handleTabClick('settings')}
+                    className={`menu-link ${activeTab === 'settings' ? 'active' : ''}`}
+                  >
+                    Settings
+                  </button>
+                  <button onClick={handleLogout} className="menu-link menu-auth whitespace-nowrap">
+                    Log out
+                  </button>
                 </div>
               </div>
+              )}
             </div>
           </nav>
         )}
@@ -431,28 +441,11 @@ function AppContent() {
             </p>
             <div className="mt-4 space-y-2">
               <FooterInstall />
+              {/* Settings and Log in / Log out live in the menu; desktop visitors have no menu, so they keep a footer link */}
               {isAuthenticated ? (
-                <>
-                  <div className="flex justify-center gap-4 flex-wrap">
-                    {role && <span className="footer-role text-white/80">Logged in as {ROLE_LABELS[role]}</span>}
-                    {role && <span className="text-white/60">•</span>}
-                    <button
-                      onClick={() => handleTabClick('settings')}
-                      className="text-white/90 hover:text-white underline font-medium"
-                    >
-                      Settings
-                    </button>
-                    <span className="text-white/60">•</span>
-                    <button
-                      onClick={handleLogout}
-                      className="text-white/90 hover:text-white underline font-medium"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                </>
+                role && <p className="footer-role text-white/80">Logged in as {ROLE_LABELS[role]}</p>
               ) : (
-                <div>
+                <div className="hidden md:block">
                   <button
                     onClick={() => setShowLoginModal(true)}
                     className="text-white/90 hover:text-white underline font-medium"
