@@ -59,7 +59,7 @@ Five main tables (see `supabase-schema.sql`):
 - `countdown_results` - Actual Hottest 100/200 results (type: 'hottest100' or 'hottest200')
 - `member_profiles` - AI-generated profiles (label, music_taste_description, timestamps)
 - `archives` - Historical year data (year, archived_at, data as JSONB)
-- `app_settings` - Shared key/value settings (e.g. `countdown_date`)
+- `app_settings` - Shared key/value settings (e.g. `countdown_date`, `app_icon`)
 - `groups` / `group_members` - Optional member groups for filtered leaderboards (see `supabase-add-groups.sql`). Groups belong to the current season: Archive & Reset saves them into the archive and clears them with the members.
 
 All tables use UUIDs as primary keys with foreign key constraints and ON DELETE CASCADE.
@@ -281,6 +281,10 @@ Dynamic, humorous commentary displayed on the home page during the countdown.
 - `src/utils/installPrompt.ts` is the single `beforeinstallprompt` handler (`installPromptStore`, `promptInstall`, `isInstalledApp`, `isIos`). `InstallBar.tsx` (Home bar + footer link) and TV mode's Install button both use it
 - Service worker: `pwa/service-worker.js`, written to `/sw.js` by the `serviceWorker` plugin in `vite.config.ts` with a per-build version and the main entry's shell to precache. Network-first for the page, cache-first for hashed `/assets/`, never touches other origins (Supabase, album art, stream), `/tv/` or `/cast-receiver.html`. Registered in production builds only (`src/pwa/registerServiceWorker.ts`)
 - Song alerts use `registration.showNotification` when a service worker exists (required on Android Chrome and iOS home-screen apps)
+
+### App Icon Upload
+- Settings → Style (`AppIconSetting.tsx`) uploads an icon; `src/hooks/useAppIcon.ts` resizes it to a 256px square PNG on the menu bar colour and stores it as a data URL in `app_settings` (`app_icon`), cached in localStorage
+- `startAppIconSync()` (called in `main.tsx`) swaps the `icon` and `apple-touch-icon` links for everyone. The manifest (Android/desktop install icon) stays on `public/icons/`
 
 ### Member Groups
 - Admin-only management in Settings → Groups (`GroupManager.tsx`); data loaded/saved in `AppContext` (`groups`, `saveGroup`, `removeGroup`, `groupsAvailable`)
