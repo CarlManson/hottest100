@@ -25,9 +25,11 @@ interface PublicHomeProps {
   showTvButton?: boolean;
   /** Opens the login modal. Only passed for logged-out visitors, who then see a login prompt under the countdown timer. */
   onLoginClick?: () => void;
+  /** Opens the voting page (or the login modal for logged-out visitors). Shows a "Cast your votes" button before the countdown. */
+  onVoteClick?: () => void;
 }
 
-export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onLoginClick }) => {
+export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onLoginClick, onVoteClick }) => {
   const { familyMembers, countdownResults, hottest200Results, songs, getProfileForMember, winnerPickAvailable } = useApp();
   const [selectedProfile, setSelectedProfile] = useState<MemberProfile | null>(null);
   const countdown = useCountdown();
@@ -39,6 +41,9 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
   const { bumps, bumpId } = useScoreBumps(leaderboard);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const totalResults = countdownResults.length + hottest200Results.length;
+  // Before anyone has voted (or there are no songs to vote for) these sections have nothing to show
+  const hasSongsToPick = songs.length > 0;
+  const hasPredictions = visibleMembers.some((m) => m.votes.length > 0 || !!m.winnerSongId);
 
   // Calculate ranks with tie handling
   const getRank = useMemo(() => {
@@ -598,12 +603,14 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
               // No countdown results yet, just show member votes
               <>
                 {/* Welcome Message - shown before/during countdown when no results yet */}
-                {!countdownStarted ? (
+                {!countdownStarted ? (hasSongsToPick &&
                   <div className="welcome-message bg-gradient-to-r from-primary-100 via-yellow-50 to-primary-100 border-2 border-primary-300 rounded-xl p-4 sm:p-6 mb-6">
                     <div className="welcome-message-content text-center">
                       <h3 className="welcome-message-title text-lg sm:text-2xl font-black text-gray-800 mb-2 sm:mb-3">G'day Legends!</h3>
                       <div className="welcome-message-text text-sm sm:text-base text-gray-700 space-y-2 sm:space-y-3 mx-auto">
-                        <p><strong>Righto, here's how this works. You've chucked in your top 10 picks, and now we wait for Triple J to do their thing.</strong>
+                        <p><strong>{hasPredictions
+                          ? "Righto, here's how this works. You've chucked in your top 10 picks, and now we wait for Triple J to do their thing."
+                          : "Righto, here's how this works. Chuck in your top 10 picks, then we wait for Triple J to do their thing."}</strong>
                         </p>
                         <p>
                           <strong>Scoring is dead simple:</strong> If your song cracks the Hottest 100, you score points based on how high it lands.
@@ -618,6 +625,15 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
                           Good luck to all you legends. Stay hydrated, keep the snacks coming, and may your picks absolutely smash it.
                         </p>
                       </div>
+                      {onVoteClick && (
+                        <button
+                          type="button"
+                          onClick={onVoteClick}
+                          className="welcome-vote-button mt-4 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-6 py-3 font-bold text-white shadow-md transition hover:bg-primary-700"
+                        >
+                          <Icon name="music" /> Cast your votes
+                        </button>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -640,6 +656,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
                   </div>
                 )}
 
+                {hasPredictions && (
                 <div className="predictions-submitted bg-white rounded-2xl shadow-lg p-4 sm:p-6 border-2 border-primary-200">
                   <h3 className="predictions-submitted-title text-xl sm:text-2xl font-bold mb-4 text-gray-800">
                     Predictions Submitted
@@ -675,6 +692,7 @@ export const PublicHome: React.FC<PublicHomeProps> = ({ showTvButton = true, onL
                   })}
                 </div>
               </div>
+                )}
 
               <MostPickedSongs songs={songs} familyMembers={visibleMembers} />
               <TippedToWin
