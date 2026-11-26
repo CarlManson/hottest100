@@ -114,6 +114,11 @@ export const ICONS = {
     line: "<path d=\"M12 2v2.5\"/>",
     detail: "<path d=\"M8.5 11a3.5 3.5 0 0 1 2-3\"/>",
   },
+  "bell-off": {
+    body: "<circle cx=\"12\" cy=\"20\" r=\"2.2\"/><path d=\"M5.5 17v-6a6.5 6.5 0 0 1 13 0v6l2 2h-17z\"/>",
+    line: "<path d=\"M12 2v2.5\"/>",
+    mark: "<path d=\"M3.5 2.5l17 19\"/>",
+  },
   "alarm": {
     body: "<circle cx=\"5.2\" cy=\"5\" r=\"3\"/><circle cx=\"18.8\" cy=\"5\" r=\"3\"/><circle cx=\"12\" cy=\"13\" r=\"8.5\"/>",
     line: "<path d=\"M7 19.5 5 22M17 19.5l2 2.5\"/>",

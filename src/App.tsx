@@ -10,7 +10,8 @@ import { Leaderboard } from './components/Leaderboard';
 import { DetailedBreakdown } from './components/DetailedBreakdown';
 import { Settings } from './components/Settings';
 import { Archive } from './components/Archive';
-import { AlertsBar, AlertsMemberSelect, ALERTS_SUMMARY } from './components/AlertsBar';
+import { AlertsBellButton, AlertsPanel } from './components/AlertsPanel';
+import { useIsMobile } from './hooks/useIsMobile';
 import { InstallBar, FooterInstall } from './components/InstallBar';
 import { useResultNotifications } from './utils/useResultNotifications';
 import { useCountdownSettings, useCountdownDateReached } from './hooks/useCountdownSettings';
@@ -28,6 +29,10 @@ function AppContent() {
   const { ready: authReady, role, isAdmin, isSignedIn: isAuthenticated, signIn, signOut } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  // Song alerts are offered on phones and tablets only
+  const isMobile = useIsMobile();
+  const showAlerts = isMobile;
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -133,17 +138,20 @@ function AppContent() {
           <div className="max-w-7xl mx-auto px-6 py-6 relative">
             <img
               className="logo cursor-pointer"
+              style={showAlerts && isAuthenticated ? { width: 'calc(100% - 110px)' } : undefined}
               src={brand.images.logo}
               alt={`${brand.appName} logo`}
               onClick={() => handleTabClick('home')}
             />
             {/* Banner right - hidden on mobile, shown on desktop */}
             {brand.images.mascot && <img className="banner-right hidden md:block pointer-events-none" src={brand.images.mascot} alt="" />}
-            {/* Mobile menu button - shown on mobile when authenticated */}
-            {isAuthenticated && (
+            {/* Mobile buttons: song alerts, plus the menu when logged in; vertically centred */}
+            <div className="header-buttons absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              {showAlerts && <AlertsBellButton notifications={notifications} onClick={() => { setMobileMenuOpen(false); setAlertsOpen(true); }} />}
+              {isAuthenticated && (
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden absolute top-4 right-4 p-2 rounded-lg bg-white/20 hover:bg-white/30 transition"
+                className="md:hidden p-2 rounded-lg bg-white/20 hover:bg-white/30 transition"
                 aria-label="Toggle menu"
               >
                 <svg
@@ -162,7 +170,8 @@ function AppContent() {
                   )}
                 </svg>
               </button>
-            )}
+              )}
+            </div>
           </div>
         </header>
         )}
@@ -312,7 +321,6 @@ function AppContent() {
         )}
 
         <main>
-          {activeTab === 'home' && <AlertsBar notifications={notifications} members={familyMembers} />}
           {activeTab === 'home' && <InstallBar />}
           {activeTab === 'home' && <PublicHome showTvButton={!isAuthenticated} onLoginClick={isAuthenticated ? undefined : () => setShowLoginModal(true)} onVoteClick={() => handleTabClick('voting')} />}
           {activeTab === 'tv' && <TVMode />}
@@ -323,6 +331,10 @@ function AppContent() {
           {activeTab === 'settings' && isAuthenticated && <Settings />}
           {activeTab === 'archive' && isAuthenticated && hasArchives && <Archive />}
         </main>
+
+        {showAlerts && activeTab !== 'tv' && (
+          <AlertsPanel notifications={notifications} members={familyMembers} open={alertsOpen} onClose={() => setAlertsOpen(false)} />
+        )}
 
         {/* Login Modal - Shown when trying to access protected tabs */}
         {showLoginModal && (
@@ -419,24 +431,6 @@ function AppContent() {
             </p>
             <div className="mt-4 space-y-2">
               <FooterInstall />
-              {notifications.supported && !notifications.blocked && (
-                <div className="footer-alerts flex justify-center items-center gap-3 flex-wrap">
-                  <button
-                    onClick={notifications.toggle}
-                    title={ALERTS_SUMMARY}
-                    className="text-white/90 hover:text-white underline font-medium"
-                  >
-                    Song alerts: {notifications.enabled ? 'on' : 'off'}
-                  </button>
-                  {notifications.enabled && (
-                    <AlertsMemberSelect
-                      notifications={notifications}
-                      members={familyMembers}
-                      className="bg-white/15 rounded-full px-3 py-1 text-xs text-white"
-                    />
-                  )}
-                </div>
-              )}
               {isAuthenticated ? (
                 <>
                   <div className="flex justify-center gap-4 flex-wrap">
