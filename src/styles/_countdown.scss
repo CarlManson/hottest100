@@ -95,7 +95,8 @@
     .main-content:empty { display: none; }
 }
 
-main:has(.hero-banner--feature) + footer { margin-top: 0; }
+// ~ not +: the alerts panel and login modal can sit between main and the footer
+main:has(.hero-banner--feature) ~ footer { margin-top: 0; }
 
 .hero-banner--feature {
     flex: 1 0 auto;

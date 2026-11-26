@@ -52,7 +52,8 @@ export const AlertsPanel: React.FC<PanelProps> = ({ notifications, members, open
   }, [open, onClose]);
 
   return (
-    <div className={`alerts-panel-wrap fixed inset-0 z-50 ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
+    // invisible once closed (after the slide), so the sheet can never peek out below the page
+    <div className={`alerts-panel-wrap fixed inset-0 z-50 transition-[visibility] duration-300 ${open ? 'visible' : 'invisible pointer-events-none'}`} aria-hidden={!open}>
       <div
         className={`alerts-panel-backdrop absolute inset-0 bg-black/50 transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0'}`}
         onClick={onClose}
@@ -140,7 +141,7 @@ export const AlertsPanel: React.FC<PanelProps> = ({ notifications, members, open
             <ul className="list-disc pl-5 space-y-1 text-white/90">
               <li>the countdown starts</li>
               <li>every {ALERT_EVERY} songs, with the latest ones</li>
-              <li>{member ? `one of ${member.name}’s picks comes in` : 'one of your picks comes in (pick your name above)'}</li>
+              <li>{member ? `one of ${member.name}’s picks comes in` : voters.length > 0 ? 'one of your picks comes in (pick your name above)' : 'one of your picks comes in'}</li>
             </ul>
           </div>
 

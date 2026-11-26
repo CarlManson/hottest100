@@ -35,6 +35,7 @@ npm run lint      # Run ESLint
 - **Admin**: everything. **Host** (one shared login): Mates & Picks (add, edit, delete mates, picks, AI nicknames/profiles), Parties, Countdown results, Leaderboard, Archive viewing, and Settings → Event (countdown date) only.
 - Enforced by RLS (`supabase-lock-writes.sql`): everyone can read every table (Home, TV, /tv polling, realtime); writes need a role. Songs, archives and other settings are Admin only; Host may write `app_settings` only for `countdown_date`. `supabase-unlock-writes.sql` is the emergency undo.
 - The `generate-profile` edge function checks `app_role()` from the caller's token, so only a signed-in Admin/Host can spend API credit. `profileGenerator.ts` sends the session token via `authHeader()`.
+- The menu button shows for everyone on mobile: visitors get Home, TV Mode and Log in; Admin/Host also get their pages, Settings and Log out (also on the desktop nav bar). Desktop visitors have no menu, so the footer keeps a Log in link for them; the hero's Log in button stays.
 - Countdown and Leaderboard are always in the Admin's menu. For the Host they stay hidden until the countdown starts (date reached or first result); `#countdown` / `#leaderboard` still open, Settings → Event links to them, and `PreCountdownNotice` explains.
 - Supabase keeps the session in localStorage and refreshes it. The old `hottest100_auth` flag and cookie are cleared on load.
 
