@@ -197,7 +197,7 @@ function AppContent() {
                         : ''
                     }`}
                   >
-                    Votes
+                    Mates
                   </button>
                   <button
                     onClick={() => handleTabClick('countdown')}
@@ -258,7 +258,7 @@ function AppContent() {
                       : ''
                   }`}
                 >
-                  Votes
+                  Mates
                 </button>
                 <button
                   onClick={() => handleTabClick('countdown')}

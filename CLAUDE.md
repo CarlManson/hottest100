@@ -286,8 +286,8 @@ Dynamic, humorous commentary displayed on the home page during the countdown.
 - Settings → Style (`AppIconSetting.tsx`) uploads an icon; `src/hooks/useAppIcon.ts` resizes it to a 256px square PNG on the menu bar colour and stores it as a data URL in `app_settings` (`app_icon`), cached in localStorage
 - `startAppIconSync()` (called in `main.tsx`) swaps the `icon` and `apple-touch-icon` links for everyone. The manifest (Android/desktop install icon) stays on `public/icons/`
 
-### Member Groups
-- Admin-only management in Settings → Groups (`GroupManager.tsx`); data loaded/saved in `AppContext` (`groups`, `saveGroup`, `removeGroup`, `groupsAvailable`)
+### Member Groups ("Parties" in the UI)
+- Shown to users as **Parties** (code, tables and the `?group=` param keep the name "group"). Admin-only management on the Mates page (`voting` tab, labelled "Mates" in the menu) below the mates card (`PartyManager.tsx`, rendered by `VotingInterface.tsx`); data loaded/saved in `AppContext` (`groups`, `saveGroup`, `removeGroup`, `groupsAvailable`)
 - `useGroupView()` (`src/hooks/useGroupView.ts`) is the single source for the selected group and `visibleMembers`; public views build their leaderboard from `visibleMembers`
 - Selection is shared across components, stored in localStorage and the `?group=<slug>` URL param (TV mode reads it on load)
 - Group features hide themselves when the tables don't exist (`groupsAvailable === false`)
