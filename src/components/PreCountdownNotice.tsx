@@ -4,8 +4,8 @@ import { useCountdownDateReached } from '../hooks/useCountdownSettings';
 import { Icon } from './icons/Icon';
 
 /**
- * Shown on pages that stay out of the menu until the countdown starts,
- * so whoever opens them early (for testing) knows why the menu skips them.
+ * Shown on the Countdown and Leaderboard pages before the countdown starts,
+ * so the Admin or Host knows they're looking at a test run.
  */
 export const PreCountdownNotice: React.FC<{ page: string }> = ({ page }) => {
   const { countdownResults, hottest200Results } = useApp();
@@ -14,7 +14,7 @@ export const PreCountdownNotice: React.FC<{ page: string }> = ({ page }) => {
 
   return (
     <div className="pre-countdown-notice mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs sm:text-sm text-amber-900">
-      <Icon name="info" /> {page} is hidden from the menu until the countdown starts. You can still open it here for testing.
+      <Icon name="info" /> The countdown hasn't started yet. {page} is ready for testing in the meantime.
     </div>
   );
 };

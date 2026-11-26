@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import Cookies from 'js-cookie';
 import { AppProvider, useApp } from './context/AppContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ROLE_LABELS } from './utils/auth';
 import { PublicHome } from './components/PublicHome';
 import { TVMode } from './components/TVMode';
 import { VotingInterface } from './components/VotingInterface';
@@ -12,7 +13,7 @@ import { Archive } from './components/Archive';
 import { AlertsBar, AlertsMemberSelect, ALERTS_SUMMARY } from './components/AlertsBar';
 import { InstallBar, FooterInstall } from './components/InstallBar';
 import { useResultNotifications } from './utils/useResultNotifications';
-import { useCountdownSettings, useCountdownDateReached } from './hooks/useCountdownSettings';
+import { useCountdownSettings } from './hooks/useCountdownSettings';
 import { brand } from './config/brand';
 import { Icon } from './components/icons/Icon';
 
@@ -24,22 +25,15 @@ function AppContent() {
   const { countdownDate } = useCountdownSettings();
   const notifications = useResultNotifications(songs, countdownResults, hottest200Results, familyMembers, countdownDate, !loading);
   const [activeTab, setActiveTab] = useState<Tab>('home');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { ready: authReady, role, isSignedIn: isAuthenticated, signIn, signOut } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [signingIn, setSigningIn] = useState(false);
 
   const hasArchives = archives.length > 0;
-
-  // Countdown and Leaderboard stay out of the menu until the countdown starts (date reached
-  // or first result entered). Their #countdown / #leaderboard links still work for testing,
-  // and Settings → Event links to them.
-  const countdownDateReached = useCountdownDateReached();
-  const countdownUnderway = countdownDateReached || countdownResults.length > 0 || hottest200Results.length > 0;
-  const showCountdownTab = countdownUnderway || activeTab === 'countdown';
-  const showLeaderboardTab = countdownUnderway || activeTab === 'leaderboard' || activeTab === 'detailed-breakdown';
 
   // Get tab from URL hash
   const getTabFromHash = (): Tab => {
@@ -57,29 +51,23 @@ function AppContent() {
     window.location.hash = tab;
   };
 
-  // Check for existing session (localStorage and cookie) and set initial tab from URL
+  // Once the saved login (if any) has been checked, open the page in the URL
   useEffect(() => {
-    const localAuth = localStorage.getItem('hottest100_auth');
-    const sessionCookie = Cookies.get('hottest100_session');
-
-    if (localAuth === 'true' || sessionCookie === 'authenticated') {
-      setIsAuthenticated(true);
-      // Sync both storage methods
-      localStorage.setItem('hottest100_auth', 'true');
-      Cookies.set('hottest100_session', 'authenticated', { expires: 7 });
-
-      const tabFromHash = getTabFromHash();
-      if (tabFromHash !== 'home') {
-        setActiveTab(tabFromHash);
-      }
-    } else {
-      // Check if trying to access public tabs (home or tv)
-      const tabFromHash = getTabFromHash();
-      if (tabFromHash === 'tv') {
-        setActiveTab('tv');
-      }
+    if (!authReady) return;
+    const tabFromHash = getTabFromHash();
+    if (tabFromHash === 'home' || tabFromHash === 'tv' || isAuthenticated) {
+      setActiveTab(tabFromHash);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authReady]);
+
+  // Logged out (here or in another tab): leave pages that need a login
+  useEffect(() => {
+    if (authReady && !isAuthenticated && activeTab !== 'home' && activeTab !== 'tv') {
+      setActiveTab('home');
+      updateHash('home');
+    }
+  }, [authReady, isAuthenticated, activeTab]);
 
   // Listen for hash changes (back/forward buttons)
   useEffect(() => {
@@ -95,21 +83,21 @@ function AppContent() {
   }, [isAuthenticated]);
 
   const handleLogin = () => {
-    setIsAuthenticated(true);
-    // Set both localStorage and cookie with 7-day expiration
-    localStorage.setItem('hottest100_auth', 'true');
-    Cookies.set('hottest100_session', 'authenticated', { expires: 7 });
     setActiveTab('home');
     updateHash('home');
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    // Remove both localStorage and cookie
-    localStorage.removeItem('hottest100_auth');
-    Cookies.remove('hottest100_session');
+  const handleLogout = async () => {
+    await signOut();
     setActiveTab('home');
     updateHash('home');
+  };
+
+  const closeLoginModal = () => {
+    setShowLoginModal(false);
+    setUsername('');
+    setPassword('');
+    setLoginError('');
   };
 
   const handleTabClick = (tab: Tab) => {
@@ -209,8 +197,7 @@ function AppContent() {
                   </button>
                   <button
                     onClick={() => handleTabClick('countdown')}
-                    hidden={!showCountdownTab}
-                    className={`menu-link ${
+                                        className={`menu-link ${
                       activeTab === 'countdown'
                         ? 'active'
                         : ''
@@ -220,8 +207,7 @@ function AppContent() {
                   </button>
                   <button
                     onClick={() => handleTabClick('leaderboard')}
-                    hidden={!showLeaderboardTab}
-                    className={`menu-link ${
+                                        className={`menu-link ${
                       activeTab === 'leaderboard'
                         ? 'active'
                         : ''
@@ -272,8 +258,7 @@ function AppContent() {
                 </button>
                 <button
                   onClick={() => handleTabClick('countdown')}
-                  hidden={!showCountdownTab}
-                  className={`menu-link ${
+                                    className={`menu-link ${
                     activeTab === 'countdown'
                       ? 'active'
                       : ''
@@ -283,8 +268,7 @@ function AppContent() {
                 </button>
                 <button
                   onClick={() => handleTabClick('leaderboard')}
-                  hidden={!showLeaderboardTab}
-                  className={`menu-link ${
+                                    className={`menu-link ${
                     activeTab === 'leaderboard'
                       ? 'active'
                       : ''
@@ -332,22 +316,20 @@ function AppContent() {
         {showLoginModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8">
-              <h3 className="text-2xl font-bold mb-4 text-gray-800">Admin Login</h3>
-              <p className="text-gray-600 mb-6">Enter your credentials to access admin features</p>
-              <form onSubmit={(e) => {
+              <h3 className="text-2xl font-bold mb-4 text-gray-800">Log in</h3>
+              <p className="text-gray-600 mb-6">For the Admin or Host. Everyone else can follow along without logging in.</p>
+              <form onSubmit={async (e) => {
                 e.preventDefault();
-                const envUsername = import.meta.env.VITE_AUTH_USERNAME;
-                const envPassword = import.meta.env.VITE_AUTH_PASSWORD;
-
-                if (username === envUsername && password === envPassword) {
-                  setShowLoginModal(false);
-                  setUsername('');
+                setSigningIn(true);
+                setLoginError('');
+                const error = await signIn(username, password);
+                setSigningIn(false);
+                if (error) {
+                  setLoginError(error);
                   setPassword('');
-                  setLoginError('');
-                  handleLogin();
                 } else {
-                  setLoginError('Invalid username or password');
-                  setPassword('');
+                  closeLoginModal();
+                  handleLogin();
                 }
               }} className="space-y-4">
                 <div>
@@ -361,6 +343,8 @@ function AppContent() {
                     onChange={(e) => setUsername(e.target.value)}
                     className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition"
                     placeholder="Enter username"
+                    autoComplete="username"
+                    autoCapitalize="none"
                     required
                     autoFocus
                   />
@@ -377,6 +361,7 @@ function AppContent() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-primary-500 focus:outline-none transition"
                     placeholder="Enter password"
+                    autoComplete="current-password"
                     required
                   />
                 </div>
@@ -390,18 +375,14 @@ function AppContent() {
                 <div className="flex gap-3">
                   <button
                     type="submit"
-                    className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold py-3 px-6 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition shadow-lg"
+                    disabled={signingIn}
+                    className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold py-3 px-6 rounded-lg hover:from-primary-600 hover:to-secondary-600 transition shadow-lg disabled:opacity-60"
                   >
-                    Login
+                    {signingIn ? 'Logging in…' : 'Login'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowLoginModal(false);
-                      setUsername('');
-                      setPassword('');
-                      setLoginError('');
-                    }}
+                    onClick={closeLoginModal}
                     className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 transition font-bold"
                   >
                     Cancel
@@ -447,6 +428,8 @@ function AppContent() {
               {isAuthenticated ? (
                 <>
                   <div className="flex justify-center gap-4 flex-wrap">
+                    {role && <span className="footer-role text-white/80">Logged in as {ROLE_LABELS[role]}</span>}
+                    {role && <span className="text-white/60">•</span>}
                     <button
                       onClick={() => handleTabClick('settings')}
                       className="text-white/90 hover:text-white underline font-medium"
@@ -468,7 +451,7 @@ function AppContent() {
                     onClick={() => setShowLoginModal(true)}
                     className="text-white/90 hover:text-white underline font-medium"
                   >
-                    Admin Login
+                    Log in
                   </button>
                 </div>
               )}
@@ -488,9 +471,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </AuthProvider>
   );
 }
 

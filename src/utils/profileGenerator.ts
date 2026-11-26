@@ -1,3 +1,4 @@
+import { authHeader } from './auth';
 import type { FamilyMember, Song, CountdownResult, MemberProfile } from '../types';
 
 // API call for music taste only
@@ -18,7 +19,7 @@ export async function generateMusicTasteProfileAPI(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'Authorization': await authHeader(),
     },
     body: JSON.stringify({
       mode: 'music_taste',
@@ -62,7 +63,7 @@ export async function generateLabelAndTasteAPI(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'Authorization': await authHeader(),
     },
     body: JSON.stringify({
       mode: 'label_and_taste',
@@ -135,7 +136,7 @@ export async function generateRunningCommentaryAPI(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'Authorization': await authHeader(),
     },
     body: JSON.stringify({
       mode: 'running_commentary',
@@ -189,7 +190,7 @@ export async function generateFullProfileAPI(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'Authorization': await authHeader(),
     },
     body: JSON.stringify({
       mode: 'full_regeneration',

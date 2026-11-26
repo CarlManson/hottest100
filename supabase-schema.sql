@@ -163,3 +163,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE group_members;
 -- Winner pick: the song each member reckons will finish #1 (50 point bonus)
 ALTER TABLE family_members
   ADD COLUMN winner_song_id UUID REFERENCES songs(id) ON DELETE SET NULL;
+
+-- Logins: the policies above let anyone write. Finish setup with
+--   supabase-add-roles.sql   (Admin and Host logins)
+--   supabase-lock-writes.sql (only those logins can change data)

@@ -1,6 +1,21 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
+
+/** Only a signed-in Admin or Host may spend API credit (roles from supabase-add-roles.sql) */
+async function callerHasRole(req: Request): Promise<boolean> {
+  const authorization = req.headers.get('Authorization');
+  if (!authorization || !SUPABASE_URL || !SUPABASE_ANON_KEY) return false;
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authorization } },
+    auth: { persistSession: false },
+  });
+  const { data, error } = await client.rpc('app_role');
+  return !error && (data === 'admin' || data === 'host');
+}
 
 interface MemberData {
   memberId: string;
@@ -46,6 +61,13 @@ serve(async (req) => {
   try {
     if (!ANTHROPIC_API_KEY) {
       throw new Error('ANTHROPIC_API_KEY not configured in Supabase Edge Function secrets');
+    }
+
+    if (!(await callerHasRole(req))) {
+      return new Response(
+        JSON.stringify({ error: 'Log in as the Admin or Host to generate profiles' }),
+        { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+      );
     }
 
     const requestData: ProfileRequest = await req.json();
