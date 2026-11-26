@@ -7,7 +7,8 @@ type Draft = { id?: string; name: string; emoji: string; memberIds: string[] };
 
 const emptyDraft: Draft = { name: '', emoji: '', memberIds: [] };
 
-export const GroupManager: React.FC = () => {
+/** Party management on the Mates & Picks page (stored in the `groups` tables) */
+export const PartyManager: React.FC = () => {
   const { groups, groupsAvailable, familyMembers, saveGroup, removeGroup } = useApp();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState('');
@@ -16,8 +17,8 @@ export const GroupManager: React.FC = () => {
 
   if (!groupsAvailable) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 sm:p-6 text-sm text-yellow-900">
-        <h2 className="text-lg font-bold mb-2">Groups aren't set up yet</h2>
+      <div className="party-manager bg-yellow-50 border border-yellow-200 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 text-sm text-yellow-900">
+        <h3 className="text-lg font-bold mb-2">Parties aren't set up yet</h3>
         <p>Run <code className="bg-yellow-100 px-1 rounded">supabase-add-groups.sql</code> in the Supabase SQL Editor, then reload this page.</p>
       </div>
     );
@@ -38,9 +39,9 @@ export const GroupManager: React.FC = () => {
   const handleSave = async () => {
     if (!draft) return;
     const name = draft.name.trim();
-    if (!name) return setError('Give the group a name');
+    if (!name) return setError('Give the party a name');
     const clash = groups.find(g => g.id !== draft.id && groupSlug(g.name) === groupSlug(name));
-    if (clash) return setError(`There's already a group called "${clash.name}"`);
+    if (clash) return setError(`There's already a party called "${clash.name}"`);
 
     setSaving(true);
     setError('');
@@ -48,19 +49,19 @@ export const GroupManager: React.FC = () => {
       await saveGroup({ id: draft.id, name, emoji: draft.emoji, memberIds: draft.memberIds });
       setDraft(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save the group. Please try again.');
+      setError(err instanceof Error ? err.message : 'Could not save the party. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (group: Group) => {
-    if (!window.confirm(`Delete "${group.name}"? Members and their votes are not affected.`)) return;
+    if (!window.confirm(`Delete "${group.name}"? Mates and their votes are not affected.`)) return;
     try {
       await removeGroup(group.id);
       if (draft?.id === group.id) setDraft(null);
     } catch {
-      alert('Could not delete the group. Please try again.');
+      alert('Could not delete the party. Please try again.');
     }
   };
 
@@ -76,21 +77,21 @@ export const GroupManager: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+    <div className="party-manager mb-4 sm:mb-6">
+      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-2 border-primary-200">
         <div className="flex items-center justify-between gap-3 mb-2">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-800">Groups</h2>
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-800">Parties</h3>
           {!draft && (
             <button
               onClick={() => { setDraft({ ...emptyDraft }); setError(''); }}
               className="px-4 py-2 bg-primary-500 text-white font-bold rounded-lg hover:bg-primary-600 transition text-sm"
             >
-              + New group
+              + New party
             </button>
           )}
         </div>
         <p className="text-sm text-gray-600 mb-4">
-          Everyone can switch the home page, leaderboard and TV mode to a group. Members can be in more than one group.
+          Everyone can switch the home page, leaderboard and TV mode to a party. Mates can be in more than one party.
         </p>
 
         {draft && (
@@ -120,10 +121,10 @@ export const GroupManager: React.FC = () => {
 
             <fieldset>
               <legend className="text-xs font-semibold text-gray-700 mb-2">
-                Members ({draft.memberIds.length} selected)
+                Mates ({draft.memberIds.length} selected)
               </legend>
               {members.length === 0 ? (
-                <p className="text-sm text-gray-500">Add members on the Votes page first.</p>
+                <p className="text-sm text-gray-500">Add mates above first.</p>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {members.map(m => (
@@ -154,7 +155,7 @@ export const GroupManager: React.FC = () => {
                 disabled={saving}
                 className="px-5 py-2 bg-primary-500 text-white font-bold rounded-lg hover:bg-primary-600 transition disabled:opacity-50"
               >
-                {saving ? 'Saving…' : draft.id ? 'Save changes' : 'Create group'}
+                {saving ? 'Saving…' : draft.id ? 'Save changes' : 'Create party'}
               </button>
               <button
                 onClick={() => { setDraft(null); setError(''); }}
@@ -167,7 +168,7 @@ export const GroupManager: React.FC = () => {
         )}
 
         {groups.length === 0 && !draft ? (
-          <p className="text-sm text-gray-500">No groups yet.</p>
+          <p className="text-sm text-gray-500">No parties yet. Make one to give a household, workplace or friend group its own leaderboard.</p>
         ) : (
           <ul className="space-y-3">
             {groups.map(group => (

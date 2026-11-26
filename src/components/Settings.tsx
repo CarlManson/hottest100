@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { GroupManager } from './GroupManager';
 import { AppIconSetting } from './AppIconSetting';
 import type { Song } from '../types';
 import { useCountdownSettings, useCountdown, formatDateForInput, parseDateFromInput } from '../hooks/useCountdownSettings';
@@ -38,7 +37,7 @@ Be observant, funny, and engaging about their musical preferences. Keep it frien
 Return format:
 MUSIC_TASTE: [Your 3-4 sentence analysis here]`;
 
-type TabType = 'event' | 'style' | 'groups' | 'ai' | 'songs' | 'data';
+type TabType = 'event' | 'style' | 'ai' | 'songs' | 'data';
 
 export const Settings: React.FC = () => {
   const {
@@ -466,16 +465,6 @@ export const Settings: React.FC = () => {
           <Icon name="sparkle" /> Style
         </button>
         <button
-          onClick={() => setActiveTab('groups')}
-          className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
-            activeTab === 'groups'
-              ? 'text-primary-600 border-b-2 border-primary-600'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          <Icon name="people" /> Groups
-        </button>
-        <button
           onClick={() => setActiveTab('ai')}
           className={`px-4 py-2 font-semibold transition whitespace-nowrap ${
             activeTab === 'ai'
@@ -512,8 +501,6 @@ export const Settings: React.FC = () => {
           {saveMessage}
         </div>
       )}
-
-      {activeTab === 'groups' && <GroupManager />}
 
       {activeTab === 'style' && (
         <div className="space-y-6">
@@ -900,7 +887,7 @@ export const Settings: React.FC = () => {
                 <p className="text-yellow-800 font-semibold text-sm mb-2"><Icon name="warning" /> Warning: This will permanently delete all current data!</p>
                 <ul className="text-yellow-700 text-xs space-y-1">
                   <li><Icon name="check" /> All data will be saved to the archive first</li>
-                  <li><Icon name="check" /> Songs, members, groups, votes, and results will be cleared</li>
+                  <li><Icon name="check" /> Songs, members, parties, votes, and results will be cleared</li>
                   <li><Icon name="check" /> You'll start fresh for the next year</li>
                   <li><Icon name="check" /> Archived data can be viewed in the Archive tab</li>
                 </ul>

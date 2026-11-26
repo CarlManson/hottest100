@@ -69,7 +69,7 @@ export const Archive: React.FC = () => {
                 <select
                   value={selectedGroup?.id || ''}
                   onChange={(e) => setSelectedGroupId(e.target.value)}
-                  aria-label="Show group"
+                  aria-label="Show party"
                   className="p-2 border-2 border-gray-200 rounded-lg focus:border-primary-500 focus:outline-none font-semibold"
                 >
                   <option value="">All members</option>

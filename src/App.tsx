@@ -197,7 +197,7 @@ function AppContent() {
                         : ''
                     }`}
                   >
-                    Votes
+                    Mates &amp; Picks
                   </button>
                   <button
                     onClick={() => handleTabClick('countdown')}
@@ -252,13 +252,13 @@ function AppContent() {
                 
                 <button
                   onClick={() => handleTabClick('voting')}
-                  className={`menu-link ${
+                  className={`menu-link whitespace-nowrap ${
                     activeTab === 'voting'
                       ? 'active'
                       : ''
                   }`}
                 >
-                  Votes
+                  Mates &amp; Picks
                 </button>
                 <button
                   onClick={() => handleTabClick('countdown')}
