@@ -10,6 +10,7 @@ export const VotingInterface: React.FC = () => {
   const {
     songs,
     familyMembers,
+    groups,
     countdownResults,
     hottest200Results,
     addFamilyMember,
@@ -426,8 +427,8 @@ export const VotingInterface: React.FC = () => {
         </div>
       )}
 
-      {/* Parties: mates grouped for their own leaderboards */}
-      <PartyManager />
+      {/* Parties: only worth it with more than two mates (kept if some already exist, so they can be edited or deleted) */}
+      {(familyMembers.length > 2 || groups.length > 0) && <PartyManager />}
 
       {/* All Mates' Votes */}
       {familyMembers.length > 0 && (
