@@ -1,38 +1,76 @@
 # Changelog
 
-## [Unreleased] - 2026-11-24
+## [Unreleased] - 2026-11-27
 
 ### Action needed before the countdown
-- **Run `supabase-add-groups.sql`** in the Supabase SQL Editor to turn on member groups (group features stay hidden until then)
-- **Set the countdown date** in Settings once Triple J announces it ("Use default" now picks the fourth Saturday of January)
-- **Drop in the new event branding** — see `src/assets/brand/README.md` and `src/config/brand.ts`
-- **Run `supabase-add-app-settings.sql`** in the Supabase SQL Editor so the countdown date is shared with every visitor
-- **Run `supabase-add-song-unique-index.sql`** in the Supabase SQL Editor (new projects get it from `supabase-schema.sql`)
-- Optional: set `VITE_STREAM_URL` to show the "Listen live" button
+- **Run the SQL scripts** in the Supabase SQL Editor, if not done yet (new projects get most of these from `supabase-schema.sql`):
+  - `supabase-add-app-settings.sql`: shares the countdown date (and uploaded app icon) with every visitor
+  - `supabase-add-groups.sql`: turns on Parties (hidden until then)
+  - `supabase-add-winner-pick.sql`: turns on the pick-the-winner bonus (hidden until then)
+  - `supabase-add-song-unique-index.sql`: blocks duplicate songs at the database
+  - `supabase-clear-empty-groups.sql`: one-off, removes empty parties left from the 2025 reset
+  - `supabase-add-roles.sql` then `supabase-lock-writes.sql`: Admin and Host logins (see below). `supabase-unlock-writes.sql` is the emergency undo
+- **Redeploy the AI profile function** (`supabase functions deploy generate-profile`) so only a signed-in Admin or Host can spend API credit
+- **Delete the old `VITE_AUTH_USERNAME` / `VITE_AUTH_PASSWORD` secrets** from GitHub; the app no longer reads them
+- **Set the countdown date** in Settings → Event once Triple J announces it ("Use default" picks the fourth Saturday of January)
+- **Drop in the new event branding**: see `src/assets/brand/README.md` and `src/config/brand.ts`
+- Optional: set `VITE_STREAM_URL` to show the "Listen live" button, and `VITE_CAST_APP_ID` (or `brand.castAppId`) for the Cast button
 
-### Changed — groups are now Parties
-- The Votes menu item is now **Mates & Picks**, since that page holds mates, their picks and parties
-- "Groups" are called **Parties** everywhere on screen, and they're managed on the Mates & Picks page (formerly Votes), below the list of mates instead of in Settings (the Settings → Groups tab is gone). Database tables, links (`?group=`) and existing parties are unchanged
+### Added — Admin and Host logins
+- Real Supabase Auth logins (email + password, sign-ups off, users created in the Supabase dashboard) replace the old shared username/password that was baked into the site's JavaScript
+- The login box takes a username: `host` becomes `host@fairest100.au` (`LOGIN_EMAIL_DOMAIN` in `src/context/AuthContext.tsx`); a full email works too
+- Two roles in a new `user_roles` table: **Admin** can do everything; **Host** (one shared login) can manage mates, picks and parties, enter countdown results, run AI nicknames/profiles, view the leaderboard and archive, and change the countdown date in Settings → Event
+- Row-level security now enforces this in the database: anyone can read (Home, TV mode, /tv), but writes need a signed-in role. Songs, archives and other settings are Admin only
+- The `generate-profile` edge function checks the caller's role, so visitors can't spend API credit
+- The old `hottest100_auth` flag and cookie are cleared on load; Supabase keeps and refreshes the session
+
+### Changed — menu, Log in and Settings
+- The mobile menu button now shows for everyone: visitors get Home, TV Mode and Log in; Admin and Host also get their pages, Settings and Log out. The desktop menu bar has Settings and Log out too
+- Desktop visitors have no menu, so the footer keeps a Log in link for them; the hero's Log in button stays
+- Countdown and Leaderboard are always in the Admin's menu. For the Host they stay hidden until the countdown starts (date reached or first result). `#countdown` / `#leaderboard` still open, Settings → Event links to them, and a notice explains it's a test run (Admin) or why it's not in the menu yet (Host)
+- Navbar tidy: Archive is styled like the other links and sits next to a white TV Mode tab on the right
+
+### Added — pick the winner
+- Each mate can pick one song from the catalogue to finish #1. If it does, they get a flat **+50 points**, with or without the Hottest 200, and whether or not the song is in their top 10
+- Picks lock with the votes when the countdown starts (or the first result is entered), are visible to everyone, and tied scores share a position
+- Hidden until `supabase-add-winner-pick.sql` has been run
+
+### Added — TV mode on a TV
+- **Cast** button in TV mode (Chrome/Edge) sends the leaderboard to a Chromecast or Google TV through a custom receiver (`public/cast-receiver.html`), including the selected party. Only shown when a Cast app ID is set
+- **Full screen** and **Show on your TV** buttons, with a guide for Cast, AirPlay mirroring, HDMI and smart-TV browsers. The buttons fade when idle, and TV mode keeps the screen awake
+- **fairest100.au/tv** for old smart-TV browsers: modern browsers jump to the normal TV mode, old ones get a simple leaderboard that refreshes every 15 seconds (`?lite` / `?full` force a view; `?group=` works)
+- TV mode shows "Predictions Submitted" only once there are songs, and lists only mates who have picked something
 
 ### Added — installable app
 - The site can be installed to a phone's home screen and opens full screen like an app (iPhone: Share → Add to Home Screen; Android/desktop Chrome: Install). No app stores involved
-- A dismissible bar on Home explains how to install (with the browser's own Install button where it has one); the footer keeps an "Install the app" link
+- A dismissible bar on Home explains how to install (with the browser's own Install button where it has one); the footer keeps an "Install the app" link. On Android, until Chrome is ready to offer its Install button, the bar shows the browser-menu steps instead
 - A service worker (`pwa/service-worker.js`, written to `/sw.js` by the build) keeps the app shell cached so it opens on bad signal; scores, Supabase data and the /tv page always come from the network
-- Song alerts now go through the service worker, which Android Chrome and iPhone home-screen apps require. Alerts still only fire while the app is open in the background; alerts with the app fully closed would need a web push service on Supabase
 
-### Added — groups
-- Member groups (e.g. The Fair Family, Work, Friends): admins create, rename, re-member and delete them in Settings → Groups; a member can be in several groups
-- Everyone can switch the home page, leaderboard page and detailed breakdown between "All members" and a group; podium, quips, awards, Crowd Favourites and score bumps follow the group (scores don't change)
-- The home page shows the selected group's name above the title (hidden for "All members")
-- The choice is remembered and kept in the link (`?group=the-fair-family`), so TV screens can be pointed at a group (`/?group=work#tv`); Settings has "Copy link" / "Copy TV link" for each group
+### Added — app icon
+- Admins can upload an app icon in Settings → Style. It's resized to a 256px square and used as the browser tab icon and iPhone home-screen icon for everyone. Android and desktop installs keep the built-in icon
+
+### Changed — song alerts
+- Three kinds of alert: a round-up every 10 songs (Hottest 100 and 200), "your pick is in" when one of your mate's songs is played, and one when the countdown starts
+- Alerts are now for **phones and tablets only**. A bell next to the menu button (crossed out when off) opens a panel from the bottom of the screen with the on/off switch, "Which mate are you?" (for pick alerts) and a note that alerts are for this device only
+- The Home alerts bar and footer toggle are gone; desktops no longer send alerts
+- Alerts go through the service worker, which Android Chrome and iPhone home-screen apps require. They still only fire while the app is open in the background; alerts with the app fully closed would need a web push service
+
+### Added — Parties (member groups)
+- Parties (e.g. The Fair Family, Work, Friends) are managed on the **Mates & Picks** page (formerly Votes), below the list of mates. The panel appears once there are more than two mates (or a party already exists). A mate can be in several parties
+- Everyone can switch the home page, leaderboard and detailed breakdown between "All members" and a party; podium, quips, awards, Crowd Favourites and score bumps follow the party (scores don't change)
+- The home page shows the selected party's name above the title as a small menu for switching
+- The choice is remembered and kept in the link (`?group=the-fair-family`), so TV screens can be pointed at a party (`/?group=work#tv`); each party has "Copy link" / "Copy TV link"
+- Parties belong to the season: Archive & Reset saves them into the archive and clears them with the mates. The Archive page can filter a year by its parties. Empty parties are hidden
+- Code, tables and the `?group=` link keep the name "group"
+
+### Changed — look and home page
+- Emojis are replaced across the app by a custom set of Riso-style line icons (`src/components/icons`); award definitions use icon names. Party emojis stay as chosen
+- Before the countdown, the home page centres a larger countdown timer that fills the first screen, with a Log in button for visitors. The old "Get started" empty state is gone
+- Home hides "Predictions Submitted" until someone has voted, and shows the "G'day Legends" welcome only once there are songs, with a "Cast your votes" button
+- Fixed white gaps under the countdown hero and above the footer
 
 ### Changed — archive
 - "Archive & Reset for Next Year" (Settings → Data) now appears once the Hottest 100 is complete; the Hottest 200 no longer has to be finished and is archived as it stands
-
-### Changed — song alerts
-- The hero "Song alerts" button is now a slim, dismissible bar under the menu on the home page; it hides once alerts are on, if notifications are blocked, or after dismissal
-- "Song alerts: on/off" link in the footer to change it later; alerts now work from any page, not just home
-- Fixed the header mascot image intercepting clicks below the menu
 
 ### Added — branding, TV mode and motion
 - Brand layer: `src/config/brand.ts` + `src/assets/brand/` hold the event name, year, logo, mascot/badge, backgrounds, favicon and colours
