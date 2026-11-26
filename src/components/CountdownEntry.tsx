@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { LazyImage } from './LazyImage';
 import type { CountdownResult } from '../types';
 import { Icon } from './icons/Icon';
+import { PreCountdownNotice } from './PreCountdownNotice';
 
 interface UndoAction {
   type: 'add' | 'remove';
@@ -191,6 +192,7 @@ export const CountdownEntry: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-6">
+      <PreCountdownNotice page="The Countdown page" />
       {/* Loading Overlay - blocks all interaction during updates */}
       {isUpdating && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -260,7 +262,11 @@ export const CountdownEntry: React.FC = () => {
             <div className="max-h-48 sm:max-h-96 overflow-y-auto space-y-1.5 sm:space-y-2">
               {availableSongs.length === 0 ? (
                 <p className="text-gray-500 text-xs sm:text-sm">
-                  {searchTerm ? 'No songs match your search' : 'All songs have been added'}
+                  {songs.length === 0
+                    ? 'No songs in the catalogue yet. Add them in Settings → Songs.'
+                    : searchTerm
+                      ? 'No songs match your search'
+                      : 'Every song in the catalogue is already in the countdown'}
                 </p>
               ) : (
                 availableSongs.map((song) => (

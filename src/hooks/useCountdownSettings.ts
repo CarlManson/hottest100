@@ -174,3 +174,32 @@ export const parseDateFromInput = (value: string): Date | null => {
   const date = new Date(value);
   return isNaN(date.getTime()) ? null : date;
 };
+
+// setTimeout overflows past ~24.8 days, so long waits re-check hourly
+const MAX_WAIT_MS = 60 * 60 * 1000;
+
+/**
+ * True once the shared countdown date has passed (or no date is set).
+ * Re-renders only when that flips, unlike useCountdown which ticks every second.
+ */
+export const useCountdownDateReached = (): boolean => {
+  const date = useSharedCountdownDate();
+  const reached = (d: Date | null) => !d || d.getTime() <= Date.now();
+  const [isReached, setIsReached] = useState(() => reached(date));
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const check = () => {
+      if (reached(date)) {
+        setIsReached(true);
+        return;
+      }
+      setIsReached(false);
+      timer = setTimeout(check, Math.min(date!.getTime() - Date.now() + 250, MAX_WAIT_MS));
+    };
+    check();
+    return () => clearTimeout(timer);
+  }, [date]);
+
+  return isReached;
+};
