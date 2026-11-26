@@ -6,6 +6,7 @@ import { LazyImage } from './LazyImage';
 import { useGroupView } from '../hooks/useGroupView';
 import { GroupMenu } from './GroupMenu';
 import { Icon } from './icons/Icon';
+import { PreCountdownNotice } from './PreCountdownNotice';
 import { WinnerPickBadge } from './WinnerPick';
 import { WINNER_PICK_BONUS, calculateWinnerBonus } from '../utils/scoring';
 
@@ -25,6 +26,7 @@ export const Leaderboard: React.FC = () => {
   const leaderboard = getLeaderboard(visibleMembers, countdownResults, hottest200Results);
   const maxPossibleScore = calculateMaxPossibleScore(countdownResults, hottest200Results);
   const hasHottest200 = hottest200Results.length > 0;
+  const hasResults = countdownResults.length > 0 || hasHottest200;
 
   // Calculate ranks with tie handling
   const getRank = useMemo(() => {
@@ -55,6 +57,7 @@ export const Leaderboard: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-6">
+      <PreCountdownNotice page="The Leaderboard" />
       <div className="mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
           <div>
@@ -79,8 +82,14 @@ export const Leaderboard: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md p-3 sm:p-6">
           <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Standings</h3>
           {leaderboard.length === 0 ? (
-            <p className="text-sm sm:text-base text-gray-500">No mates yet</p>
+            <p className="text-sm sm:text-base text-gray-500">No mates yet. Add them on the Mates &amp; Picks page.</p>
           ) : (
+            <>
+            {!hasResults && (
+              <p className="leaderboard-waiting text-xs sm:text-sm text-gray-500 mb-3">
+                Everyone's on 0 until the first song is entered on the Countdown page.
+              </p>
+            )}
             <div className="space-y-2 sm:space-y-3">
               {leaderboard.map((entry) => {
                 const efficiency = calculateEfficiency(entry.score, maxPossibleScore);
@@ -167,17 +176,18 @@ export const Leaderboard: React.FC = () => {
                 );
               })}
             </div>
+            </>
           )}
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-3 sm:p-6">
           <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
-            {selectedMember ? `${selectedMember.name}'s Matches` : 'Select a Member'}
+            {selectedMember ? `${selectedMember.name}'s Matches` : 'Select a Mate'}
           </h3>
           {!selectedMember ? (
-            <p className="text-sm sm:text-base text-gray-500">Click on a member to see their matching songs</p>
+            <p className="text-sm sm:text-base text-gray-500">Click a mate to see their matching songs</p>
           ) : matches.length === 0 && !calculateWinnerBonus(selectedMember, countdownResults) ? (
-            <p className="text-sm sm:text-base text-gray-500">No matches yet</p>
+            <p className="text-sm sm:text-base text-gray-500">{hasResults ? 'No matches yet' : 'No songs have been counted down yet'}</p>
           ) : (
             <div className="space-y-2 sm:space-y-3">
               {calculateWinnerBonus(selectedMember, countdownResults) > 0 && (() => {

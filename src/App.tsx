@@ -12,7 +12,7 @@ import { Archive } from './components/Archive';
 import { AlertsBar, AlertsMemberSelect, ALERTS_SUMMARY } from './components/AlertsBar';
 import { InstallBar, FooterInstall } from './components/InstallBar';
 import { useResultNotifications } from './utils/useResultNotifications';
-import { useCountdownSettings } from './hooks/useCountdownSettings';
+import { useCountdownSettings, useCountdownDateReached } from './hooks/useCountdownSettings';
 import { brand } from './config/brand';
 import { Icon } from './components/icons/Icon';
 
@@ -32,6 +32,14 @@ function AppContent() {
   const [loginError, setLoginError] = useState('');
 
   const hasArchives = archives.length > 0;
+
+  // Countdown and Leaderboard stay out of the menu until the countdown starts (date reached
+  // or first result entered). Their #countdown / #leaderboard links still work for testing,
+  // and Settings → Event links to them.
+  const countdownDateReached = useCountdownDateReached();
+  const countdownUnderway = countdownDateReached || countdownResults.length > 0 || hottest200Results.length > 0;
+  const showCountdownTab = countdownUnderway || activeTab === 'countdown';
+  const showLeaderboardTab = countdownUnderway || activeTab === 'leaderboard' || activeTab === 'detailed-breakdown';
 
   // Get tab from URL hash
   const getTabFromHash = (): Tab => {
@@ -201,6 +209,7 @@ function AppContent() {
                   </button>
                   <button
                     onClick={() => handleTabClick('countdown')}
+                    hidden={!showCountdownTab}
                     className={`menu-link ${
                       activeTab === 'countdown'
                         ? 'active'
@@ -211,6 +220,7 @@ function AppContent() {
                   </button>
                   <button
                     onClick={() => handleTabClick('leaderboard')}
+                    hidden={!showLeaderboardTab}
                     className={`menu-link ${
                       activeTab === 'leaderboard'
                         ? 'active'
@@ -262,6 +272,7 @@ function AppContent() {
                 </button>
                 <button
                   onClick={() => handleTabClick('countdown')}
+                  hidden={!showCountdownTab}
                   className={`menu-link ${
                     activeTab === 'countdown'
                       ? 'active'
@@ -272,6 +283,7 @@ function AppContent() {
                 </button>
                 <button
                   onClick={() => handleTabClick('leaderboard')}
+                  hidden={!showLeaderboardTab}
                   className={`menu-link ${
                     activeTab === 'leaderboard'
                       ? 'active'
