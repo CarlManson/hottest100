@@ -275,7 +275,7 @@ Dynamic, humorous commentary displayed on the home page during the countdown.
 
 ### Installable App (PWA)
 - Manifest and icons: `public/manifest.webmanifest` + `public/icons/`; iPhone meta tags in `index.html`
-- `src/utils/installPrompt.ts` is the single `beforeinstallprompt` handler (`installPromptStore`, `promptInstall`, `isInstalledApp`, `isIos`). `InstallBar.tsx` (Home bar + footer link) and TV mode's Install button both use it
+- `src/utils/installPrompt.ts` is the single `beforeinstallprompt` handler (`installPromptStore`, `promptInstall`, `isInstalledApp`, `isIos`, `isAndroid`). Chrome on Android may hold back its install offer until the site has had some use, so until then the bar shows browser-menu steps instead of an Install button. `InstallBar.tsx` (Home bar + footer link) and TV mode's Install button both use it
 - Service worker: `pwa/service-worker.js`, written to `/sw.js` by the `serviceWorker` plugin in `vite.config.ts` with a per-build version and the main entry's shell to precache. Network-first for the page, cache-first for hashed `/assets/`, never touches other origins (Supabase, album art, stream), `/tv/` or `/cast-receiver.html`. Registered in production builds only (`src/pwa/registerServiceWorker.ts`)
 - Song alerts use `registration.showNotification` when a service worker exists (required on Android Chrome and iOS home-screen apps)
 

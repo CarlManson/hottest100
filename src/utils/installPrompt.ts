@@ -51,3 +51,8 @@ export function isIos(): boolean {
   return /iPhone|iPad|iPod/.test(navigator.userAgent)
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
+
+/** Android, where Chrome may not offer its install dialog until the site has had some use */
+export function isAndroid(): boolean {
+  return /Android/i.test(navigator.userAgent);
+}
