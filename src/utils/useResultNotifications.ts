@@ -3,6 +3,7 @@ import type { CountdownResult, FamilyMember, Song } from '../types';
 import { WINNER_PICK_BONUS } from './scoring';
 import { getWinnerPickers, joinNames } from './winnerPick';
 import { brand } from '../config/brand';
+import { isMobileDevice } from '../hooks/useIsMobile';
 
 const STORAGE_KEY = 'song_alerts_enabled';
 const MEMBER_KEY = 'song_alerts_member_id';
@@ -110,7 +111,8 @@ export function useResultNotifications(
   const member = familyMembers.find(m => m.id === memberId);
 
   const notify = useCallback((title: string, options: NotificationOptions) => {
-    if (!enabled || !document.hidden) return;
+    // Alerts are a phone thing; a desktop that turned them on before stays quiet
+    if (!enabled || !document.hidden || !isMobileDevice()) return;
     void showNotification(title, options);
   }, [enabled]);
 
