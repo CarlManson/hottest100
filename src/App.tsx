@@ -10,6 +10,7 @@ import { DetailedBreakdown } from './components/DetailedBreakdown';
 import { Settings } from './components/Settings';
 import { Archive } from './components/Archive';
 import { AlertsBar, AlertsMemberSelect, ALERTS_SUMMARY } from './components/AlertsBar';
+import { InstallBar, FooterInstall } from './components/InstallBar';
 import { useResultNotifications } from './utils/useResultNotifications';
 import { useCountdownSettings } from './hooks/useCountdownSettings';
 import { brand } from './config/brand';
@@ -304,6 +305,7 @@ function AppContent() {
 
         <main>
           {activeTab === 'home' && <AlertsBar notifications={notifications} members={familyMembers} />}
+          {activeTab === 'home' && <InstallBar />}
           {activeTab === 'home' && <PublicHome showTvButton={!isAuthenticated} onLoginClick={isAuthenticated ? undefined : () => setShowLoginModal(true)} />}
           {activeTab === 'tv' && <TVMode />}
           {activeTab === 'voting' && isAuthenticated && <VotingInterface />}
@@ -411,6 +413,7 @@ function AppContent() {
               • © {new Date().getFullYear()}
             </p>
             <div className="mt-4 space-y-2">
+              <FooterInstall />
               {notifications.supported && !notifications.blocked && (
                 <div className="footer-alerts flex justify-center items-center gap-3 flex-wrap">
                   <button

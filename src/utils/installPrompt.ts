@@ -44,3 +44,10 @@ export function isInstalledApp(): boolean {
     || window.matchMedia?.('(display-mode: fullscreen)').matches
     || (navigator as Navigator & { standalone?: boolean }).standalone === true;
 }
+
+/** iPhone/iPad, where installing is done by hand from Safari's Share menu */
+export function isIos(): boolean {
+  // iPadOS reports itself as a Mac, but Macs don't have touch screens
+  return /iPhone|iPad|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}

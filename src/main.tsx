@@ -5,8 +5,10 @@ import './styles/compiled.css'
 import App from './App.tsx'
 import { applyBrand } from './config/brand'
 import './utils/installPrompt'
+import { registerServiceWorker } from './pwa/registerServiceWorker'
 
 applyBrand()
+registerServiceWorker()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

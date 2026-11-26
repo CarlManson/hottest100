@@ -5,6 +5,7 @@ import logo from '../assets/brand/logo.png';
 import mascot from '../assets/brand/mascot.png';
 import background from '../assets/brand/background.jpg';
 import backgroundTv from '../assets/brand/background-tv.jpg';
+import appIcon from '../assets/brand/app-icon.png';
 
 export const brand = {
   appName: 'Fairest 100',
@@ -19,7 +20,9 @@ export const brand = {
     mascot: mascot as string | null,
     background,
     backgroundTv,
-    // Browser tab icon; falls back to the logo
+    // Square app icon (512x512 PNG, solid background): browser tab, iPhone/Android home screen
+    appIcon,
+    // Optional different browser tab icon; falls back to appIcon
     favicon: null as string | null,
   },
 
@@ -59,8 +62,8 @@ export function applyBrand() {
 
   document.title = brand.appName;
   const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
-  if (icon) {
-    icon.href = images.favicon ?? images.logo;
+  if (icon && images.favicon) {
+    icon.href = images.favicon;
     icon.removeAttribute('type');
   }
 }

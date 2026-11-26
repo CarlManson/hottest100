@@ -10,6 +10,12 @@
 - **Run `supabase-add-song-unique-index.sql`** in the Supabase SQL Editor (new projects get it from `supabase-schema.sql`)
 - Optional: set `VITE_STREAM_URL` to show the "Listen live" button
 
+### Added — installable app
+- The site can be installed to a phone's home screen and opens full screen like an app (iPhone: Share → Add to Home Screen; Android/desktop Chrome: Install). No app stores involved
+- A dismissible bar on Home explains how to install (with the browser's own Install button where it has one); the footer keeps an "Install the app" link
+- A service worker (`pwa/service-worker.js`, written to `/sw.js` by the build) keeps the app shell cached so it opens on bad signal; scores, Supabase data and the /tv page always come from the network
+- Song alerts now go through the service worker, which Android Chrome and iPhone home-screen apps require. Alerts still only fire while the app is open in the background; alerts with the app fully closed would need a web push service on Supabase
+
 ### Added — groups
 - Member groups (e.g. The Fair Family, Work, Friends): admins create, rename, re-member and delete them in Settings → Groups; a member can be in several groups
 - Everyone can switch the home page, leaderboard page and detailed breakdown between "All members" and a group; podium, quips, awards, Crowd Favourites and score bumps follow the group (scores don't change)
