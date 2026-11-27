@@ -166,6 +166,12 @@ Two separate lists (Hottest 100 vs 200) stored in same table, differentiated by 
 
 Countdown and Leaderboard are only for logged-in users. The Admin always sees them in the menu; the Host only once the countdown is underway (`useCountdownDateReached()` or any result entered). Before then `PreCountdownNotice` says it's a test run (Admin) or why it's not in the menu (Host).
 
+### triple j Auto-fill
+- `TriplejAutoFill.tsx` sits on the Countdown page. Its switch (remembered per browser) checks triple j every 60s and adds the songs it can match to the active tab's countdown. "Check now" is a dry run.
+- The browser can't fetch abc.net.au (no CORS), so the `triplej-countdown` edge function (Admin/Host only, no secrets) reads `/triplej/countdown/hottest100/<yy>/1-100` (or `101-200`), then `/<yy>`, then the main page, and returns `songsPrepared` from the page's `__NEXT_DATA__` SongCountdown component. The main page is only trusted when its title/canonical is the requested year. Deploy with `supabase functions deploy triplej-countdown`.
+- Matching is non-AI (`src/utils/triplejMatch.ts`): normalised titles/artists, letter-pair similarity, title weighted 0.7. Unmatched songs, close calls, songs already in the other countdown, and positions already holding a different song are listed for a person, never overwritten. Adds are single inserts, so two browsers can't duplicate (unique position/song per type).
+- `?triplejYear=25` tests against an older countdown. The year defaults to triple j's (the Hottest 100 of 2026 airs in Jan 2027 at `/26`).
+
 ### Real-time Updates
 Supabase channels (`*-channel`) subscribe to all operations (`event: '*'`) on respective tables. On any change, relevant load function re-fetches data, triggering React re-renders across all connected clients.
 
