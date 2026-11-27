@@ -4,6 +4,7 @@ import { LazyImage } from './LazyImage';
 import type { CountdownResult } from '../types';
 import { Icon } from './icons/Icon';
 import { PreCountdownNotice } from './PreCountdownNotice';
+import { TriplejAutoFill } from './TriplejAutoFill';
 
 interface UndoAction {
   type: 'add' | 'remove';
@@ -240,11 +241,13 @@ export const CountdownEntry: React.FC = () => {
           </button>
         </div>
 
+        <TriplejAutoFill activeTab={activeTab} disabled={isUpdating} />
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Add Song</h3>
             <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-              Click a song to add it to the countdown. Songs are added from position {maxPosition} down to {minPosition}.
+              Click a song to add it to the countdown. It goes in the highest empty position, counting down from {maxPosition} to {minPosition}.
             </p>
 
             <div className="mb-3 sm:mb-4">
